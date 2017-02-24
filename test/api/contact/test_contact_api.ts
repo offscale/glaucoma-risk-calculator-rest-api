@@ -7,7 +7,7 @@ import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
 import { ContactTestSDK } from './contact_test_sdk';
 import { user_mocks } from '../user/user_mocks';
-import { ITestSDK } from '../auth/auth_test_sdk.d';
+import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { IUser, IUserBase } from '../../../api/user/models.d';
 import { Response } from 'supertest';
@@ -26,7 +26,7 @@ process.env['NO_SAMPLE_DATA'] = 'true';
 const user_mocks_subset: Array<IUserBase> = user_mocks.successes.slice(20, 30);
 
 describe('Contact::routes', () => {
-    let sdk: ContactTestSDK, auth_sdk: ITestSDK, app: Server,
+    let sdk: ContactTestSDK, auth_sdk: IAuthSdk, app: Server,
         mocks: {successes: Array<IContactBase>, failures: Array<{}>};
 
     before('tearDownConnections', done => tearDownConnections(c.connections, done));

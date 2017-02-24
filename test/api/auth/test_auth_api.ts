@@ -10,7 +10,7 @@ import { AuthTestSDK } from './../auth/auth_test_sdk';
 import { AccessToken } from './../../../api/auth/models';
 import { tearDownConnections } from '../../shared_tests';
 import { user_mocks } from '../user/user_mocks';
-import { ITestSDK } from './auth_test_sdk.d';
+import { IAuthSdk } from './auth_test_sdk.d';
 import IAssertionError = Chai.AssertionError;
 
 
@@ -26,7 +26,7 @@ process.env['NO_SAMPLE_DATA'] = 'true';
 const mocks: Array<IUserBase> = user_mocks.successes.slice(0, 10);
 
 describe('Auth::routes', () => {
-    let sdk: ITestSDK, app: Server;
+    let sdk: IAuthSdk, app: Server;
 
     before(done =>
         series([

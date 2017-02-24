@@ -6,7 +6,7 @@ import { map, waterfall, series } from 'async';
 import { sanitiseSchema } from 'nodejs-utils';
 import { fmtError } from 'restify-errors';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { ITestSDK } from './auth_test_sdk.d';
+import { IAuthSdk } from './auth_test_sdk.d';
 import { cb } from '../../share_interfaces.d';
 import { IUser, IUserBase } from '../../../api/user/models.d';
 import { user_mocks } from '../user/user_mocks';
@@ -17,8 +17,8 @@ const auth_schema = require('./schema.json');
 
 chai.use(chaiJsonSchema);
 
-export class AuthTestSDK implements ITestSDK {
-    constructor(public app) {
+export class AuthTestSDK implements IAuthSdk {
+    constructor(private app) {
     }
 
     register(user: IUserBase, cb: cb) {
@@ -93,6 +93,29 @@ export class AuthTestSDK implements ITestSDK {
             })
     }
 
+    get_all(access_token: string, cb: cb) {
+        if (!access_token) return cb(new TypeError('access_token argument to get_all must be defined'));
+
+        supertest(this.app)
+            .get('/api/users')
+            .set('X-Access-Token', access_token)
+            .set('Connection', 'keep-alive')
+            .end((err, res: Response) => {
+                if (err) return cb(err);
+                else if (res.error) return cb(res.error);
+                try {
+                    expect(res.body).to.be.an('object');
+                    expect(res.body).to.have.property('users');
+                    expect(res.body.users).to.be.an('array');
+                    res.body.users.map(e => expect(e).to.be.jsonSchema(user_schema));
+                } catch (e) {
+                    err = <Chai.AssertionError>e;
+                } finally {
+                    cb(err, res);
+                }
+            })
+    }
+
     logout(access_token: string, cb: cb) {
         if (!access_token) return cb(new TypeError('access_token argument to logout must be defined'));
 
@@ -148,7 +171,7 @@ export class AuthTestSDK implements ITestSDK {
         series([
                 cb => this.register(user, cb),
                 cb => this.login(user, cb)
-            ], (err, results: Array<Response>) => {
+            ], (err: Error, results: Array<Response>) => {
                 if (err) return done(err);
                 return done(err, results[1].get('x-access-token'));
             }

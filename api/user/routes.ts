@@ -49,6 +49,22 @@ export function read(app: restify.Server, namespace: string = ""): void {
     );
 }
 
+export function getAll(app: restify.Server, namespace: string = ""): void {
+    app.get(`${namespace}s`, has_auth(),
+        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+            const User: Query = c.collections['user_tbl'];
+
+            User.find().exec((error: WLError, users: IUser[]) => {
+                    if (error) return next(fmtError(error));
+                    else if (!users || !users.length) return next(new NotFoundError('`User`s'));
+                    res.json({users: users});
+                    return next();
+                }
+            );
+        }
+    );
+}
+
 export function update(app: restify.Server, namespace: string = ""): void {
     app.put(namespace, remove_from_body(['email']),
         has_body, mk_valid_body_mw(user_schema, false),

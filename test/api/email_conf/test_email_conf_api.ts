@@ -8,7 +8,7 @@ import { all_models_and_routes, strapFrameworkKwargs, IObjectCtor, c } from '../
 import { tearDownConnections } from '../../shared_tests';
 import { EmailConfTestSDK } from './email_conf_test_sdk';
 import { user_mocks } from '../user/user_mocks';
-import { ITestSDK } from '../auth/auth_test_sdk.d';
+import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { IUser, IUserBase } from '../../../api/user/models.d';
 import { email_conf_mocks } from './email_conf_mocks';
@@ -25,7 +25,7 @@ process.env['NO_SAMPLE_DATA'] = 'true';
 const user_mocks_subset: Array<IUserBase> = user_mocks.successes.slice(40, 50);
 
 describe('EmailConf::routes', () => {
-    let sdk: EmailConfTestSDK, auth_sdk: ITestSDK, app: Server;
+    let sdk: EmailConfTestSDK, auth_sdk: IAuthSdk, app: Server;
 
     before('tearDownConnections', done => tearDownConnections(c.connections, done));
 

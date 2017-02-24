@@ -1,6 +1,6 @@
 import * as supertest from 'supertest';
 import { expect } from 'chai';
-import { series, waterfall } from 'async';
+import { series, waterfall, map } from 'async';
 import { IModelRoute } from 'nodejs-utils';
 import { strapFramework } from 'restify-utils';
 import { Collection, Connection } from 'waterline';
@@ -9,7 +9,7 @@ import { all_models_and_routes, strapFrameworkKwargs, IObjectCtor, c } from '../
 import { AuthTestSDK } from './../auth/auth_test_sdk';
 import { AccessToken } from './../../../api/auth/models';
 import { tearDownConnections } from '../../shared_tests';
-import { ITestSDK } from '../auth/auth_test_sdk.d';
+import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { IUserBase } from '../../../api/user/models.d';
 import { user_mocks } from './user_mocks';
 
@@ -25,7 +25,7 @@ process.env['NO_SAMPLE_DATA'] = 'true';
 const mocks: Array<IUserBase> = user_mocks.successes.slice(10, 20);
 
 describe('User::routes', () => {
-    let sdk: ITestSDK, app: Server;
+    let sdk: IAuthSdk, app: Server;
 
     before(done =>
         series([
@@ -93,6 +93,13 @@ describe('User::routes', () => {
                     }
                 ],
                 done
+            )
+        );
+
+        type AccessToken = string;
+        it('GET /users should get all users', done =>
+            map(mocks.slice(4, 10), sdk.register_login.bind(sdk), (err, res: AccessToken[]) =>
+                err ? done(err) : sdk.get_all(res[0], done)
             )
         );
 
