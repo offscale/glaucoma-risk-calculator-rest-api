@@ -9,10 +9,11 @@
   },
   "license": "Apache-2.0",
   "scripts": {
-    "start": "node main.js | node_modules/bunyan/bin/bunyan",
+    "start": "node main.js | bunyan",
     "test": "mocha test --recursive"
   },
   "dependencies": {
+    "argon2": "^0.15.0",
     "async": "^2.1.4",
     "async-es": "^2.1.4",
     "bunyan": "^1.8.5",
