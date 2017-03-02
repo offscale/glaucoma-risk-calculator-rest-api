@@ -40,7 +40,7 @@ export function update(app: restify.Server, namespace: string = ""): void {
             // TODO: Transaction
             async.series({
                 count: cb =>
-                    EmailTpl.count(crit).exec((err: WLError, count: number) => {
+                    EmailTpl.count(crit, (err: WLError, count: number) => {
                         if (err) return cb(err);
                         else if (!count) return cb(new NotFoundError('EmailTpl'));
                         console.info('got this far');

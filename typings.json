@@ -18,7 +18,6 @@
         "restify-validators": "github:SamuelMarks/restify-validators/restify-validators.d.ts",
         "superagent": "registry:dt/superagent#2.0.0+20161124104740",
         "supertest": "registry:dt/supertest#1.1.0+20161122042843",
-        "tv4": "registry:dt/tv4#1.2.5+20160620211513",
         "waterline": "github:SamuelMarks/cust_typings/waterline/waterline.d.ts",
         "waterline-postgresql": "github:SamuelMarks/cust_typings/waterline-postgresql/waterline-postgresql.d.ts"
     }
