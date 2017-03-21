@@ -3,14 +3,13 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as redis from 'redis';
 import { Collection, Connection } from 'waterline';
-import * as waterline_nedb from 'waterline-nedb';
-import * as waterline_tingo from 'sails-tingo';
 import * as waterline_postgres from 'waterline-postgresql';
 import { createLogger } from 'bunyan';
 import { Server } from 'restify';
-import { populateModelRoutes, IModelRoute, uri_to_config } from 'nodejs-utils';
-import { strapFramework, IStrapFramework } from 'restify-utils';
+import { IModelRoute, populateModelRoutes, uri_to_config } from 'nodejs-utils';
+import { IStrapFramework, strapFramework } from 'restify-utils';
 import { SampleData } from './test/SampleData';
+import { user_mocks } from './test/api/user/user_mocks';
 
 export const package_ = Object.freeze(require('./package'));
 export const logger = createLogger({
@@ -30,8 +29,8 @@ const db_uri: string = process.env['RDBMS_URI'] || process.env['DATABASE_URL'] |
 
 const db_path = (r => !!r ? r : path.join(homedir(), '.glaucoma_risk_calculator'))(
     process.argv.length > 2 ? process.argv.slice(2).reduce((acc, arg) =>
-            ['--dbpath', '-d'].indexOf(acc) > -1 ? acc = arg : null
-        ) : path.join(homedir(), '.glaucoma_risk_calculator'));
+        ['--dbpath', '-d'].indexOf(acc) > -1 ? acc = arg : null
+    ) : path.join(homedir(), '.glaucoma_risk_calculator'));
 
 function init_db_dir(db_type, cb) {
     ['nedb', 'tingo'].indexOf(db_type) > -1 ?
@@ -66,7 +65,7 @@ export const waterline_config = Object.freeze({
 // Other config examples:
 Object.freeze({
     adapters: {
-        tingo: waterline_tingo
+        tingo: "import * as waterline_tingo from 'sails-tingo'"
     },
     connections: {
         main_db: {
@@ -84,7 +83,7 @@ Object.freeze({
 
 Object.freeze({
     adapters: {
-        nedb: waterline_nedb
+        nedb: "import * as waterline_nedb from 'waterline-nedb';"
     },
     connections: {
         main_db: {
@@ -101,14 +100,15 @@ Object.freeze({
 
 export const all_models_and_routes: IModelRoute = populateModelRoutes('.');
 
-export const redis_cursors: {redis: redis.RedisClient} = {
+export const redis_cursors: { redis: redis.RedisClient } = {
     redis: null
 };
 
-export const c: {collections: Collection[], connections: Connection[]} = {collections: [], connections: []};
+export const c: { collections: Collection[], connections: Connection[] } = {collections: [], connections: []};
 
 let _cache = {};
 
+const default_user: string = JSON.stringify(user_mocks.successes[98]);
 export const strapFrameworkKwargs: IStrapFramework = Object.freeze(<IStrapFramework>{
     app_name: package_.name,
     models_and_routes: all_models_and_routes,
@@ -123,9 +123,10 @@ export const strapFrameworkKwargs: IStrapFramework = Object.freeze(<IStrapFramew
     redis_cursors: redis_cursors,
     createSampleData: true,
     SampleData: SampleData,
-    sampleDataToCreate: (sampleData: any) => [
-        cb => sampleData.unregister(cb),
-        cb => sampleData.registerLogin(cb)
+    sampleDataToCreate: (sampleData: SampleData) => [
+        cb => sampleData.unregister(default_user, (err, res) => cb(err, 'unregistered default user')),
+        cb => sampleData.registerLogin(default_user, cb),
+        cb => sampleData.loadRiskJson((err, res) => cb(err, 'loaded risk-json'))
     ]
 });
 

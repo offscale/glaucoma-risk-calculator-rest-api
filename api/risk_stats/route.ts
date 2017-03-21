@@ -6,26 +6,26 @@ import { fmtError, NotFoundError } from 'restify-errors';
 import { JsonSchema } from 'tv4';
 import { c } from '../../main';
 import { has_auth } from '../auth/middleware';
-import { IEmailTpl } from './models.d';
+import { IRiskStats } from './models.d';
 
 
-const email_tpl_schema: JsonSchema = require('./../../test/api/email_tpl/schema');
+const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
 
 export function read(app: restify.Server, namespace: string = ""): void {
     app.get(`${namespace}/:createdAt`, has_auth(),
         function (req: restify.Request, res: restify.Response, next: restify.Next) {
-            const EmailTpl: Query = c.collections['email_tpl_tbl'];
+            const RiskStats: Query = c.collections['risk_stats_tbl'];
 
             const q = req.params.createdAt === 'latest' ?
-                EmailTpl.find().sort('createdAt DESC')
+                RiskStats.find().sort('createdAt DESC')
                     .limit(1) :
-                EmailTpl.findOne({createdAt: req.params.createdAt});
-            q.exec((error: WLError, email_tpl: IEmailTpl | IEmailTpl[]) => {
+                RiskStats.findOne({createdAt: req.params.createdAt});
+            q.exec((error: WLError, risk_stats: IRiskStats | IRiskStats[]) => {
                 if (error) return next(fmtError(error));
-                else if (!email_tpl) return next(new NotFoundError('EmailTpl'));
-                const tpl: IEmailTpl = Array.isArray(email_tpl) ? email_tpl[0] : email_tpl;
-                if (!tpl) return next(new NotFoundError('EmailTpl'));
-                res.json(tpl);
+                else if (!risk_stats) return next(new NotFoundError('RiskStats'));
+                const stats: IRiskStats = Array.isArray(risk_stats) ? risk_stats[0] : risk_stats;
+                if (!stats) return next(new NotFoundError('RiskStats'));
+                res.json(stats);
                 return next();
             });
         }
@@ -33,21 +33,23 @@ export function read(app: restify.Server, namespace: string = ""): void {
 }
 
 export function update(app: restify.Server, namespace: string = ""): void {
-    app.put(`${namespace}/:createdAt`, has_auth(), has_body, mk_valid_body_mw_ignore(email_tpl_schema, ['createdAt']),
+    app.put(`${namespace}/:createdAt`, has_auth(), has_body, mk_valid_body_mw_ignore(risk_stats_schema, ['createdAt']),
         function (req: restify.Request, res: restify.Response, next: restify.Next) {
-            const EmailTpl: Query = c.collections['email_tpl_tbl'];
+            const RiskStats: Query = c.collections['risk_stats_tbl'];
 
-            req.body = Object.freeze({tpl: req.body.tpl});
+            req.body = Object.freeze({risk_json: req.body.risk_json});
             const crit = Object.freeze({createdAt: req.params.createdAt});
             // TODO: Transaction
             async.series({
                 count: cb =>
-                    EmailTpl.count(crit, (err: WLError, count: number) => {
+                    RiskStats.count(crit, (err: WLError, count: number) => {
                         if (err) return cb(err);
-                        else if (!count) return cb(new NotFoundError('EmailTpl'));
+                        else if (!count) return cb(new NotFoundError('RiskStats'));
                         return cb(null, count);
                     }),
-                update: cb => EmailTpl.update(crit, req.body, (e, email_tpls: IEmailTpl[]) => cb(e, email_tpls[0]))
+                update: cb => RiskStats.update(crit, req.body).exec((e, risk_stats: IRiskStats[]) =>
+                    cb(e, risk_stats[0])
+                )
             }, (error, results: { count: number, update: string }) => {
                 if (error) return next(fmtError(error));
                 res.json(200, results.update);
@@ -60,9 +62,9 @@ export function update(app: restify.Server, namespace: string = ""): void {
 export function del(app: restify.Server, namespace: string = ""): void {
     app.del(`${namespace}/:createdAt`, has_auth(),
         function (req: restify.Request, res: restify.Response, next: restify.Next) {
-            const EmailTpl: Query = c.collections['email_tpl_tbl'];
+            const RiskStats: Query = c.collections['risk_stats_tbl'];
 
-            EmailTpl.destroy({createdAt: req.params.createdAt}).exec((error: WLError) => {
+            RiskStats.destroy({createdAt: req.params.createdAt}).exec((error: WLError) => {
                 if (error) return next(fmtError(error));
                 res.send(204);
                 return next();

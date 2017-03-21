@@ -10,7 +10,7 @@ export const user_mocks: {successes: Array<IUserBase>, failures: Array<{}>} = {
     ],
     "successes": (() => {
         const a: Array<IUserBase> = [];
-        for (let i = 0; i < 50; i++)
+        for (let i = 0; i < 100; i++)
             a.push({"email": faker.internet.email(), "password": faker.internet.password()});
         return a;
     })()
