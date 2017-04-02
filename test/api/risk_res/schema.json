@@ -1,0 +1,22 @@
+{
+    "type": "object",
+    "properties": {
+        "risk_json": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "object"
+                }
+            ]
+        },
+        "createdAt": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "risk_json",
+        "createdAt"
+    ]
+}

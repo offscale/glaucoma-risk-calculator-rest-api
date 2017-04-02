@@ -4,7 +4,8 @@ import { ClientRequest, IncomingMessage, request as http_request, RequestOptions
 import { trivial_merge } from 'nodejs-utils';
 import { HttpError } from 'restify';
 import { AsyncResultCallback } from 'waterline';
-import { risk_json } from 'glaucoma-risk-quiz-engine';
+import { IRiskJson } from 'glaucoma-risk-quiz-engine';
+const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-quiz-engine/risk');
 
 export interface ISampleData {
     token: string;

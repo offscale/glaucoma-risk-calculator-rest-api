@@ -124,7 +124,7 @@ export const strapFrameworkKwargs: IStrapFramework = Object.freeze(<IStrapFramew
     createSampleData: true,
     SampleData: SampleData,
     sampleDataToCreate: (sampleData: SampleData) => [
-        cb => sampleData.unregister(default_user, (err, res) => cb(err, 'unregistered default user')),
+        cb => sampleData.unregister(default_user, (err, res) => cb(err, 'removed default user; next: adding')),
         cb => sampleData.registerLogin(default_user, cb),
         cb => sampleData.loadRiskJson((err, res) => cb(err, 'loaded risk-json'))
     ]
