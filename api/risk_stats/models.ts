@@ -19,7 +19,8 @@ export const RiskStats = {
             RiskStats._omit.map(k => delete risk_stats[k]);
             for (const key in risk_stats)
                 if (risk_stats.hasOwnProperty(key) && !risk_stats[key]) delete risk_stats[key];
-            if (typeof risk_stats.risk_json === 'string') risk_stats.risk_json = JSON.parse(risk_stats.risk_json);
+            if (typeof risk_stats.risk_json === 'string' && ['{', '['].indexOf(risk_stats.risk_json[0]) > -1)
+                risk_stats.risk_json = JSON.parse(risk_stats.risk_json);
             return risk_stats;
         },
     },

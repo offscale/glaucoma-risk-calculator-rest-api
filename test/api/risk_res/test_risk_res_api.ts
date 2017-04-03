@@ -34,7 +34,7 @@ describe('RiskRes::routes', () => {
         createSampleData: false,
         start_app: false,
         use_redis: true,
-        app_name: 'test-risk-stats-api',
+        app_name: 'test-risk-res-api',
         callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
             if (err) return done(err);
             c.connections = _connections;

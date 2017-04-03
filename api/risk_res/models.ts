@@ -6,9 +6,26 @@ export const RiskRes = {
     connection: 'main_db',
     _omit: [/*'uuid'*/],
     attributes: {
-        risk_json: {
+        age: {
+            type: 'integer',
+            required: false
+        },
+        gender: {
             type: 'string',
             required: true
+        },
+        ethnicity: {
+            type: 'string',
+            required: true
+        },
+        other_info: {
+            type: 'string',
+            required: false
+        },
+        //family_history_of_glaucoma? : string[],
+        email: {
+            type: 'string',
+            required: false
         },
         toJSON: function toJSON() {
             let risk_res: IRiskRes = this.toObject();

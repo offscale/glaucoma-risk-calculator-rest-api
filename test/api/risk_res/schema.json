@@ -1,22 +1,28 @@
 {
     "type": "object",
     "properties": {
-        "risk_json": {
-            "oneOf": [
-                {
-                    "type": "string"
-                },
-                {
-                    "type": "object"
-                }
-            ]
+        "age": {
+            "type": "integer"
+        },
+        "gender": {
+            "type": "string"
+        },
+        "ethnicity": {
+            "type": "string"
+        },
+        "other_info": {
+            "type": "string"
+        },
+        "email": {
+            "type": "string"
         },
         "createdAt": {
             "type": "string"
         }
     },
     "required": [
-        "risk_json",
-        "createdAt"
+        "createdAt",
+        "ethnicity",
+        "gender"
     ]
 }

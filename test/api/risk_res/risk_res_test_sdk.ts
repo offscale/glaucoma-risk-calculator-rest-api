@@ -58,8 +58,8 @@ export class RiskResTestSDK {
                 if (err) return cb(err);
                 else if (res.error) return cb(res.error);
                 try {
-                    expect(res.body).to.have.property('risk_json');
-                    expect(res.body.risk_json).to.be.a('string');
+                    expect(res.body).to.be.an('object');
+                    expect(res.body).to.be.jsonSchema(risk_res_schema);
                 } catch (e) {
                     err = <Chai.AssertionError>e;
                 } finally {

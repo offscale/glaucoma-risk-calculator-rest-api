@@ -12,7 +12,7 @@ export const risk_res_mocks: { successes: Array<IRiskResBase>, failures: Array<{
             createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()},
         {age: 55, ethnicity: 'barbados', gender: 'female',
             createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()},
-        {age: 55, ethnicity: 'barbados', gender: 'female',
+        {age: 55, ethnicity: 'barbados', gender: 'female', //family_history_of_glaucoma: ['sibling'],
             createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()}
     ]
 };
