@@ -8,11 +8,12 @@ export const risk_res_mocks: { successes: Array<IRiskResBase>, failures: Array<{
         {}, {risk_json: ''}, {risk_json: null}, {risk_json: undefined}, {risk_json: 0}
     ],
     "successes": [
-        {age: 55, ethnicity: 'barbados', gender: 'male',
+        {age: 55, ethnicity: 'barbados', gender: 'male', client_risk: Math.random(),
             createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()},
-        {age: 55, ethnicity: 'barbados', gender: 'female',
+        {age: 55, ethnicity: 'barbados', gender: 'female', client_risk: Math.random(),
             createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()},
-        {age: 55, ethnicity: 'barbados', gender: 'female', //family_history_of_glaucoma: ['sibling'],
+        {age: 55, ethnicity: 'barbados', gender: 'female', client_risk: Math.random(),
+            //family_history_of_glaucoma: ['sibling'],
             createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()}
     ]
 };

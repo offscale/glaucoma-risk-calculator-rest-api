@@ -15,4 +15,5 @@ export interface IRiskResBase {
     family_history_of_glaucoma?: string[];
     email?: string;
     createdAt?: string|Date;
+    client_risk: number;
 }

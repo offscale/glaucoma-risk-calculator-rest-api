@@ -8,7 +8,11 @@ export const RiskRes = {
     attributes: {
         age: {
             type: 'integer',
-            required: false
+            required: true
+        },
+        client_risk: {
+            type: 'float',
+            required: true
         },
         gender: {
             type: 'string',

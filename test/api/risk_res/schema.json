@@ -4,6 +4,9 @@
         "age": {
             "type": "integer"
         },
+        "client_risk": {
+            "type": "number"
+        },
         "gender": {
             "type": "string"
         },
@@ -23,6 +26,8 @@
     "required": [
         "createdAt",
         "ethnicity",
+        "client_risk",
+        "age",
         "gender"
     ]
 }

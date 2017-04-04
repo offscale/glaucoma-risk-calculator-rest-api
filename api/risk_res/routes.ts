@@ -4,13 +4,12 @@ import { fmtError, NotFoundError } from 'restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { JsonSchema } from 'tv4';
 import { c } from '../../main';
-import { has_auth } from '../auth/middleware';
 import { IRiskRes } from './models.d';
 
 const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
 
 export function create(app: restify.Server, namespace: string = ""): void {
-    app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(risk_res_schema, ['createdAt']),
+    app.post(namespace, has_body, mk_valid_body_mw_ignore(risk_res_schema, ['createdAt', 'id']),
         function (req: restify.Request, res: restify.Response, next: restify.Next) {
             const RiskRes: Query = c.collections['risk_res_tbl'];
 
