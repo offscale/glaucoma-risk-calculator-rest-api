@@ -26,9 +26,16 @@ export const RiskRes = {
             type: 'string',
             required: false
         },
-        //family_history_of_glaucoma? : string[],
         email: {
             type: 'string',
+            required: false
+        },
+        sibling: {
+            type: 'boolean',
+            required: false
+        },
+        parent: {
+            type: 'boolean',
             required: false
         },
         toJSON: function toJSON() {

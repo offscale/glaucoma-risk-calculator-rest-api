@@ -1,4 +1,4 @@
-import { Model, Record } from 'waterline';
+import { Model } from 'waterline';
 
 export interface IRiskRes extends Model, IRiskResBase {
     id?: number;
@@ -14,6 +14,8 @@ export interface IRiskResBase {
     other_info?: string;
     family_history_of_glaucoma?: string[];
     email?: string;
-    createdAt?: string|Date;
+    createdAt?: string | Date;
     client_risk: number;
+    sibling?: boolean; // sibling has glaucoma?
+    parent?: boolean;  // parent has glaucoma?
 }
