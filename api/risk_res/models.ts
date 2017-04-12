@@ -1,6 +1,5 @@
 import { IRiskRes } from './models.d';
 
-
 export const RiskRes = {
     identity: 'risk_res_tbl',
     connection: 'main_db',
@@ -39,7 +38,7 @@ export const RiskRes = {
             required: false
         },
         toJSON: function toJSON() {
-            let risk_res: IRiskRes = this.toObject();
+            const risk_res: IRiskRes = this.toObject();
             RiskRes._omit.map(k => delete risk_res[k]);
             for (const key in risk_res)
                 if (risk_res.hasOwnProperty(key) && !risk_res[key]) delete risk_res[key];

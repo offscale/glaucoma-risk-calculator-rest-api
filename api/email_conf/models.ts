@@ -29,7 +29,7 @@ export const EmailConf = {
             type: 'string'
         },
         toJSON: function toJSON() {
-            let email_conf: IEmailConf = this.toObject();
+            const email_conf: IEmailConf = this.toObject();
             EmailConf._omit.map(k => delete email_conf[k]);
             for (const key in email_conf)
                 if (email_conf.hasOwnProperty(key) && !email_conf[key]) delete email_conf[key];

@@ -4,35 +4,36 @@ import { strapFramework } from 'restify-utils';
 import { Server } from 'restify';
 import { Collection, Connection } from 'waterline';
 import { expect } from 'chai';
-import { all_models_and_routes, strapFrameworkKwargs, IObjectCtor, c } from './../../../main';
+import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from './../../../main';
 import { IUserBase } from '../../../api/user/models.d';
 import { AuthTestSDK } from './../auth/auth_test_sdk';
 import { AccessToken } from './../../../api/auth/models';
-import { tearDownConnections } from '../../shared_tests';
+import { getError, tearDownConnections } from '../../shared_tests';
 import { user_mocks } from '../user/user_mocks';
 import { IAuthSdk } from './auth_test_sdk.d';
+import { IncomingMessageError } from '../../share_interfaces';
 import IAssertionError = Chai.AssertionError;
-
 
 declare const Object: IObjectCtor;
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes['user'],
-    auth: all_models_and_routes['auth'],
+    auth: all_models_and_routes['auth']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
 
-const mocks: Array<IUserBase> = user_mocks.successes.slice(0, 10);
+const mocks: IUserBase[] = user_mocks.successes.slice(0, 10);
 
 describe('Auth::routes', () => {
-    let sdk: IAuthSdk, app: Server;
+    let sdk: IAuthSdk;
+    let app: Server;
 
     before(done =>
         series([
             cb => tearDownConnections(c.connections, cb),
             cb => strapFramework(Object.assign({}, strapFrameworkKwargs, {
-                models_and_routes: models_and_routes,
+                models_and_routes,
                 createSampleData: false,
                 start_app: false,
                 use_redis: true,
@@ -76,11 +77,12 @@ describe('Auth::routes', () => {
                             expect(err.message).to.contain(expected_err);
                             err = null;
                         } catch (e) {
-                            err = <IAssertionError>e;
+                            err = e as IAssertionError;
                         } finally {
                             done(err);
                         }
                     }
+                    /* tslint:disable:one-line */
                     else return done();
                 }
             );
@@ -88,7 +90,13 @@ describe('Auth::routes', () => {
 
         it('DELETE should logout user', done => {
             waterfall([
-                    cb => sdk.register(mocks[1], err => cb(err)),
+                    cb => sdk.register(mocks[1], (err: IncomingMessageError) => {
+                            const e = getError(err);
+                            return cb(e && e.error_code ?
+                                (['E_VALIDATION', 'E_UNIQUE'].indexOf(e.error_code) > -1 ? null : err)
+                                : err);
+                        }
+                    ),
                     cb => sdk.login(mocks[1], (err, res) =>
                         err ? cb(err) : cb(null, res.body.access_token)
                     ),
@@ -98,12 +106,12 @@ describe('Auth::routes', () => {
                         )
                     ,
                     (access_token, cb) =>
-                        AccessToken().findOne(access_token, (e, r) =>
-                            cb(!e ? new Error("Access token wasn't invalidated/removed") : null)
+                        AccessToken().findOne(access_token, e =>
+                            cb(!e ? new Error('Access token wasn\'t invalidated/removed') : null)
                         )
                 ],
                 done
-            )
+            );
         });
     });
 });

@@ -8,12 +8,12 @@ import { c } from '../../main';
 import { has_auth } from '../auth/middleware';
 import { IRiskStats } from './models.d';
 
-
+/* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
 
-export function read(app: restify.Server, namespace: string = ""): void {
+export function read(app: restify.Server, namespace: string = ''): void {
     app.get(`${namespace}/:createdAt`,
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
 
             const q = req.params.createdAt === 'latest' ?
@@ -32,9 +32,9 @@ export function read(app: restify.Server, namespace: string = ""): void {
     );
 }
 
-export function update(app: restify.Server, namespace: string = ""): void {
+export function update(app: restify.Server, namespace: string = ''): void {
     app.put(`${namespace}/:createdAt`, has_auth(), has_body, mk_valid_body_mw_ignore(risk_stats_schema, ['createdAt']),
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
 
             req.body = Object.freeze({risk_json: req.body.risk_json});
@@ -53,15 +53,15 @@ export function update(app: restify.Server, namespace: string = ""): void {
             }, (error, results: { count: number, update: string }) => {
                 if (error) return next(fmtError(error));
                 res.json(200, results.update);
-                return next()
+                return next();
             });
         }
     );
 }
 
-export function del(app: restify.Server, namespace: string = ""): void {
+export function del(app: restify.Server, namespace: string = ''): void {
     app.del(`${namespace}/:createdAt`, has_auth(),
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
 
             RiskStats.destroy({createdAt: req.params.createdAt}).exec((error: WLError) => {

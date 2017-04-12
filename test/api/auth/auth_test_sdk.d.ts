@@ -1,5 +1,5 @@
-import {IUserBase, IUser} from '../../../api/user/models.d';
-import {cb} from '../../share_interfaces.d';
+import { IUser, IUserBase } from '../../../api/user/models.d';
+import { cb } from '../../share_interfaces.d';
 
 export interface IAuthSdk {
     register(user: IUserBase | IUser, cb: cb): void;

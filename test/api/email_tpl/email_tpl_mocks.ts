@@ -3,11 +3,11 @@ import { IEmailTplBase } from '../../../api/email_tpl/models.d';
 
 declare const Object: IObjectCtor;
 
-export const email_tpl_mocks: {successes: Array<IEmailTplBase>, failures: Array<{}>} = {
-    "failures": [
+export const email_tpl_mocks: { successes: IEmailTplBase[], failures: Array<{}> } = {
+    failures: [
         {}, {tpl: ''}, {tpl: null}, {tpl: undefined}, {tpl: 0}
     ],
-    "successes": [
+    successes: [
         {tpl: 'foo', createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()},
         {tpl: 'bar', createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()},
         {tpl: 'can', createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1).toISOString()}
@@ -15,5 +15,6 @@ export const email_tpl_mocks: {successes: Array<IEmailTplBase>, failures: Array<
 };
 
 if (require.main === module) {
+    /* tslint:disable:no-console */
     console.info(email_tpl_mocks);
 }

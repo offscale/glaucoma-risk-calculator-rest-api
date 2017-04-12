@@ -1,16 +1,14 @@
-import * as async from 'async';
 import { IModelRoute } from 'nodejs-utils';
 import { strapFramework } from 'restify-utils';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
-import { Response } from 'supertest';
 import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
-import { tearDownConnections } from '../../shared_tests';
+import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
 import { RiskStatsTestSDK } from './risk_stats_test_sdk';
 import { user_mocks } from '../user/user_mocks';
 import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
-import { IUser, IUserBase } from '../../../api/user/models.d';
+import { IUserBase } from '../../../api/user/models.d';
 import { risk_stats_mocks } from './risk_stats_mocks';
 
 declare const Object: IObjectCtor;
@@ -22,15 +20,17 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-const user_mocks_subset: Array<IUserBase> = user_mocks.successes.slice(50, 60);
+const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(50, 60);
 
 describe('RiskStats::routes', () => {
-    let sdk: RiskStatsTestSDK, auth_sdk: IAuthSdk, app: Server;
+    let sdk: RiskStatsTestSDK;
+    let auth_sdk: IAuthSdk;
+    let app: Server;
 
     before('tearDownConnections', done => tearDownConnections(c.connections, done));
 
     before('strapFramework', done => strapFramework(Object.assign({}, strapFrameworkKwargs, {
-        models_and_routes: models_and_routes,
+        models_and_routes,
         createSampleData: false,
         start_app: false,
         use_redis: true,
@@ -46,48 +46,39 @@ describe('RiskStats::routes', () => {
         }
     })));
 
-    before('Create & auth users', done => async.forEachOf(user_mocks_subset, (user: IUser, idx: number, callback) =>
-        async.series([
-            cb => auth_sdk.register(user, cb),
-            cb => auth_sdk.login(user, cb)
-        ], (err, results: Array<Response>) => {
-            if (err) return callback(err);
-            user['access_token'] = results[1].body.access_token;
-            user_mocks_subset[idx] = user;
-            return callback();
-        }), done)
-    );
+    describe('routes', () => {
+        before('Create & auth users', done => create_and_auth_users(user_mocks_subset, auth_sdk, done));
 
-    // Deregister database adapter connections
-    after('unregister all users', done => auth_sdk.unregister_all(user_mocks_subset, done));
-    after('tearDownConnections', done => tearDownConnections(c.connections, done));
+        // Deregister database adapter connections
+        after('tearDownConnections', done => tearDownConnections(c.connections, done));
 
-    describe('/api/risk_stats', () => {
-        afterEach('deleteRiskStats', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[0], done));
+        describe('/api/risk_stats', () => {
+            afterEach('deleteRiskStats', done =>
+                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[0], done));
 
-        it('POST should create RiskStats', done =>
-            sdk.create(user_mocks_subset[0].access_token, risk_stats_mocks.successes[0], done)
-        );
-    });
+            it('POST should create RiskStats', done =>
+                sdk.create(user_mocks_subset[0].access_token, risk_stats_mocks.successes[0], done)
+            );
+        });
 
-    describe('/api/risk_stats/:createdAt', () => {
-        before('createRiskStats', done =>
-            sdk.create(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], _ => done()));
-        after('deleteRiskStats', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done));
+        describe('/api/risk_stats/:createdAt', () => {
+            before('createRiskStats', done =>
+                sdk.create(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], _ => done()));
+            after('deleteRiskStats', done =>
+                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done));
 
-        it('GET should retrieve RiskStats', done =>
-            sdk.get(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done)
-        );
+            it('GET should retrieve RiskStats', done =>
+                sdk.get(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done)
+            );
 
-        it('PUT should update RiskStats', done =>
-            sdk.update(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1],
-                {risk_json: 'json_risk', createdAt: risk_stats_mocks.successes[1].createdAt}, done)
-        );
+            it('PUT should update RiskStats', done =>
+                sdk.update(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1],
+                    {risk_json: 'json_risk', createdAt: risk_stats_mocks.successes[1].createdAt}, done)
+            );
 
-        it('DELETE should destroy RiskStats', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done)
-        );
+            it('DELETE should destroy RiskStats', done =>
+                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done)
+            );
+        });
     });
 });

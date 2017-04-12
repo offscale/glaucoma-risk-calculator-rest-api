@@ -1,16 +1,14 @@
-import * as async from 'async';
 import { IModelRoute } from 'nodejs-utils';
 import { strapFramework } from 'restify-utils';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
-import { Response } from 'supertest';
 import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
-import { tearDownConnections } from '../../shared_tests';
+import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
 import { RiskResTestSDK } from './risk_res_test_sdk';
 import { user_mocks } from '../user/user_mocks';
 import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
-import { IUser, IUserBase } from '../../../api/user/models.d';
+import { IUserBase } from '../../../api/user/models.d';
 import { risk_res_mocks } from './risk_res_mocks';
 
 declare const Object: IObjectCtor;
@@ -22,15 +20,17 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-const user_mocks_subset: Array<IUserBase> = user_mocks.successes.slice(50, 60);
+const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(60, 70);
 
 describe('RiskRes::routes', () => {
-    let sdk: RiskResTestSDK, auth_sdk: IAuthSdk, app: Server;
+    let sdk: RiskResTestSDK;
+    let auth_sdk: IAuthSdk;
+    let app: Server;
 
     before('tearDownConnections', done => tearDownConnections(c.connections, done));
 
     before('strapFramework', done => strapFramework(Object.assign({}, strapFrameworkKwargs, {
-        models_and_routes: models_and_routes,
+        models_and_routes,
         createSampleData: false,
         start_app: false,
         use_redis: true,
@@ -46,17 +46,7 @@ describe('RiskRes::routes', () => {
         }
     })));
 
-    before('Create & auth users', done => async.forEachOf(user_mocks_subset, (user: IUser, idx: number, callback) =>
-        async.series([
-            cb => auth_sdk.register(user, cb),
-            cb => auth_sdk.login(user, cb)
-        ], (err, results: Array<Response>) => {
-            if (err) return callback(err);
-            user['access_token'] = results[1].body.access_token;
-            user_mocks_subset[idx] = user;
-            return callback();
-        }), done)
-    );
+    before('Create & auth users', done => create_and_auth_users(user_mocks_subset, auth_sdk, done));
 
     // Deregister database adapter connections
     after('unregister all users', done => auth_sdk.unregister_all(user_mocks_subset, done));

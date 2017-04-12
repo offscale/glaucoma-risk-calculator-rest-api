@@ -9,6 +9,7 @@ import { cb } from '../../share_interfaces.d';
 import { IRiskResBase } from '../../../api/risk_res/models.d';
 import { User } from '../../../api/user/models';
 
+/* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
 const risk_res_schema = require('./schema.json');
 
@@ -18,7 +19,7 @@ export class RiskResTestSDK {
     constructor(public app) {
     }
 
-    create(access_token: string, risk_res: IRiskResBase, cb: cb) {
+    public create(access_token: string, risk_res: IRiskResBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `create` must be defined'));
         else if (!risk_res) return cb(new TypeError('`risk_res` argument to `create` must be defined'));
 
@@ -37,16 +38,18 @@ export class RiskResTestSDK {
                     expect(res.body).to.be.an('object');
                     expect(res.body).to.be.jsonSchema(risk_res_schema);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
             });
     }
 
-    get(access_token: string, risk_res: IRiskResBase, cb: cb) {
+    public get(access_token: string, risk_res: IRiskResBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (!risk_res) return cb(new TypeError('`risk_res` argument to `getAll` must be defined'));
+        /*else if (isNaN(risk_res.createdAt as any))
+         return cb(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
 
         supertest(this.app)
             .get(`/api/risk_res/${risk_res.createdAt}`)
@@ -61,14 +64,14 @@ export class RiskResTestSDK {
                     expect(res.body).to.be.an('object');
                     expect(res.body).to.be.jsonSchema(risk_res_schema);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 
-    destroy(access_token: string, risk_res: IRiskResBase, cb: cb) {
+    public destroy(access_token: string, risk_res: IRiskResBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `destroy` must be defined'));
         else if (!risk_res) return cb(new TypeError('`risk_res` argument to `destroy` must be defined'));
 
@@ -82,10 +85,10 @@ export class RiskResTestSDK {
                 try {
                     expect(res.status).to.be.equal(204);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 }

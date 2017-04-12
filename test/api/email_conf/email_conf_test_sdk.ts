@@ -9,6 +9,7 @@ import { cb } from '../../share_interfaces.d';
 import { IEmailConfBase } from '../../../api/email_conf/models.d';
 import { User } from '../../../api/user/models';
 
+/* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
 const email_conf_schema = require('./schema.json');
 
@@ -18,7 +19,7 @@ export class EmailConfTestSDK {
     constructor(public app) {
     }
 
-    create(access_token: string, email_conf: IEmailConfBase, cb: cb) {
+    public create(access_token: string, email_conf: IEmailConfBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `create` must be defined'));
         else if (!email_conf) return cb(new TypeError('`email_conf` argument to `create` must be defined'));
 
@@ -38,14 +39,14 @@ export class EmailConfTestSDK {
                     expect(res.body).to.be.an('object');
                     expect(res.body).to.be.jsonSchema(email_conf_schema);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
             });
     }
 
-    get(access_token: string, email_conf: IEmailConfBase, cb: cb) {
+    public get(access_token: string, email_conf: IEmailConfBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (!email_conf) return cb(new TypeError('`email_conf` argument to `getAll` must be defined'));
 
@@ -61,10 +62,10 @@ export class EmailConfTestSDK {
                 try {
                     expect(res.body).to.be.jsonSchema(email_conf_schema);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 }

@@ -9,6 +9,7 @@ import { cb } from '../../share_interfaces.d';
 import { IRiskStatsBase } from '../../../api/risk_stats/models.d';
 import { User } from '../../../api/user/models';
 
+/* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
 const risk_stats_schema = require('./schema.json');
 
@@ -18,7 +19,7 @@ export class RiskStatsTestSDK {
     constructor(public app) {
     }
 
-    create(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
+    public create(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `create` must be defined'));
         else if (!risk_stats) return cb(new TypeError('`risk_stats` argument to `create` must be defined'));
 
@@ -37,14 +38,14 @@ export class RiskStatsTestSDK {
                     expect(res.body).to.be.an('object');
                     expect(res.body).to.be.jsonSchema(risk_stats_schema);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
             });
     }
 
-    get(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
+    public get(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (!risk_stats) return cb(new TypeError('`risk_stats` argument to `getAll` must be defined'));
 
@@ -61,15 +62,15 @@ export class RiskStatsTestSDK {
                     expect(res.body).to.have.property('risk_json');
                     expect(res.body.risk_json).to.be.a('string');
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 
-    update(access_token: string, initial_risk_stats: IRiskStatsBase,
-           updated_risk_stats: IRiskStatsBase, cb: cb) {
+    public update(access_token: string, initial_risk_stats: IRiskStatsBase,
+                  updated_risk_stats: IRiskStatsBase, cb: cb) {
         if (!access_token)
             return cb(new TypeError('`access_token` argument to `update` must be defined'));
         else if (!initial_risk_stats)
@@ -77,8 +78,8 @@ export class RiskStatsTestSDK {
         else if (!updated_risk_stats)
             return cb(new TypeError('`updated_risk_stats` argument to `update` must be defined'));
         else if (initial_risk_stats.createdAt !== updated_risk_stats.createdAt)
-            return cb(new ReferenceError(
-                `${initial_risk_stats.createdAt} != ${updated_risk_stats.createdAt} (\`createdAt\`s between risk_statss)`)
+            return cb(new ReferenceError(`${initial_risk_stats.createdAt} != ${updated_risk_stats.createdAt}
+                 (\`createdAt\`s between risk_stats')`)
             );
 
         supertest(this.app)
@@ -96,14 +97,14 @@ export class RiskStatsTestSDK {
                     );
                     expect(res.body).to.be.jsonSchema(risk_stats_schema);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 
-    destroy(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
+    public destroy(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `destroy` must be defined'));
         else if (!risk_stats) return cb(new TypeError('`risk_stats` argument to `destroy` must be defined'));
 
@@ -117,10 +118,10 @@ export class RiskStatsTestSDK {
                 try {
                     expect(res.status).to.be.equal(204);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 }

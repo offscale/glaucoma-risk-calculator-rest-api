@@ -1,11 +1,11 @@
 import * as supertest from 'supertest';
 import { expect } from 'chai';
-import { series, waterfall, map } from 'async';
+import { map, series, waterfall } from 'async';
 import { IModelRoute } from 'nodejs-utils';
 import { strapFramework } from 'restify-utils';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
-import { all_models_and_routes, strapFrameworkKwargs, IObjectCtor, c } from '../../../main';
+import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
 import { AuthTestSDK } from './../auth/auth_test_sdk';
 import { AccessToken } from './../../../api/auth/models';
 import { tearDownConnections } from '../../shared_tests';
@@ -22,16 +22,17 @@ const models_and_routes: IModelRoute = {
 
 process.env['NO_SAMPLE_DATA'] = 'true';
 
-const mocks: Array<IUserBase> = user_mocks.successes.slice(10, 20);
+const mocks: IUserBase[] = user_mocks.successes.slice(10, 20);
 
 describe('User::routes', () => {
-    let sdk: IAuthSdk, app: Server;
+    let sdk: IAuthSdk;
+    let app: Server;
 
     before(done =>
         series([
             cb => tearDownConnections(c.connections, cb),
             cb => strapFramework(Object.assign({}, strapFrameworkKwargs, {
-                models_and_routes: models_and_routes,
+                models_and_routes,
                 createSampleData: false,
                 start_app: false,
                 use_redis: true,
@@ -110,7 +111,7 @@ describe('User::routes', () => {
                         err ? cb(err) : cb(null, res.body.access_token)
                     ),
                     (access_token, cb) =>
-                        sdk.unregister({access_token: access_token}, err =>
+                        sdk.unregister({access_token}, err =>
                             cb(err, access_token)
                         )
                     ,

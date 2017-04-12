@@ -8,17 +8,16 @@ import { c } from '../../main';
 import { has_auth } from '../auth/middleware';
 import { IRiskRes } from './models.d';
 
-
+/* tslint:disable:no-var-requires */
 const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
 
-export function read(app: restify.Server, namespace: string = ""): void {
+export function read(app: restify.Server, namespace: string = ''): void {
     app.get(`${namespace}/:id`,
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
-
             const q = req.params.id === 'latest' ?
                 RiskRes.find().sort('createdAt DESC').limit(1)
-                : RiskRes.findOne({id: req.params.id});
+                : RiskRes.findOne({createdAt: req.params.id});
             q.exec((error: WLError, risk_res: IRiskRes | IRiskRes[]) => {
                 if (error) return next(fmtError(error));
                 else if (!risk_res) return next(new NotFoundError('RiskRes'));
@@ -31,9 +30,9 @@ export function read(app: restify.Server, namespace: string = ""): void {
     );
 }
 
-export function update(app: restify.Server, namespace: string = ""): void {
+export function update(app: restify.Server, namespace: string = ''): void {
     app.put(`${namespace}/:id`, has_body, mk_valid_body_mw(risk_res_schema),
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
 
             const crit = Object.freeze({id: req.params.id});
@@ -51,15 +50,15 @@ export function update(app: restify.Server, namespace: string = ""): void {
             }, (error, results: { count: number, update: string }) => {
                 if (error) return next(fmtError(error));
                 res.json(200, results.update);
-                return next()
+                return next();
             });
         }
     );
 }
 
-export function del(app: restify.Server, namespace: string = ""): void {
+export function del(app: restify.Server, namespace: string = ''): void {
     app.del(`${namespace}/:id`, has_auth(),
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
 
             RiskRes.destroy({createdAt: req.params.id}).exec((error: WLError) => {

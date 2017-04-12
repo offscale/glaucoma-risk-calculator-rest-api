@@ -7,14 +7,14 @@ import { c } from '../../main';
 import { has_auth } from '../auth/middleware';
 import { IRiskStats } from './models.d';
 
+/* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
 
-export function create(app: restify.Server, namespace: string = ""): void {
+export function create(app: restify.Server, namespace: string = ''): void {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(risk_stats_schema, ['createdAt']),
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
 
-            console.info('req.body =', req.body);
             RiskStats.create(req.body).exec((error: WLError | Error, risk_stats: IRiskStats) => {
                 if (error) return next(fmtError(error));
                 else if (!risk_stats) return next(new NotFoundError('RiskStats'));
@@ -22,5 +22,5 @@ export function create(app: restify.Server, namespace: string = ""): void {
                 return next();
             });
         }
-    )
+    );
 }

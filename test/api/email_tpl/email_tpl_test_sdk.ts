@@ -9,6 +9,7 @@ import { cb } from '../../share_interfaces.d';
 import { IEmailTplBase } from '../../../api/email_tpl/models.d';
 import { User } from '../../../api/user/models';
 
+/* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
 const email_tpl_schema = require('./schema.json');
 
@@ -18,7 +19,7 @@ export class EmailTplTestSDK {
     constructor(public app) {
     }
 
-    create(access_token: string, email_tpl: IEmailTplBase, cb: cb) {
+    public create(access_token: string, email_tpl: IEmailTplBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `create` must be defined'));
         else if (!email_tpl) return cb(new TypeError('`email_tpl` argument to `create` must be defined'));
 
@@ -37,14 +38,14 @@ export class EmailTplTestSDK {
                     expect(res.body).to.be.an('object');
                     expect(res.body).to.be.jsonSchema(email_tpl_schema);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
             });
     }
 
-    get(access_token: string, email_tpl: IEmailTplBase, cb: cb) {
+    public get(access_token: string, email_tpl: IEmailTplBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (!email_tpl) return cb(new TypeError('`email_tpl` argument to `getAll` must be defined'));
 
@@ -61,15 +62,15 @@ export class EmailTplTestSDK {
                     expect(res.body).to.have.property('tpl');
                     expect(res.body.tpl).to.be.a('string');
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 
-    update(access_token: string, initial_email_tpl: IEmailTplBase,
-           updated_email_tpl: IEmailTplBase, cb: cb) {
+    public update(access_token: string, initial_email_tpl: IEmailTplBase,
+                  updated_email_tpl: IEmailTplBase, cb: cb) {
         if (!access_token)
             return cb(new TypeError('`access_token` argument to `update` must be defined'));
         else if (!initial_email_tpl)
@@ -96,14 +97,14 @@ export class EmailTplTestSDK {
                     );
                     expect(res.body).to.be.jsonSchema(email_tpl_schema);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 
-    destroy(access_token: string, email_tpl: IEmailTplBase, cb: cb) {
+    public destroy(access_token: string, email_tpl: IEmailTplBase, cb: cb) {
         if (!access_token) return cb(new TypeError('`access_token` argument to `destroy` must be defined'));
         else if (!email_tpl) return cb(new TypeError('`email_tpl` argument to `destroy` must be defined'));
 
@@ -117,10 +118,10 @@ export class EmailTplTestSDK {
                 try {
                     expect(res.status).to.be.equal(204);
                 } catch (e) {
-                    err = <Chai.AssertionError>e;
+                    err = e as Chai.AssertionError;
                 } finally {
                     cb(err, res);
                 }
-            })
+            });
     }
 }

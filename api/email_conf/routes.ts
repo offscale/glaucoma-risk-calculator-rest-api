@@ -1,7 +1,7 @@
 import * as restify from 'restify';
 import * as async from 'async';
 import { Query, WLError } from 'waterline';
-import { NotFoundError, fmtError } from 'restify-errors';
+import { fmtError, NotFoundError } from 'restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { JsonSchema } from 'tv4';
 import { c, IObjectCtor } from '../../main';
@@ -10,15 +10,16 @@ import { IEmailConf } from './models.d';
 
 declare const Object: IObjectCtor;
 
+/* tslint:disable:no-var-requires */
 const email_tpl_schema: JsonSchema = require('./../../test/api/email_conf/schema');
 
-export function create(app: restify.Server, namespace: string = ""): void {
+export function create(app: restify.Server, namespace: string = ''): void {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(email_tpl_schema, ['createdAt']),
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const EmailConf: Query = c.collections['email_conf_tbl'];
 
             function create(cb) {
-                EmailConf.create(req.body).exec((error: WLError|Error, email_conf: IEmailConf) => {
+                EmailConf.create(req.body).exec((error: WLError | Error, email_conf: IEmailConf) => {
                     if (error) return cb(fmtError(error));
                     else if (!email_conf) return cb(new NotFoundError('EmailConf'));
                     return cb(null, email_conf);
@@ -34,13 +35,14 @@ export function create(app: restify.Server, namespace: string = ""): void {
                         else return cb(null, email_conf[0]);
                     }),
                 (email_conf, cb) =>
-                    EmailConf.update(email_conf, Object.assign({}, email_conf, req.body), (e, email_confs: IEmailConf[]) => {
+                    EmailConf.update(email_conf, Object.assign({}, email_conf, req.body),
+                        (e, email_confs: IEmailConf[]) => {
                             if (e) return cb(e);
                             else if (!email_confs || !email_confs.length) return cb(new NotFoundError('EmailConf[]'));
-                            return cb(null, email_confs)
+                            return cb(null, email_confs);
                         }
                     )
-            ], (error: any, results: Array<IEmailConf>[2]) => {
+            ], (error: any, results: IEmailConf[][2]) => {
                 if (error) {
                     if (error instanceof NotFoundError)
                         create((err, email_tpl) => {
@@ -51,20 +53,21 @@ export function create(app: restify.Server, namespace: string = ""): void {
                         );
                     else return next(fmtError(error));
                 }
+                /* tslint:disable:one-line */ // Bug in TSLint!
                 else if (!results || !results.length)
                     return next(new NotFoundError('EmailConf[]'));
                 else {
                     res.json(200, results[0]);
-                    return next()
+                    return next();
                 }
             });
         }
-    )
+    );
 }
 
-export function read(app: restify.Server, namespace: string = ""): void {
+export function read(app: restify.Server, namespace: string = ''): void {
     app.get(namespace, has_auth(),
-        function (req: restify.Request, res: restify.Response, next: restify.Next) {
+        (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const EmailConf: Query = c.collections['email_conf_tbl'];
             EmailConf.find().limit(1).exec((error: WLError, email_conf: IEmailConf[]) => {
                 if (error) return next(fmtError(error));
