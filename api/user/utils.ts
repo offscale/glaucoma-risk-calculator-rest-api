@@ -8,7 +8,7 @@ export const argon2_options: argon2.Options = Object.freeze({
     timeCost: 4, memoryCost: 13, parallelism: 2, type: argon2.argon2d
 });
 
-export function shakeSalt(cb: (error: WLError | Error, salt?: Buffer) => void) {
+export const shakeSalt = (cb: (error: WLError | Error, salt?: Buffer) => void) => {
     argon2.generateSalt().then(gen_salt => {
         const Salt: Query = c.collections['auth_salt_tbl'];
         // `return cb(null, gen_salt)` doesn't work... postgres stored salt !== gen_salt
@@ -19,9 +19,9 @@ export function shakeSalt(cb: (error: WLError | Error, salt?: Buffer) => void) {
             return cb(null, Buffer.from(salt_res.salt));
         });
     });
-}
+};
 
-export function saltSeeker(cb: (error: WLError | Error, salt?: Buffer) => void) {
+export const saltSeeker = (cb: (error: WLError | Error, salt?: Buffer) => void) => {
     const Salt: Query = c.collections['auth_salt_tbl'];
 
     Salt.find().limit(1).exec((error: WLError, salt: ISalt[]) => {
@@ -29,4 +29,4 @@ export function saltSeeker(cb: (error: WLError | Error, salt?: Buffer) => void) 
         else if (!salt || !salt.length) return cb(new NotFoundError('Salt'));
         return cb(error, Buffer.from(salt[0].salt));
     });
-}
+};

@@ -36,13 +36,13 @@ const db_path = (r => !!r ? r : path.join(homedir(), '.glaucoma_risk_calculator'
         ['--dbpath', '-d'].indexOf(acc) > -1 ? acc = arg : null
     ) : path.join(homedir(), '.glaucoma_risk_calculator'));
 
-function init_db_dir(db_type, cb) {
+const init_db_dir = (db_type, cb) => {
     ['nedb', 'tingo'].indexOf(db_type) > -1 ?
         fs.access(db_path, err => {
             if (!err) return cb();
             fs.mkdir(db_path, e => cb(err));
         }) : cb();
-}
+};
 
 /* TODO: Put this all in tiered environment-variable powered .json file */
 

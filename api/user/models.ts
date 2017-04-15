@@ -4,18 +4,22 @@ import { argon2_options, saltSeeker } from './utils';
 import { cache } from '../../main';
 
 export const hash_password = (record: { password: string, email?: string }, callback): void => {
-    function hash(salt, cb) {
+    const hash = (salt, cb) => {
         cache['global_salt'] = salt;
-        argon2.hash(record.password, cache['global_salt'], argon2_options).then(hash => {
-            record.password = hash;
+        argon2.hash(record.password, cache['global_salt'], argon2_options).then(hashed => {
+            record.password = hashed;
             return cb();
         }).catch((err) => console.error('hash_password::hash::err =', err, 'record =', record) || cb(err));
-    }
+    };
 
     return record && record.password && !record.password.startsWith('$argon2') ?
         (cache.hasOwnProperty('global_salt') ? hash(cache['global_salt'], callback)
             : saltSeeker((err, salt) => err ? callback(err) : hash(salt, callback)))
         : callback();
+};
+
+export const verify_password = (hashed: string, password: string): boolean => {
+    return false;
 };
 
 export const User = {

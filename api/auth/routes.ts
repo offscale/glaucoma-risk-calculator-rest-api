@@ -8,24 +8,25 @@ import { c } from '../../main';
 import { has_auth } from './middleware';
 import { AccessToken } from './models';
 import { hash_password } from '../user/models';
+import { IUser } from '../user/models.d';
 
 /* tslint:disable:no-var-requires */
 const user_schema: JsonSchema = require('./../../test/api/user/schema');
 
-export function login(app: restify.Server, namespace: string = ''): void {
+export const login = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_body, mk_valid_body_mw(user_schema),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const User: Query = c.collections['user_tbl'];
 
             const user = {
-                email: req.body.email,
-                password: req.body.password
+                email: req.body.email
             };
             waterfall([
-                cb => hash_password(user, cb),
-                cb => User.findOne(user, (err: any, _user) =>
+                // cb => hash_password(user, cb),
+                cb => User.findOne(user, (err: any, _user: IUser) =>
                     cb(err ? err : !_user ? new NotFoundError('User') : null)
                 ),
+                cb => hash_password(Object.assign(user, {password: req.body.password}), cb),
                 cb => AccessToken().add(req.body.email, 'login', cb)
             ], (error: any, access_token: string) => {
                 if (error) return next(fmtError(error));
@@ -35,9 +36,9 @@ export function login(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function logout(app: restify.Server, namespace: string = ''): void {
+export const logout = (app: restify.Server, namespace: string = ''): void => {
     app.del(namespace, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             AccessToken().logout(
@@ -48,4 +49,4 @@ export function logout(app: restify.Server, namespace: string = ''): void {
                 });
         }
     );
-}
+};

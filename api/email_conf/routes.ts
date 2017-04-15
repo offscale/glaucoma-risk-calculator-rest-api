@@ -13,18 +13,18 @@ declare const Object: IObjectCtor;
 /* tslint:disable:no-var-requires */
 const email_tpl_schema: JsonSchema = require('./../../test/api/email_conf/schema');
 
-export function create(app: restify.Server, namespace: string = ''): void {
+export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(email_tpl_schema, ['createdAt']),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const EmailConf: Query = c.collections['email_conf_tbl'];
 
-            function create(cb) {
+            const _create = (cb) => {
                 EmailConf.create(req.body).exec((error: WLError | Error, email_conf: IEmailConf) => {
                     if (error) return cb(fmtError(error));
                     else if (!email_conf) return cb(new NotFoundError('EmailConf'));
                     return cb(null, email_conf);
                 });
-            }
+            };
 
             // TODO: Transaction
             async.waterfall([
@@ -45,7 +45,7 @@ export function create(app: restify.Server, namespace: string = ''): void {
             ], (error: any, results: IEmailConf[][2]) => {
                 if (error) {
                     if (error instanceof NotFoundError)
-                        create((err, email_tpl) => {
+                        _create((err, email_tpl) => {
                                 if (err) return next(err);
                                 res.json(201, email_tpl);
                                 return next();
@@ -63,9 +63,9 @@ export function create(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function read(app: restify.Server, namespace: string = ''): void {
+export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(namespace, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const EmailConf: Query = c.collections['email_conf_tbl'];
@@ -77,4 +77,4 @@ export function read(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};

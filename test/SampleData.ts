@@ -25,7 +25,7 @@ export interface IncomingMessageF extends IncomingMessage {
     func_name: string;
 }
 
-function httpF(method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') {
+const httpF = (method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') => {
     return (options: RequestOptions,
             func_name: string,
             body_or_cb: string | Callback | Cb | AsyncResultCallback<{}>,
@@ -59,7 +59,7 @@ function httpF(method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') {
 
         return req;
     };
-}
+};
 
 const httpHEAD = httpF('HEAD');
 const httpGET = httpF('GET');

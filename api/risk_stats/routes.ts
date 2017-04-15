@@ -10,7 +10,7 @@ import { IRiskStats } from './models.d';
 /* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
 
-export function create(app: restify.Server, namespace: string = ''): void {
+export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(risk_stats_schema, ['createdAt']),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
@@ -23,4 +23,4 @@ export function create(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};

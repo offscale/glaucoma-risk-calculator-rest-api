@@ -13,7 +13,7 @@ import { IUser } from './models.d';
 /* tslint:disable:no-var-requires */
 const user_schema: JsonSchema = require('./../../test/api/user/schema');
 
-export function create(app: restify.Server, namespace: string = ''): void {
+export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_body, mk_valid_body_mw(user_schema),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const User: Query = c.collections['user_tbl'];
@@ -31,9 +31,9 @@ export function create(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function read(app: restify.Server, namespace: string = ''): void {
+export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(namespace, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const User: Query = c.collections['user_tbl'];
@@ -47,9 +47,9 @@ export function read(app: restify.Server, namespace: string = ''): void {
             );
         }
     );
-}
+};
 
-export function getAll(app: restify.Server, namespace: string = ''): void {
+export const getAll = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}s`, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const User: Query = c.collections['user_tbl'];
@@ -63,9 +63,9 @@ export function getAll(app: restify.Server, namespace: string = ''): void {
             );
         }
     );
-}
+};
 
-export function update(app: restify.Server, namespace: string = ''): void {
+export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(namespace, remove_from_body(['email']),
         has_body, mk_valid_body_mw(user_schema, false),
         mk_valid_body_mw_ignore(user_schema, ['Missing required property']), has_auth(),
@@ -96,9 +96,9 @@ export function update(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function del(app: restify.Server, namespace: string = ''): void {
+export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(namespace, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const User: Query = c.collections['user_tbl'];
@@ -113,4 +113,4 @@ export function del(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};

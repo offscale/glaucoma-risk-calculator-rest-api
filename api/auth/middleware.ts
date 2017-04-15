@@ -2,7 +2,7 @@ import * as restify from 'restify';
 import { GenericError } from 'restify-errors';
 import { AccessToken } from './models';
 
-export function has_auth(scope = 'login') {
+export const has_auth = (scope = 'login') => {
     return (req: restify.Request, res: restify.Response, next: restify.Next) => {
         if (!req.headers['x-access-token'])
             if (req.params.access_token)
@@ -27,4 +27,4 @@ export function has_auth(scope = 'login') {
             }
         );
     };
-}
+};

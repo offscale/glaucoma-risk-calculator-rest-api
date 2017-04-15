@@ -11,7 +11,7 @@ import { IContact, IContactBase } from './models.d';
 /* tslint:disable:no-var-requires */
 const contact_schema: JsonSchema = require('./../../test/api/contact/schema');
 
-export function read(app: restify.Server, namespace: string = ''): void {
+export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:email`, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const Contact: Query = c.collections['contact_tbl'];
@@ -25,9 +25,9 @@ export function read(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function update(app: restify.Server, namespace: string = ''): void {
+export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:email`, has_body, mk_valid_body_mw(contact_schema, false),
         mk_valid_body_mw_ignore(contact_schema, ['Missing required property']), has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
@@ -50,9 +50,9 @@ export function update(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function del(app: restify.Server, namespace: string = ''): void {
+export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:email`, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const Contact: Query = c.collections['contact_tbl'];
@@ -64,4 +64,4 @@ export function del(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};

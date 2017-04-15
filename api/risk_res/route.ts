@@ -11,7 +11,7 @@ import { IRiskRes } from './models.d';
 /* tslint:disable:no-var-requires */
 const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
 
-export function read(app: restify.Server, namespace: string = ''): void {
+export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:id`,
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
@@ -28,9 +28,9 @@ export function read(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function update(app: restify.Server, namespace: string = ''): void {
+export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:id`, has_body, mk_valid_body_mw(risk_res_schema),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
@@ -54,9 +54,9 @@ export function update(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function del(app: restify.Server, namespace: string = ''): void {
+export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:id`, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
@@ -68,4 +68,4 @@ export function del(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};

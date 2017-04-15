@@ -5,7 +5,7 @@ import { IUser, IUserBase } from '../api/user/models.d';
 import { IAuthSdk } from './api/auth/auth_test_sdk.d';
 import { IncomingMessageError } from './share_interfaces';
 
-export function tearDownConnections(connections: Connection[], cb) {
+export const tearDownConnections = (connections: Connection[], cb) => {
     return connections ? parallel(Object.keys(connections).map(
         connection => connections[connection]._adapter.teardown
     ), () => {
@@ -15,7 +15,7 @@ export function tearDownConnections(connections: Connection[], cb) {
         });
         cb();
     }) : cb();
-}
+};
 
 interface IResponse extends Response {
     readonly body: ReadableStream | null | any | { access_token: string };

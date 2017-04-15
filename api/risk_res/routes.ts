@@ -9,7 +9,7 @@ import { IRiskRes } from './models.d';
 /* tslint:disable:no-var-requires */
 const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
 
-export function create(app: restify.Server, namespace: string = ''): void {
+export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_body, mk_valid_body_mw_ignore(risk_res_schema, ['createdAt', 'id']),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
@@ -22,4 +22,4 @@ export function create(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};

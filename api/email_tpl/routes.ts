@@ -10,7 +10,7 @@ import { IEmailTpl } from './models.d';
 /* tslint:disable:no-var-requires */
 const email_tpl_schema: JsonSchema = require('./../../test/api/email_tpl/schema');
 
-export function create(app: restify.Server, namespace: string = ''): void {
+export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(email_tpl_schema, ['createdAt']),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const EmailTpl: Query = c.collections['email_tpl_tbl'];
@@ -23,4 +23,4 @@ export function create(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};

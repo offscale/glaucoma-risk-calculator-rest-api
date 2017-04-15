@@ -11,7 +11,7 @@ import { IRiskStats } from './models.d';
 /* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
 
-export function read(app: restify.Server, namespace: string = ''): void {
+export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:createdAt`,
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
@@ -30,9 +30,9 @@ export function read(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function update(app: restify.Server, namespace: string = ''): void {
+export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:createdAt`, has_auth(), has_body, mk_valid_body_mw_ignore(risk_stats_schema, ['createdAt']),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
@@ -57,9 +57,9 @@ export function update(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
 
-export function del(app: restify.Server, namespace: string = ''): void {
+export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:createdAt`, has_auth(),
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
@@ -71,4 +71,4 @@ export function del(app: restify.Server, namespace: string = ''): void {
             });
         }
     );
-}
+};
