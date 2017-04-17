@@ -3,7 +3,7 @@
         "chai-json-schema": "github:SamuelMarks/cust_typings/chai-json-schema/chai-json-schema.d.ts"
     },
     "dependencies": {
-        "glaucoma-risk-quiz-engine": "github:glaucoma-australia/glaucoma-risk-calculator-engine/glaucoma-risk-quiz-engine.d.ts",
+        "glaucoma-risk-quiz-engine": "github:glaucoma-australia/glaucoma-risk-calculator-engine/glaucoma-risk-calculator-engine.d.ts",
         "nodejs-utils": "github:SamuelMarks/nodejs-utils/nodejs-utils.d.ts",
         "restify-errors": "github:SamuelMarks/restify-errors/restify-errors.d.ts#master",
         "restify-utils": "github:SamuelMarks/restify-utils/restify-utils.d.ts",

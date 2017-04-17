@@ -8,7 +8,7 @@ import { IRiskJson } from 'glaucoma-risk-quiz-engine';
 import { c } from '../main';
 
 /* tslint:disable:no-var-requires */
-const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-quiz-engine/risk');
+const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-engine/risk');
 
 export interface ISampleData {
     token: string;
