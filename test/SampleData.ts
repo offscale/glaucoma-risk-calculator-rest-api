@@ -12,9 +12,13 @@ const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-e
 
 export interface ISampleData {
     token: string;
+
     login(user: string, cb);
+
     registerLogin(user: string, cb);
+
     unregister(user: string, cb);
+
     loadRiskJson(cb);
 }
 
