@@ -37,6 +37,10 @@ export const RiskRes = {
             type: 'boolean',
             required: false
         },
+        study: {
+            type: 'string',
+            required: true
+        },
         toJSON: function toJSON() {
             const risk_res: IRiskRes = this.toObject();
             RiskRes._omit.map(k => delete risk_res[k]);

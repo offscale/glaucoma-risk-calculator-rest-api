@@ -21,6 +21,9 @@
         },
         "createdAt": {
             "type": "string"
+        },
+        "study": {
+            "type": "string"
         }
     },
     "required": [
@@ -28,6 +31,8 @@
         "ethnicity",
         "client_risk",
         "age",
-        "gender"
-    ]
+        "gender",
+        "study"
+    ],
+    "additionalProperties": false
 }

@@ -29,7 +29,7 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             // TODO: Transaction
             async.waterfall([
                 cb =>
-                    EmailConf.find().limit(1).exec((err: WLError, email_conf: IEmailConf) => {
+                    EmailConf.find().limit(1).exec((err: WLError, email_conf: IEmailConf[]) => {
                         if (err) return cb(err);
                         else if (!email_conf || !email_conf.length) return cb(new NotFoundError('EmailConf'));
                         else return cb(null, email_conf[0]);

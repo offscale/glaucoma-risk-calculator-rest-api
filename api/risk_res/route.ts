@@ -17,7 +17,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
             const q = req.params.id === 'latest' ?
                 RiskRes.find().sort('createdAt DESC').limit(1)
-                : RiskRes.findOne({createdAt: req.params.id});
+                : RiskRes.findOne({id: req.params.id});
             q.exec((error: WLError, risk_res: IRiskRes | IRiskRes[]) => {
                 if (error) return next(fmtError(error));
                 else if (!risk_res) return next(new NotFoundError('RiskRes'));
