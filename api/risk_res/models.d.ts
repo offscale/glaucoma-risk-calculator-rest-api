@@ -10,6 +10,8 @@ export interface IRiskResBase {
     gender: string;
     ethnicity: string;
     study: string;
+    myopia?: boolean;
+    diabetes?: boolean;
     ocular_disease_history?: string[];
     ocular_surgery_history?: string[];
     other_info?: string;

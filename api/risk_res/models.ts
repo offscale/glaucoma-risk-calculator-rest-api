@@ -41,6 +41,14 @@ export const RiskRes = {
             type: 'string',
             required: true
         },
+        myopia: {
+            type: 'boolean',
+            required: false
+        },
+        diabetes: {
+            type: 'boolean',
+            required: false
+        },
         toJSON: function toJSON() {
             const risk_res: IRiskRes = this.toObject();
             RiskRes._omit.map(k => delete risk_res[k]);
