@@ -19,10 +19,16 @@
         "email": {
             "type": "string"
         },
-        "createdAt": {
+        "study": {
             "type": "string"
         },
-        "study": {
+        "id": {
+            "type": "integer"
+        },
+        "updatedAt": {
+            "type": "string"
+        },
+        "createdAt": {
             "type": "string"
         }
     },

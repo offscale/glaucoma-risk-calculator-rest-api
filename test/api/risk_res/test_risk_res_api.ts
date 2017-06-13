@@ -10,6 +10,7 @@ import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { IUserBase } from '../../../api/user/models.d';
 import { risk_res_mocks } from './risk_res_mocks';
+import { IRiskRes } from '../../../api/risk_res/models.d';
 
 declare const Object: IObjectCtor;
 
@@ -63,12 +64,16 @@ describe('RiskRes::routes', () => {
 
     describe('/api/risk_res/:createdAt', () => {
         before('createRiskRes', done =>
-            sdk.create(user_mocks_subset[0].access_token, risk_res_mocks.successes[1], _ => done()));
+            sdk.create(user_mocks_subset[0].access_token, risk_res_mocks.successes[1],
+                (e, r: Response) => {
+                    if (e == null && r != null) risk_res_mocks.successes[1] = r.body as any;
+                    return done();
+                }));
         after('deleteRiskRes', done =>
             sdk.destroy(user_mocks_subset[0].access_token, risk_res_mocks.successes[1], done));
 
         it('GET should retrieve RiskRes', done =>
-            sdk.get(user_mocks_subset[0].access_token, risk_res_mocks.successes[1], done)
+            sdk.get(user_mocks_subset[0].access_token, risk_res_mocks.successes[1] as IRiskRes, done)
         );
 
         it('DELETE should destroy RiskRes', done =>

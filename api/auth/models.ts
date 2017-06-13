@@ -2,6 +2,7 @@ import { v4 as uuid_v4 } from 'uuid';
 import { RestError } from 'restify';
 import { AuthError, GenericError } from 'restify-errors';
 import { redis_cursors } from '../../main';
+import { Callback } from 'redis';
 
 export const AccessToken = () => {
     const redis = redis_cursors.redis;
@@ -28,8 +29,8 @@ export const AccessToken = () => {
                         if (err) return cb(err);
                         const t = _redis.multi();
                         t.del(...access_tokens);
-                        t.exec((errors: any[]) =>
-                            cb(errors && errors.length ? new GenericError({
+                        t.exec((errors: Error | Callback<any[]>) =>
+                            cb(errors && errors['length'] ? new GenericError({
                                 statusCode: 400,
                                 error: 'LogoutErrors',
                                 error_message: JSON.stringify(errors)
