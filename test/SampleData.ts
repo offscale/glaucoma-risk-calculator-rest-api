@@ -43,9 +43,9 @@ const httpF = (method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') => 
 
         if (body_or_cb)
             if (!options)
-                options = {headers: {'Content-Length': Buffer.byteLength(body_or_cb as string)}};
+                options = { headers: { 'Content-Length': Buffer.byteLength(body_or_cb as string) } };
             else if (!options.headers)
-                options.headers = {'Content-Length': Buffer.byteLength(body_or_cb as string)};
+                options.headers = { 'Content-Length': Buffer.byteLength(body_or_cb as string) };
             else if (!options.headers['Content-Length'])
                 options.headers['Content-Length'] = Buffer.byteLength(body_or_cb as string);
 
@@ -84,7 +84,7 @@ export class SampleData implements ISampleData {
 
     public login(user: string, cb) {
         httpPOST(
-            this.mergeOptions({path: '/api/auth'}),
+            this.mergeOptions({ path: '/api/auth' }),
             'login', user, (err, res) => {
                 if (err) return cb(err);
                 else if (!res.headers) return cb(new HttpError('HTTP request failed'));
@@ -94,7 +94,7 @@ export class SampleData implements ISampleData {
     }
 
     public logout(access_token: string, cb) {
-        const options = this.mergeOptions({path: '/api/auth'});
+        const options = this.mergeOptions({ path: '/api/auth' });
         options.headers['x-access-token'] = access_token || this.token;
         httpDELETE(options, 'logout', (err, res) => {
             if (err) return cb(err);
@@ -106,7 +106,7 @@ export class SampleData implements ISampleData {
 
     public register(user: string, cb) {
         httpPOST(
-            this.mergeOptions({path: '/api/user'}),
+            this.mergeOptions({ path: '/api/user' }),
             'registerLogin', user, cb
         );
     }
@@ -124,7 +124,7 @@ export class SampleData implements ISampleData {
 
     public unregister(user: string, cb) {
         const unregisterUser = (_user, callback) => httpDELETE(
-            this.mergeOptions({path: '/api/user'}),
+            this.mergeOptions({ path: '/api/user' }),
             'unregister', _user, (error, result) => {
                 if (error) return callback(error);
                 else if (result.statusCode !== 204)
@@ -140,7 +140,7 @@ export class SampleData implements ISampleData {
 
     public loadRiskJson(cb) {
         httpPOST(
-            this.mergeOptions({path: '/api/risk_stats'}),
+            this.mergeOptions({ path: '/api/risk_stats' }),
             'loadRiskJson', JSON.stringify({
                 risk_json
             }), cb
@@ -155,7 +155,7 @@ export class SampleData implements ISampleData {
             headers: trivial_merge({
                 'Content-Type': 'application/json',
                 'Content-Length': body ? Buffer.byteLength(body) : 0
-            }, this.token ? {'X-Access-Token': this.token} : {})
+            }, this.token ? { 'X-Access-Token': this.token } : {})
         }, options);
     }
 }

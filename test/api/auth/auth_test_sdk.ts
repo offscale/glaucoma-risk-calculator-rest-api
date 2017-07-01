@@ -10,9 +10,9 @@ import { IAuthSdk } from './auth_test_sdk.d';
 import { cb } from '../../share_interfaces.d';
 import { IUser, IUserBase } from '../../../api/user/models.d';
 import { user_mocks } from '../user/user_mocks';
-import { Salt, User } from '../../../api/user/models';
-import { saltSeeker } from '../../../api/user/utils';
-import { saltSeekerCb } from '../../../main';
+import { User } from '../../../api/user/models';
+// import { saltSeeker } from '../../../api/user/utils';
+// import { saltSeekerCb } from '../../../main';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -25,41 +25,31 @@ export class AuthTestSDK implements IAuthSdk {
     }
 
     public register(user: IUserBase, cb: cb) {
-        const _register = callback => {
-            if (!user) return callback(new TypeError('user argument to register must be defined'));
+        if (user == null) return cb(new TypeError('user argument to register must be defined'));
 
-            supertest(this.app)
-                .post('/api/user')
-                .set('Connection', 'keep-alive')
-                .send(user)
-                .expect('Content-Type', /json/)
-                .end((err, res: Response) => {
-                    if (err) return cb(err);
-                    else if (res.error) return cb(fmtError(res.error));
+        supertest(this.app)
+            .post('/api/user')
+            .set('Connection', 'keep-alive')
+            .send(user)
+            .expect('Content-Type', /json/)
+            .end((err, res: Response) => {
+                if (err) return cb(err);
+                else if (res.error) return cb(fmtError(res.error));
 
-                    try {
-                        expect(res.status).to.be.equal(201);
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.be.jsonSchema(user_schema);
-                    } catch (e) {
-                        err = e as Chai.AssertionError;
-                    } finally {
-                        callback(err, res);
-                    }
-                });
-        };
-
-        series(
-            [callb => saltSeeker(saltSeekerCb(callb)),
-                callb => _register(callb)], (error: Error, result: any[][2]) => {
-                if (error) return cb(error);
-                return cb(null, result[1]);
-            }
-        );
+                try {
+                    expect(res.status).to.be.equal(201);
+                    expect(res.body).to.be.an('object');
+                    expect(res.body).to.be.jsonSchema(user_schema);
+                } catch (e) {
+                    err = e as Chai.AssertionError;
+                } finally {
+                    cb(err, res);
+                }
+            });
     }
 
     public login(user: IUserBase, cb: cb) {
-        if (!user) return cb(new TypeError('user argument to login must be defined'));
+        if (user == null) return cb(new TypeError('user argument to login must be defined'));
 
         supertest(this.app)
             .post('/api/auth')
@@ -140,7 +130,7 @@ export class AuthTestSDK implements IAuthSdk {
             .end(cb);
     }
 
-    public unregister(ident: { access_token?: string, user_id?: string }, cb: cb) {
+    public unregister(ident: {access_token?: string, user_id?: string}, cb: cb) {
         if (!ident) return cb(new TypeError('ident argument to unregister must be defined'));
 
         if (ident.access_token)
@@ -154,7 +144,7 @@ export class AuthTestSDK implements IAuthSdk {
             supertest(this.app)
                 .delete('/api/user')
                 .set('Connection', 'keep-alive')
-                .send({email: ident.user_id})
+                .send({ email: ident.user_id })
                 .expect(204)
                 .end(cb);
     }
@@ -166,7 +156,7 @@ export class AuthTestSDK implements IAuthSdk {
                         err ? cb(err) : cb(null, res.body.access_token)
                     ),
                     (access_token, cb) =>
-                        this.unregister({access_token}, (err, res) =>
+                        this.unregister({ access_token }, (err, res) =>
                             cb(err, access_token)
                         )
                     ,

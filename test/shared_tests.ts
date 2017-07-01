@@ -18,10 +18,11 @@ export const tearDownConnections = (connections: Connection[], cb) => {
 };
 
 interface IResponse extends Response {
-    readonly body: ReadableStream | null | any | { access_token: string };
+    readonly body: ReadableStream | null | any | {access_token: string};
 }
 
 export const create_and_auth_users = (user_mocks_subset: IUserBase[], auth_sdk: IAuthSdk, done: MochaDone) => {
+    // TODO: Build bulk API endpoints so this can be done efficiently.
     forEachOfLimit(user_mocks_subset, 1, (user: IUser, idx: number, callback) =>
         auth_sdk.register_login(user, (err, access_token: string) => {
             if (err) return callback(err);
@@ -34,5 +35,4 @@ export const create_and_auth_users = (user_mocks_subset: IUserBase[], auth_sdk: 
 };
 
 export const getError = (err: IncomingMessageError) =>
-    err && err.body && err.body.error_message ?
-        JSON.parse(err.body.error_message) : err;
+    err && err.body && err.body.error_message ? JSON.parse(err.body.error_message) : err;

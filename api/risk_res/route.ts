@@ -17,7 +17,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
             const q = req.params.id === 'latest' ?
                 RiskRes.find().sort('createdAt DESC').limit(1)
-                : RiskRes.findOne({id: req.params.id});
+                : RiskRes.findOne({ id: req.params.id });
             q.exec((error: WLError, risk_res: IRiskRes | IRiskRes[]) => {
                 if (error) return next(fmtError(error));
                 else if (!risk_res) return next(new NotFoundError('RiskRes'));
@@ -35,7 +35,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
 
-            const crit = Object.freeze({id: req.params.id});
+            const crit = Object.freeze({ id: req.params.id });
             // TODO: Transaction
             async.series({
                 count: cb =>
@@ -47,7 +47,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 update: cb => RiskRes.update(crit, req.body).exec((e, risk_res: IRiskRes[]) =>
                     cb(e, risk_res[0])
                 )
-            }, (error, results: { count: number, update: string }) => {
+            }, (error, results: {count: number, update: string}) => {
                 if (error) return next(fmtError(error));
                 res.json(200, results.update);
                 return next();
@@ -61,7 +61,7 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
 
-            RiskRes.destroy({createdAt: req.params.id}).exec((error: WLError) => {
+            RiskRes.destroy({ createdAt: req.params.id }).exec((error: WLError) => {
                 if (error) return next(fmtError(error));
                 res.send(204);
                 return next();

@@ -74,7 +74,7 @@ describe('EmailTpl::routes', () => {
 
         it('PUT should update EmailTpl', done =>
             sdk.update(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1],
-                {tpl: 'foo', createdAt: email_tpl_mocks.successes[1].createdAt} as IEmailTpl, done)
+                { tpl: 'foo', createdAt: email_tpl_mocks.successes[1].createdAt } as IEmailTpl, done)
         );
 
         it('DELETE should destroy EmailTpl', done =>

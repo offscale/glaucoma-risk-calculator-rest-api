@@ -22,7 +22,7 @@ export const AccessToken = () => {
             t.exec(err => cb(err, new_key));
         },
         logout: function logout(_redis) {
-            return (id: { user_id?: string, access_token?: string }, cb: (err?: Error | RestError) => void) => {
+            return (id: {user_id?: string, access_token?: string}, cb: (err?: Error | RestError) => void) => {
                 if (id.user_id)
                 // TODO: Rewrite this in Lua [maybe?]
                     _redis.smembers(id.user_id, (err, access_tokens: string[]) => {
@@ -45,7 +45,7 @@ export const AccessToken = () => {
                             error: 'AlreadyDone',
                             error_message: 'User already logged out'
                         }));
-                        return logout(_redis)({user_id}, cb);
+                        return logout(_redis)({ user_id }, cb);
                     });
                 else
                     return cb(new GenericError({

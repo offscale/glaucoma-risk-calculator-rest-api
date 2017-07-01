@@ -12,7 +12,7 @@ export interface IAuthSdk {
 
     logout(access_token: string, cb: cb): void;
 
-    unregister(ident: { access_token?: string, user_id?: string }, cb: cb): void;
+    unregister(ident: {access_token?: string, user_id?: string}, cb: cb): void;
 
     unregister_all(users: Array<IUser | IUserBase>, done: cb);
 

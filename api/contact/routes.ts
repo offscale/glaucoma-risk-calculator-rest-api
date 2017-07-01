@@ -35,10 +35,10 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const Contact: Query = c.collections['contact_tbl'];
 
-            Contact.find({owner: req['user_id']}, (error: WLError, contacts: IContact[]) => {
+            Contact.find({ owner: req['user_id'] }, (error: WLError, contacts: IContact[]) => {
                 if (error) return next(fmtError(error));
                 else if (!contacts) return next(new NotFoundError('Contact'));
-                res.json({contacts, owner: req['user_id']});
+                res.json({ contacts, owner: req['user_id'] });
                 return next();
             });
         }

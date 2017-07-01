@@ -1,6 +1,6 @@
 {
   "name": "glaucoma-risk-calculator-rest-api",
-  "version": "0.0.14-push",
+  "version": "0.0.15",
   "description": "REST API backend written on Node.JS in TypeScript with restify and waterline.",
   "main": "main.js",
   "author": "Samuel Marks <samuel@offscale.io>",
@@ -14,7 +14,7 @@
     "test": "mocha test --recursive"
   },
   "dependencies": {
-    "argon2": "~0.15.0",
+    "argon2": "^0.16.1",
     "async": "^2.4.1",
     "async-es": "^2.4.1",
     "bunyan": "^1.8.10",
@@ -24,7 +24,7 @@
     "mathjs": "^3.13.3",
     "nodejs-utils": "https://api.github.com/repos/SamuelMarks/nodejs-utils-dist/tarball",
     "redis": "^2.7.1",
-    "restify": "^4.3.0",
+    "restify": "^4.3.1",
     "restify-errors": "https://api.github.com/repos/SamuelMarks/restify-errors-dist/tarball",
     "restify-utils": "https://api.github.com/repos/SamuelMarks/restify-utils-dist/tarball",
     "restify-validators": "https://api.github.com/repos/SamuelMarks/restify-validators-dist/tarball",

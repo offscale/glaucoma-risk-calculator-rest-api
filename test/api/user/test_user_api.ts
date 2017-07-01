@@ -83,7 +83,7 @@ describe('User::routes', () => {
                             .put('/api/user')
                             .set('X-Access-Token', access_token)
                             .set('Connection', 'keep-alive')
-                            .send({title: 'Mr'})
+                            .send({ title: 'Mr' })
                             .end(cb)
                     ,
                     (r, cb) => {
@@ -111,7 +111,7 @@ describe('User::routes', () => {
                         err ? cb(err) : cb(null, res.body.access_token)
                     ),
                     (access_token, cb) =>
-                        sdk.unregister({access_token}, err =>
+                        sdk.unregister({ access_token }, err =>
                             cb(err, access_token)
                         )
                     ,

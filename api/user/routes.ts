@@ -5,6 +5,7 @@ import { has_body, mk_valid_body_mw, mk_valid_body_mw_ignore, remove_from_body }
 import { isShallowSubset } from 'nodejs-utils';
 import { fmtError, NotFoundError } from 'restify-errors';
 import { JsonSchema } from 'tv4';
+
 import { c } from '../../main';
 import { has_auth } from '../auth/middleware';
 import { AccessToken } from '../auth/models';
@@ -18,17 +19,23 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const User: Query = c.collections['user_tbl'];
 
-            User.create(req.body).exec((error, user: IUser) => {
-                if (error) return next(fmtError(error));
-                else if (!user) return next(NotFoundError('User'));
-
-                AccessToken().add(req.body.email, 'login', (err, access_token) => {
-                    if (err) return next(fmtError(err));
-                    res.setHeader('X-Access-Token', access_token);
-                    res.json(201, user);
+            waterfall([
+                    cb => User.create(req.body).exec((error, user: IUser) => {
+                        if (error != null) return cb(fmtError(error));
+                        else if (!user) return cb(NotFoundError('User'));
+                        return cb(null, user);
+                    }),
+                    (user, cb) => AccessToken().add(req.body.email, 'login', (err, access_token) =>
+                        err != null ? cb(err) : cb(null, { access_token, user })
+                    )
+                ], (error: Error | WLError, result: {access_token: string, user: IUser}) => {
+                    if (error != null) return next(fmtError(error));
+                    else if (result == null || result.user == null) return next(fmtError(NotFoundError('User')));
+                    res.setHeader('X-Access-Token', result.access_token);
+                    res.json(201, result.user);
                     return next();
-                });
-            });
+                }
+            );
         }
     );
 };
@@ -38,9 +45,9 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const User: Query = c.collections['user_tbl'];
 
-            User.findOne({email: req['user_id']}, (error: WLError, user: IUser) => {
-                    if (error) return next(fmtError(error));
-                    else if (!user) return next(new NotFoundError('User'));
+            User.findOne({ email: req['user_id'] }, (error: WLError, user: IUser) => {
+                    if (error != null) return next(fmtError(error));
+                    else if (user == null) return next(new NotFoundError('User'));
                     res.json(user);
                     return next();
                 }
@@ -56,8 +63,8 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
 
             User.find().exec((error: WLError, users: IUser[]) => {
                     if (error) return next(fmtError(error));
-                    else if (!users || !users.length) return next(new NotFoundError('`User`s'));
-                    res.json({users});
+                    else if (users == null || !users.length) return next(new NotFoundError('`User`s'));
+                    res.json({ users });
                     return next();
                 }
             );
@@ -76,21 +83,21 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                         error_message: 'Invalid keys detected in body'
                     }) && next();
             else if (!req.body || !Object.keys(req.body).length)
-                return res.json(400, {error: 'ValidationError', error_message: 'Body required'}) && next();
+                return res.json(400, { error: 'ValidationError', error_message: 'Body required' }) && next();
 
             const User: Query = c.collections['user_tbl'];
 
             waterfall([
-                cb => User.findOne({email: req['user_id']},
+                cb => User.findOne({ email: req['user_id'] },
                     (err: WLError, user: IUser) => {
-                        if (err) cb(err);
-                        else if (!user) cb(new NotFoundError('User'));
+                        if (err != null) cb(err);
+                        else if (user == null) cb(new NotFoundError('User'));
                         return cb(err, user);
                     }),
                 (user, cb) =>
                     User.update(user, req.body, (err, updated_users: IUser[]) => cb(err, updated_users[0]))
             ], (error, updated_user) => {
-                if (error) return next(fmtError(error));
+                if (error != null) return next(fmtError(error));
                 res.json(200, updated_user);
                 return next();
             });
@@ -104,10 +111,10 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
             const User: Query = c.collections['user_tbl'];
 
             waterfall([
-                cb => AccessToken().logout({user_id: req['user_id']}, cb),
-                cb => User.destroy({email: req['user_id']}, cb)
+                cb => AccessToken().logout({ user_id: req['user_id'] }, cb),
+                cb => User.destroy({ email: req['user_id'] }, cb)
             ], error => {
-                if (error) return next(fmtError(error));
+                if (error != null) return next(fmtError(error));
                 res.send(204);
                 return next();
             });

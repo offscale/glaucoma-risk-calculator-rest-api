@@ -6,6 +6,6 @@ export interface IncomingMessageError {
     jse_info: {};
     message: string;
     statusCode: number;
-    body: any | {} | { error: string, error_message: string };
+    body: any | {} | {error: string, error_message: string};
     restCode: 'IncomingMessageError';
 }

@@ -5,13 +5,13 @@ import { user_mocks } from '../user/user_mocks';
 
 declare const Object: IObjectCtor;
 
-export const contact_mocks: (users: IUserBase[]) => { successes: IContactBase[], failures: Array<{}> } =
+export const contact_mocks: (users: IUserBase[]) => {successes: IContactBase[], failures: Array<{}>} =
     (users: IUserBase[]) => ({
         failures: [
             {},
-            {email: 'foo@bar.com '},
-            {password: 'foo '},
-            {email: 'foo@bar.com', password: 'foo', bad_prop: true}
+            { email: 'foo@bar.com ' },
+            { password: 'foo ' },
+            { email: 'foo@bar.com', password: 'foo', bad_prop: true }
         ],
         successes: ((ob: IContactBase[] = []) => [
             `can ${Math.random()} count`, `can ${Math.random()} count`

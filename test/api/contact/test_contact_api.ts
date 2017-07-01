@@ -28,7 +28,7 @@ describe('Contact::routes', () => {
     let sdk: ContactTestSDK;
     let auth_sdk: IAuthSdk;
     let app: Server;
-    let mocks: { successes: IContactBase[], failures: Array<{}> };
+    let mocks: {successes: IContactBase[], failures: Array<{}>};
 
     before('tearDownConnections', done => tearDownConnections(c.connections, done));
 

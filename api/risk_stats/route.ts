@@ -19,7 +19,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const q = req.params.createdAt === 'latest' ?
                 RiskStats.find().sort('createdAt DESC')
                     .limit(1) :
-                RiskStats.findOne({createdAt: req.params.createdAt});
+                RiskStats.findOne({ createdAt: req.params.createdAt });
             q.exec((error: WLError, risk_stats: IRiskStats | IRiskStats[]) => {
                 if (error) return next(fmtError(error));
                 else if (!risk_stats) return next(new NotFoundError('RiskStats'));
@@ -37,8 +37,8 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
 
-            req.body = Object.freeze({risk_json: req.body.risk_json});
-            const crit = Object.freeze({createdAt: req.params.createdAt});
+            req.body = Object.freeze({ risk_json: req.body.risk_json });
+            const crit = Object.freeze({ createdAt: req.params.createdAt });
             // TODO: Transaction
             async.series({
                 count: cb =>
@@ -50,7 +50,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 update: cb => RiskStats.update(crit, req.body).exec((e, risk_stats: IRiskStats[]) =>
                     cb(e, risk_stats[0])
                 )
-            }, (error, results: { count: number, update: string }) => {
+            }, (error, results: {count: number, update: string}) => {
                 if (error) return next(fmtError(error));
                 res.json(200, results.update);
                 return next();
@@ -64,7 +64,7 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const RiskStats: Query = c.collections['risk_stats_tbl'];
 
-            RiskStats.destroy({createdAt: req.params.createdAt}).exec((error: WLError) => {
+            RiskStats.destroy({ createdAt: req.params.createdAt }).exec((error: WLError) => {
                 if (error) return next(fmtError(error));
                 res.send(204);
                 return next();

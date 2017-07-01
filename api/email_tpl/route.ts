@@ -19,7 +19,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const q = req.params.createdAt === 'latest' ?
                 EmailTpl.find().sort('createdAt DESC')
                     .limit(1) :
-                EmailTpl.findOne({createdAt: req.params.createdAt});
+                EmailTpl.findOne({ createdAt: req.params.createdAt });
             q.exec((error: WLError, email_tpl: IEmailTpl | IEmailTpl[]) => {
                 if (error) return next(fmtError(error));
                 else if (!email_tpl) return next(new NotFoundError('EmailTpl'));
@@ -37,8 +37,8 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const EmailTpl: Query = c.collections['email_tpl_tbl'];
 
-            req.body = Object.freeze({tpl: req.body.tpl});
-            const crit = Object.freeze({createdAt: req.params.createdAt});
+            req.body = Object.freeze({ tpl: req.body.tpl });
+            const crit = Object.freeze({ createdAt: req.params.createdAt });
             // TODO: Transaction
             async.series({
                 count: cb =>
@@ -48,7 +48,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                         return cb(null, count);
                     }),
                 update: cb => EmailTpl.update(crit, req.body, (e, email_tpls: IEmailTpl[]) => cb(e, email_tpls[0]))
-            }, (error, results: { count: number, update: string }) => {
+            }, (error, results: {count: number, update: string}) => {
                 if (error) return next(fmtError(error));
                 res.json(200, results.update);
                 return next();
@@ -62,7 +62,7 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const EmailTpl: Query = c.collections['email_tpl_tbl'];
 
-            EmailTpl.destroy({createdAt: req.params.createdAt}).exec((error: WLError) => {
+            EmailTpl.destroy({ createdAt: req.params.createdAt }).exec((error: WLError) => {
                 if (error) return next(fmtError(error));
                 res.send(204);
                 return next();

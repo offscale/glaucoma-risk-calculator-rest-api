@@ -65,7 +65,7 @@ describe('Auth::routes', () => {
             );
         });
 
-        it('POST should fail to register user', done => {
+        it('POST should fail to register user twice', done =>
             series([
                     cb => sdk.register(mocks[2], cb),
                     cb => sdk.register(mocks[2], cb)
@@ -85,19 +85,19 @@ describe('Auth::routes', () => {
                     /* tslint:disable:one-line */
                     else return done();
                 }
-            );
-        });
+            )
+        );
 
         it('DELETE should logout user', done => {
             waterfall([
-                    cb => sdk.register(mocks[1], (err: IncomingMessageError) => {
+                    cb => sdk.register(mocks[3], (err: IncomingMessageError) => {
                             const e = getError(err);
                             return cb(e && e.error_code ?
                                 (['E_VALIDATION', 'E_UNIQUE'].indexOf(e.error_code) > -1 ? null : err)
                                 : err);
                         }
                     ),
-                    cb => sdk.login(mocks[1], (err, res) =>
+                    cb => sdk.login(mocks[3], (err, res) =>
                         err ? cb(err) : cb(null, res.body.access_token)
                     ),
                     (access_token, cb) =>

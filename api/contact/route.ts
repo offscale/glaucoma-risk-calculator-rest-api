@@ -16,7 +16,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const Contact: Query = c.collections['contact_tbl'];
 
-            Contact.findOne({owner: req['user_id'], email: req.params.email}
+            Contact.findOne({ owner: req['user_id'], email: req.params.email }
             ).exec((error: WLError, contact: IContact) => {
                 if (error) return next(fmtError(error));
                 else if (!contact) return next(new NotFoundError('Contact'));
@@ -35,7 +35,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
             // TODO: Transaction
             waterfall([
-                cb => Contact.findOne({owner: req['user_id'], email: req.params.email}
+                cb => Contact.findOne({ owner: req['user_id'], email: req.params.email }
                 ).exec((err: WLError, contact: IContact) => {
                     if (err) return cb(err);
                     else if (!contact) return cb(new NotFoundError('Contact'));
@@ -57,7 +57,7 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const Contact: Query = c.collections['contact_tbl'];
 
-            Contact.destroy({owner: req['user_id'], email: req.params.email}).exec((error: WLError) => {
+            Contact.destroy({ owner: req['user_id'], email: req.params.email }).exec((error: WLError) => {
                 if (error) return next(fmtError(error));
                 res.send(204);
                 return next();
