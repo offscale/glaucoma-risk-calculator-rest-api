@@ -1,13 +1,14 @@
-import * as supertest from 'supertest';
-import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import { sanitiseSchema } from 'nodejs-utils';
-import { fmtError } from 'restify-errors';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { cb } from '../../share_interfaces.d';
+import { sanitiseSchema } from 'nodejs-utils';
+import * as supertest from 'supertest';
+import { Response } from 'supertest';
 import { IContactBase } from '../../../api/contact/models.d';
 import { User } from '../../../api/user/models';
+import { TCallback } from '../../shared_types';
+import { getError, superEndCb } from '../../shared_tests';
+import { IncomingMessageError } from '../../share_interfaces';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -19,9 +20,10 @@ export class ContactTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, contact: IContactBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `create` must be defined'));
-        else if (!contact) return cb(new TypeError('`contact` argument to `create` must be defined'));
+    public create(access_token: string, contact: IContactBase,
+                  callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null) return callback(new TypeError('`access_token` argument to `create` must be defined'));
+        else if (contact == null) return callback(new TypeError('`contact` argument to `create` must be defined'));
 
         supertest(this.app)
             .post('/api/contact')
@@ -30,8 +32,8 @@ export class ContactTestSDK {
             .send(contact)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(fmtError(res.error));
+                if (err != null) return superEndCb(err, res, callback);
+                else if (res.error) return callback(getError(res.error));
 
                 try {
                     expect(res.status).to.be.equal(201);
@@ -40,14 +42,15 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    superEndCb(err, res, callback);
                 }
             });
     }
 
-    public getAll(access_token: string, contact: IContactBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
-        else if (!contact) return cb(new TypeError('`contact` argument to `getAll` must be defined'));
+    public getAll(access_token: string, contact: IContactBase,
+                  callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
+        else if (contact == null) return callback(new TypeError('`contact` argument to `getAll` must be defined'));
 
         supertest(this.app)
             .get('/api/contact')
@@ -56,8 +59,8 @@ export class ContactTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return superEndCb(err, res, callback);
+                else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.have.property('owner');
                     expect(res.body).to.have.property('contacts');
@@ -69,14 +72,15 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    superEndCb(err, res, callback);
                 }
             });
     }
 
-    public retrieve(access_token: string, contact: IContactBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
-        else if (!contact) return cb(new TypeError('`contact` argument to `getAll` must be defined'));
+    public retrieve(access_token: string, contact: IContactBase,
+                    callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
+        else if (contact == null) return callback(new TypeError('`contact` argument to `getAll` must be defined'));
 
         supertest(this.app)
             .get(`/api/contact/${contact.email}`)
@@ -85,27 +89,30 @@ export class ContactTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return superEndCb(err, res, callback);
+                else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
                     expect(res.body).to.be.jsonSchema(contact_schema);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    superEndCb(err, res, callback);
                 }
             });
     }
 
     public update(access_token: string, initial_contact: IContactBase,
-                  updated_contact: IContactBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `update` must be defined'));
-        else if (!initial_contact) return cb(new TypeError('`initial_contact` argument to `update` must be defined'));
-        else if (!updated_contact) return cb(new TypeError('`updated_contact` argument to `update` must be defined'));
+                  updated_contact: IContactBase, callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null)
+            return callback(new TypeError('`access_token` argument to `update` must be defined'));
+        else if (initial_contact == null)
+            return callback(new TypeError('`initial_contact` argument to `update` must be defined'));
+        else if (updated_contact == null)
+            return callback(new TypeError('`updated_contact` argument to `update` must be defined'));
         else if (initial_contact.owner !== updated_contact.owner)
-            return cb(new ReferenceError(
-                `${initial_contact.owner} != ${updated_contact.owner} (\`owner\`s between contacts)`)
+            return callback(
+                new ReferenceError(`${initial_contact.owner} != ${updated_contact.owner} (\`owner\`s between contacts)`)
             );
 
         supertest(this.app)
@@ -114,8 +121,8 @@ export class ContactTestSDK {
             .set('X-Access-Token', access_token)
             .send(updated_contact)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return superEndCb(err, res, callback);
+                else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
                     Object.keys(updated_contact).map(
@@ -125,28 +132,31 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    superEndCb(err, res, callback);
                 }
             });
     }
 
-    public destroy(access_token: string, contact: IContactBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `destroy` must be defined'));
-        else if (!contact) return cb(new TypeError('`contact` argument to `destroy` must be defined'));
+    public destroy(access_token: string, contact: IContactBase,
+                   callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null)
+            return callback(new TypeError('`access_token` argument to `destroy` must be defined'));
+        else if (contact == null)
+            return callback(new TypeError('`contact` argument to `destroy` must be defined'));
 
         supertest(this.app)
             .del(`/api/contact/${contact.email}`)
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return superEndCb(err, res, callback);
+                else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.status).to.be.equal(204);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    superEndCb(err, res, callback);
                 }
             });
     }

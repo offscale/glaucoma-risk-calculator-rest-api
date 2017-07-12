@@ -1,6 +1,6 @@
-import { IObjectCtor } from '../../../main';
 import { IContactBase } from '../../../api/contact/models.d';
 import { IUserBase } from '../../../api/user/models.d';
+import { IObjectCtor } from '../../../main';
 import { user_mocks } from '../user/user_mocks';
 
 declare const Object: IObjectCtor;

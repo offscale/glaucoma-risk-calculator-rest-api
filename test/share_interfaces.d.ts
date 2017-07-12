@@ -5,6 +5,7 @@ export interface IncomingMessageError {
     jse_shortmsg: string;
     jse_info: {};
     message: string;
+    func_name?: string;
     statusCode: number;
     body: any | {} | {error: string, error_message: string};
     restCode: 'IncomingMessageError';

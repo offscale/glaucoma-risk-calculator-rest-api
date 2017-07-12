@@ -2,7 +2,7 @@ import * as restify from 'restify';
 import { waterfall } from 'async';
 import { Query, WLError } from 'waterline';
 import { has_body, mk_valid_body_mw, mk_valid_body_mw_ignore } from 'restify-validators';
-import { fmtError, NotFoundError } from 'restify-errors';
+import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { JsonSchema } from 'tv4';
 import { c } from '../../main';
 import { has_auth } from './../auth/middleware';
@@ -18,8 +18,8 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 
             Contact.findOne({ owner: req['user_id'], email: req.params.email }
             ).exec((error: WLError, contact: IContact) => {
-                if (error) return next(fmtError(error));
-                else if (!contact) return next(new NotFoundError('Contact'));
+                if (error != null) return next(fmtError(error));
+                else if (contact == null) return next(new NotFoundError('Contact'));
                 res.json(contact);
                 return next();
             });
@@ -37,14 +37,14 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             waterfall([
                 cb => Contact.findOne({ owner: req['user_id'], email: req.params.email }
                 ).exec((err: WLError, contact: IContact) => {
-                    if (err) return cb(err);
-                    else if (!contact) return cb(new NotFoundError('Contact'));
+                    if (err != null) return cb(err);
+                    else if (contact == null) return cb(new NotFoundError('Contact'));
                     return cb(err, contact);
                 }),
                 (contact: IContactBase, cb) =>
                     Contact.update(contact, req.body, (e, contacts: IContact[]) => cb(e, contacts[0]))
             ], (error, contact: IContact) => {
-                if (error) return next(fmtError(error));
+                if (error != null) return next(fmtError(error));
                 res.json(200, contact);
                 return next();
             });
@@ -58,7 +58,7 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
             const Contact: Query = c.collections['contact_tbl'];
 
             Contact.destroy({ owner: req['user_id'], email: req.params.email }).exec((error: WLError) => {
-                if (error) return next(fmtError(error));
+                if (error != null) return next(fmtError(error));
                 res.send(204);
                 return next();
             });

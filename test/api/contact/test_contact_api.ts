@@ -1,17 +1,17 @@
 import * as async from 'async';
 import { IModelRoute } from 'nodejs-utils';
+import { Server } from 'restify';
 import { strapFramework } from 'restify-utils';
+import { Collection, Connection } from 'waterline';
+import { IContactBase } from '../../../api/contact/models.d';
+import { IUserBase } from '../../../api/user/models.d';
 import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
 import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
-import { Collection, Connection } from 'waterline';
-import { Server } from 'restify';
-import { ContactTestSDK } from './contact_test_sdk';
-import { user_mocks } from '../user/user_mocks';
-import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
-import { IUserBase } from '../../../api/user/models.d';
+import { IAuthSdk } from '../auth/auth_test_sdk.d';
+import { user_mocks } from '../user/user_mocks';
 import { contact_mocks } from './contact_mocks';
-import { IContactBase } from '../../../api/contact/models.d';
+import { ContactTestSDK } from './contact_test_sdk';
 
 declare const Object: IObjectCtor;
 
@@ -39,7 +39,7 @@ describe('Contact::routes', () => {
         use_redis: true,
         app_name: 'test-contact-api',
         callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
-            if (err) return done(err);
+            if (err != null) return done(err);
             c.connections = _connections;
             c.collections = _collections;
             app = _app;

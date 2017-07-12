@@ -36,7 +36,7 @@ describe('RiskStats::routes', () => {
         use_redis: true,
         app_name: 'test-risk-stats-api',
         callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
-            if (err) return done(err);
+            if (err != null) return done(err);
             c.connections = _connections;
             c.collections = _collections;
             app = _app;

@@ -3,11 +3,12 @@ import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import { sanitiseSchema } from 'nodejs-utils';
-import { fmtError } from 'restify-errors';
+import { fmtError } from 'custom-restify-errors';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { cb } from '../../share_interfaces.d';
+import { IncomingMessageError } from '../../share_interfaces.d';
 import { IRiskStatsBase } from '../../../api/risk_stats/models.d';
 import { User } from '../../../api/user/models';
+import { TCallback } from '../../shared_types';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -19,9 +20,12 @@ export class RiskStatsTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `create` must be defined'));
-        else if (!risk_stats) return cb(new TypeError('`risk_stats` argument to `create` must be defined'));
+    public create(access_token: string, risk_stats: IRiskStatsBase,
+                  callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null)
+            return callback(new TypeError('`access_token` argument to `create` must be defined'));
+        else if (risk_stats == null)
+            return callback(new TypeError('`risk_stats` argument to `create` must be defined'));
 
         supertest(this.app)
             .post('/api/risk_stats')
@@ -30,8 +34,8 @@ export class RiskStatsTestSDK {
             .send(risk_stats)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(fmtError(res.error));
+                if (err != null) return callback(err);
+                else if (res.error) return callback(fmtError(res.error));
 
                 try {
                     expect(res.status).to.be.equal(201);
@@ -40,14 +44,17 @@ export class RiskStatsTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    callback(err, res);
                 }
             });
     }
 
-    public get(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
-        else if (!risk_stats) return cb(new TypeError('`risk_stats` argument to `getAll` must be defined'));
+    public get(access_token: string, risk_stats: IRiskStatsBase,
+               callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null)
+            return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
+        else if (risk_stats == null)
+            return callback(new TypeError('`risk_stats` argument to `getAll` must be defined'));
 
         supertest(this.app)
             .get(`/api/risk_stats/${risk_stats.createdAt}`)
@@ -56,22 +63,22 @@ export class RiskStatsTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return callback(err);
+                else if (res.error) return callback(res.error);
                 try {
                     expect(res.body).to.have.property('risk_json');
                     expect(res.body.risk_json).to.be.a('string');
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    callback(err, res);
                 }
             });
     }
 
     public update(access_token: string, initial_risk_stats: IRiskStatsBase,
-                  updated_risk_stats: IRiskStatsBase, cb: cb) {
-        if (!access_token)
+                  updated_risk_stats: IRiskStatsBase, cb: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null)
             return cb(new TypeError('`access_token` argument to `update` must be defined'));
         else if (!initial_risk_stats)
             return cb(new TypeError('`initial_risk_stats` argument to `update` must be defined'));
@@ -88,7 +95,7 @@ export class RiskStatsTestSDK {
             .set('X-Access-Token', access_token)
             .send(updated_risk_stats)
             .end((err, res: Response) => {
-                if (err) return cb(err);
+                if (err != null) return cb(err);
                 else if (res.error) return cb(res.error);
                 try {
                     expect(res.body).to.be.an('object');
@@ -104,23 +111,26 @@ export class RiskStatsTestSDK {
             });
     }
 
-    public destroy(access_token: string, risk_stats: IRiskStatsBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `destroy` must be defined'));
-        else if (!risk_stats) return cb(new TypeError('`risk_stats` argument to `destroy` must be defined'));
+    public destroy(access_token: string, risk_stats: IRiskStatsBase,
+                   callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null)
+            return callback(new TypeError('`access_token` argument to `destroy` must be defined'));
+        else if (risk_stats == null)
+            return callback(new TypeError('`risk_stats` argument to `destroy` must be defined'));
 
         supertest(this.app)
             .del(`/api/risk_stats/${risk_stats.createdAt}`)
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return callback(err);
+                else if (res.error) return callback(res.error);
                 try {
                     expect(res.status).to.be.equal(204);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    callback(err, res);
                 }
             });
     }

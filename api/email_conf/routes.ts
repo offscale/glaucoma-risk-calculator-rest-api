@@ -1,7 +1,7 @@
 import * as restify from 'restify';
 import * as async from 'async';
 import { Query, WLError } from 'waterline';
-import { fmtError, NotFoundError } from 'restify-errors';
+import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { JsonSchema } from 'tv4';
 import { c, IObjectCtor } from '../../main';
@@ -20,8 +20,8 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
 
             const _create = (cb) => {
                 EmailConf.create(req.body).exec((error: WLError | Error, email_conf: IEmailConf) => {
-                    if (error) return cb(fmtError(error));
-                    else if (!email_conf) return cb(new NotFoundError('EmailConf'));
+                    if (error != null) return cb(fmtError(error));
+                    else if (email_conf == null) return cb(new NotFoundError('EmailConf'));
                     return cb(null, email_conf);
                 });
             };
@@ -30,7 +30,7 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             async.waterfall([
                 cb =>
                     EmailConf.find().limit(1).exec((err: WLError, email_conf: IEmailConf[]) => {
-                        if (err) return cb(err);
+                        if (err != null) return cb(err);
                         else if (!email_conf || !email_conf.length) return cb(new NotFoundError('EmailConf'));
                         else return cb(null, email_conf[0]);
                     }),
@@ -43,10 +43,10 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
                         }
                     )
             ], (error: any, results: IEmailConf[][2]) => {
-                if (error) {
+                if (error != null) {
                     if (error instanceof NotFoundError)
                         _create((err, email_tpl) => {
-                                if (err) return next(err);
+                                if (err != null) return next(err);
                                 res.json(201, email_tpl);
                                 return next();
                             }
@@ -70,8 +70,8 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request, res: restify.Response, next: restify.Next) => {
             const EmailConf: Query = c.collections['email_conf_tbl'];
             EmailConf.find().limit(1).exec((error: WLError, email_conf: IEmailConf[]) => {
-                if (error) return next(fmtError(error));
-                else if (!email_conf) return next(new NotFoundError('EmailConf'));
+                if (error != null) return next(fmtError(error));
+                else if (email_conf == null) return next(new NotFoundError('EmailConf'));
                 res.json(email_conf[0]);
                 return next();
             });

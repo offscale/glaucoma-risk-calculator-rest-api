@@ -2,7 +2,7 @@ import * as restify from 'restify';
 import * as async from 'async';
 import { Query, WLError } from 'waterline';
 import { has_body, mk_valid_body_mw } from 'restify-validators';
-import { fmtError, NotFoundError } from 'restify-errors';
+import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { JsonSchema } from 'tv4';
 import { c } from '../../main';
 import { has_auth } from '../auth/middleware';
@@ -19,8 +19,8 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
                 RiskRes.find().sort('createdAt DESC').limit(1)
                 : RiskRes.findOne({ id: req.params.id });
             q.exec((error: WLError, risk_res: IRiskRes | IRiskRes[]) => {
-                if (error) return next(fmtError(error));
-                else if (!risk_res) return next(new NotFoundError('RiskRes'));
+                if (error != null) return next(fmtError(error));
+                else if (risk_res == null) return next(new NotFoundError('RiskRes'));
                 const stats: IRiskRes = Array.isArray(risk_res) ? risk_res[0] : risk_res;
                 if (!stats) return next(new NotFoundError('RiskRes'));
                 res.json(stats);
@@ -40,7 +40,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             async.series({
                 count: cb =>
                     RiskRes.count(crit, (err: WLError, count: number) => {
-                        if (err) return cb(err);
+                        if (err != null) return cb(err);
                         else if (!count) return cb(new NotFoundError('RiskRes'));
                         return cb(null, count);
                     }),
@@ -48,7 +48,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                     cb(e, risk_res[0])
                 )
             }, (error, results: {count: number, update: string}) => {
-                if (error) return next(fmtError(error));
+                if (error != null) return next(fmtError(error));
                 res.json(200, results.update);
                 return next();
             });
@@ -62,7 +62,7 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
 
             RiskRes.destroy({ createdAt: req.params.id }).exec((error: WLError) => {
-                if (error) return next(fmtError(error));
+                if (error != null) return next(fmtError(error));
                 res.send(204);
                 return next();
             });

@@ -1,17 +1,16 @@
-import { series, waterfall } from 'async';
-import { IModelRoute } from 'nodejs-utils';
-import { strapFramework } from 'restify-utils';
-import { Server } from 'restify';
-import { Collection, Connection } from 'waterline';
+import { series } from 'async';
 import { expect } from 'chai';
-import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from './../../../main';
+import { IModelRoute } from 'nodejs-utils';
+import { Server } from 'restify';
+import { strapFramework } from 'restify-utils';
+import { Collection, Connection, WLError } from 'waterline';
 import { IUserBase } from '../../../api/user/models.d';
-import { AuthTestSDK } from './../auth/auth_test_sdk';
-import { AccessToken } from './../../../api/auth/models';
-import { getError, tearDownConnections } from '../../shared_tests';
+import { tearDownConnections } from '../../shared_tests';
 import { user_mocks } from '../user/user_mocks';
+import { AccessToken } from './../../../api/auth/models';
+import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from './../../../main';
+import { AuthTestSDK } from './../auth/auth_test_sdk';
 import { IAuthSdk } from './auth_test_sdk.d';
-import { IncomingMessageError } from '../../share_interfaces';
 import IAssertionError = Chai.AssertionError;
 
 declare const Object: IObjectCtor;
@@ -39,7 +38,7 @@ describe('Auth::routes', () => {
                 use_redis: true,
                 app_name: 'test-auth-api',
                 callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
-                    if (err) return cb(err);
+                    if (err != null) return cb(err);
                     c.connections = _connections;
                     c.collections = _collections;
                     app = _app;
@@ -70,11 +69,11 @@ describe('Auth::routes', () => {
                     cb => sdk.register(mocks[2], cb),
                     cb => sdk.register(mocks[2], cb)
                 ],
-                (err: Error) => {
-                    if (err) {
-                        const expected_err = 'duplicate key value violates unique constraint';
+                (err: WLError | Error) => {
+                    if (err != null) {
+                        const expected_err = 'E_UNIQUE';
                         try {
-                            expect(err.message).to.contain(expected_err);
+                            expect(err['text']).to.contain(expected_err);
                             err = null;
                         } catch (e) {
                             err = e as IAssertionError;
@@ -88,30 +87,14 @@ describe('Auth::routes', () => {
             )
         );
 
-        it('DELETE should logout user', done => {
-            waterfall([
-                    cb => sdk.register(mocks[3], (err: IncomingMessageError) => {
-                            const e = getError(err);
-                            return cb(e && e.error_code ?
-                                (['E_VALIDATION', 'E_UNIQUE'].indexOf(e.error_code) > -1 ? null : err)
-                                : err);
-                        }
-                    ),
-                    cb => sdk.login(mocks[3], (err, res) =>
-                        err ? cb(err) : cb(null, res.body.access_token)
-                    ),
-                    (access_token, cb) =>
-                        sdk.logout(access_token, (err, res) =>
-                            cb(err, access_token)
-                        )
-                    ,
-                    (access_token, cb) =>
-                        AccessToken().findOne(access_token, e =>
-                            cb(!e ? new Error('Access token wasn\'t invalidated/removed') : null)
-                        )
-                ],
-                done
-            );
-        });
+        it('DELETE should logout user', done =>
+            sdk.unregister_all([mocks[3]],
+                (error: Error) => done(typeof error['text'] === 'string' && error['text'] === JSON.stringify({
+                        code: 'NotFoundError',
+                        message: 'User not found'
+                    }) ? null : error
+                )
+            )
+        );
     });
 });

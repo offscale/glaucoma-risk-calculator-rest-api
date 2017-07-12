@@ -3,11 +3,12 @@ import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import { sanitiseSchema } from 'nodejs-utils';
-import { fmtError } from 'restify-errors';
+import { fmtError } from 'custom-restify-errors';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { cb } from '../../share_interfaces.d';
+import { IncomingMessageError } from '../../share_interfaces.d';
 import { IRiskRes, IRiskResBase } from '../../../api/risk_res/models.d';
 import { User } from '../../../api/user/models';
+import { TCallback } from '../../shared_types';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -19,9 +20,10 @@ export class RiskResTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, risk_res: IRiskResBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `create` must be defined'));
-        else if (!risk_res) return cb(new TypeError('`risk_res` argument to `create` must be defined'));
+    public create(access_token: string, risk_res: IRiskResBase,
+                  callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null) return callback(new TypeError('`access_token` argument to `create` must be defined'));
+        else if (risk_res == null) return callback(new TypeError('`risk_res` argument to `create` must be defined'));
 
         supertest(this.app)
             .post('/api/risk_res')
@@ -30,8 +32,8 @@ export class RiskResTestSDK {
             .send(risk_res)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(fmtError(res.error));
+                if (err != null) return callback(err);
+                else if (res.error) return callback(fmtError(res.error));
 
                 try {
                     expect(res.status).to.be.equal(201);
@@ -40,14 +42,14 @@ export class RiskResTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    callback(err, res);
                 }
             });
     }
 
-    public get(access_token: string, risk_res: IRiskRes, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
-        else if (!risk_res) return cb(new TypeError('`risk_res` argument to `getAll` must be defined'));
+    public get(access_token: string, risk_res: IRiskRes, cb: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
+        else if (risk_res == null) return cb(new TypeError('`risk_res` argument to `getAll` must be defined'));
         /*else if (isNaN(risk_res.createdAt as any))
          return cb(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
 
@@ -58,7 +60,7 @@ export class RiskResTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err) return cb(err);
+                if (err != null) return cb(err);
                 else if (res.error) return cb(res.error);
                 try {
                     expect(res.body).to.be.an('object');
@@ -71,23 +73,26 @@ export class RiskResTestSDK {
             });
     }
 
-    public destroy(access_token: string, risk_res: IRiskResBase, cb: cb) {
-        if (!access_token) return cb(new TypeError('`access_token` argument to `destroy` must be defined'));
-        else if (!risk_res) return cb(new TypeError('`risk_res` argument to `destroy` must be defined'));
+    public destroy(access_token: string, risk_res: IRiskResBase,
+                   callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null)
+            return callback(new TypeError('`access_token` argument to `destroy` must be defined'));
+        else if (risk_res == null)
+            return callback(new TypeError('`risk_res` argument to `destroy` must be defined'));
 
         supertest(this.app)
             .del(`/api/risk_res/${risk_res.createdAt}`)
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return callback(err);
+                else if (res.error) return callback(res.error);
                 try {
                     expect(res.status).to.be.equal(204);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    callback(err, res);
                 }
             });
     }

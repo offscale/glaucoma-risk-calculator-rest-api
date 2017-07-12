@@ -1,6 +1,6 @@
 import * as restify from 'restify';
 import { Query, WLError } from 'waterline';
-import { fmtError, NotFoundError } from 'restify-errors';
+import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { JsonSchema } from 'tv4';
 import { c } from '../../main';
@@ -16,8 +16,8 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             const EmailTpl: Query = c.collections['email_tpl_tbl'];
 
             EmailTpl.create(req.body).exec((error: WLError | Error, email_tpl: IEmailTpl) => {
-                if (error) return next(fmtError(error));
-                else if (!email_tpl) return next(new NotFoundError('EmailTpl'));
+                if (error != null) return next(fmtError(error));
+                else if (email_tpl == null) return next(new NotFoundError('EmailTpl'));
                 res.json(201, email_tpl);
                 return next();
             });

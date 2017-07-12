@@ -35,6 +35,10 @@ export const User = {
             type: 'string',
             required: true
         },
+        roles: {
+            type: 'string',
+            defaultsTo: 'registered;'
+        },
         toJSON: function toJSON() {
             const user: IUser = this.toObject();
             User._omit.map(k => delete user[k]);

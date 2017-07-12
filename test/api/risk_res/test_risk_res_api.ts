@@ -2,6 +2,7 @@ import { IModelRoute } from 'nodejs-utils';
 import { strapFramework } from 'restify-utils';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
+import { Response } from 'supertest';
 import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
 import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
 import { RiskResTestSDK } from './risk_res_test_sdk';
@@ -37,7 +38,7 @@ describe('RiskRes::routes', () => {
         use_redis: true,
         app_name: 'test-risk-res-api',
         callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
-            if (err) return done(err);
+            if (err != null) return done(err);
             c.connections = _connections;
             c.collections = _collections;
             app = _app;

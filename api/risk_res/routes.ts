@@ -1,6 +1,6 @@
 import * as restify from 'restify';
 import { Query, WLError } from 'waterline';
-import { fmtError, NotFoundError } from 'restify-errors';
+import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { JsonSchema } from 'tv4';
 import { c } from '../../main';
@@ -15,8 +15,8 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             const RiskRes: Query = c.collections['risk_res_tbl'];
 
             RiskRes.create(req.body).exec((error: WLError | Error, risk_res: IRiskRes) => {
-                if (error) return next(fmtError(error));
-                else if (!risk_res) return next(new NotFoundError('RiskRes'));
+                if (error != null) return next(fmtError(error));
+                else if (risk_res == null) return next(new NotFoundError('RiskRes'));
                 res.json(201, risk_res);
                 return next();
             });

@@ -1,11 +1,14 @@
-import * as url from 'url';
 import { series } from 'async';
 import { ClientRequest, IncomingMessage, request as http_request, RequestOptions } from 'http';
 import { trivial_merge } from 'nodejs-utils';
-import { HttpError } from 'restify';
+import { HttpError } from 'restify-errors';
+import * as url from 'url';
 import { AsyncResultCallback, Connection, Query } from 'waterline';
-import { IRiskJson } from 'glaucoma-risk-quiz-engine';
 import { c } from '../main';
+import { TCallback } from './shared_types';
+import { AuthTestSDK } from './api/auth/auth_test_sdk';
+import { IRiskJson } from 'glaucoma-risk-quiz-engine';
+import { IncomingMessageError } from './share_interfaces.d';
 
 /* tslint:disable:no-var-requires */
 const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-engine/risk');
@@ -13,13 +16,10 @@ const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-e
 export interface ISampleData {
     token: string;
 
-    login(user: string, cb);
-
-    registerLogin(user: string, cb);
-
-    unregister(user: string, cb);
-
-    loadRiskJson(cb);
+    login(user: string, callback: TCallback<HttpError, string>);
+    registerLogin(user: string, callback: TCallback<Error | IncomingMessageError | IncomingMessageF, string>);
+    unregister(user: string, callback: TCallback<HttpError, string>);
+    loadRiskJson(callback);
 }
 
 type Callback = (res: IncomingMessageF) => void;
@@ -33,28 +33,28 @@ const httpF = (method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') => 
     return (options: RequestOptions,
             func_name: string,
             body_or_cb: string | Callback | Cb | AsyncResultCallback<{}>,
-            cb?: Callback | Cb | AsyncResultCallback<{}>): ClientRequest => {
-        if (!cb) {
-            cb = body_or_cb as Callback | Cb | AsyncResultCallback<{}>;
+            callback?: Callback | Cb | AsyncResultCallback<{}>): ClientRequest => {
+        if (callback == null) {
+            callback = body_or_cb as Callback | Cb | AsyncResultCallback<{}>;
             body_or_cb = null;
         }
 
         options['method'] = method;
 
-        if (body_or_cb)
-            if (!options)
+        if (body_or_cb != null)
+            if (options == null)
                 options = { headers: { 'Content-Length': Buffer.byteLength(body_or_cb as string) } };
-            else if (!options.headers)
+            else if (options.headers == null)
                 options.headers = { 'Content-Length': Buffer.byteLength(body_or_cb as string) };
-            else if (!options.headers['Content-Length'])
+            else if (options.headers['Content-Length'] == null)
                 options.headers['Content-Length'] = Buffer.byteLength(body_or_cb as string);
 
         const req = http_request(options, (res: IncomingMessageF) => {
             res.func_name = func_name;
-            if (!res) return (cb as Cb)(res);
+            if (res == null) return (callback as Cb)(res);
             /* tslint:disable:no-bitwise */
-            else if ((res.statusCode / 100 | 0) > 3) return (cb as Cb)(res);
-            return (cb as Cb)(null, res);
+            else if ((res.statusCode / 100 | 0) > 3) return (callback as Cb)(res);
+            return (callback as Cb)(null, res);
         });
         // body_or_cb ? req.end(<string>body_or_cb, cb) : req.end();
         /* tslint:disable:no-unused-expression */
@@ -72,6 +72,8 @@ const httpPUT = httpF('PUT');
 const httpPATCH = httpF('PATCH');
 const httpDELETE = httpF('DELETE');
 
+const zip = (a0: any[], a1: any[]) => a0.map((x, i) => [x, a1[i]]);
+
 export class SampleData implements ISampleData {
     public token: string;
     private uri: url.Url;
@@ -82,59 +84,59 @@ export class SampleData implements ISampleData {
         c.collections = collections;
     }
 
-    public login(user: string, cb) {
+    public login(user: string, callback: TCallback<HttpError, string>) {
         httpPOST(
             this.mergeOptions({ path: '/api/auth' }),
             'login', user, (err, res) => {
-                if (err) return cb(err);
-                else if (!res.headers) return cb(new HttpError('HTTP request failed'));
+                if (err != null) return callback(err);
+                else if (res.headers == null) return callback(new HttpError('HTTP request failed'));
                 this.token = res.headers['x-access-token'];
-                return cb(err, this.token);
+                return callback(err, this.token);
             });
     }
 
-    public logout(access_token: string, cb) {
+    public logout(access_token: string, callback: TCallback<HttpError, string>) {
         const options = this.mergeOptions({ path: '/api/auth' });
         options.headers['x-access-token'] = access_token || this.token;
         httpDELETE(options, 'logout', (err, res) => {
-            if (err) return cb(err);
-            else if (!res.headers) return cb(new HttpError('HTTP request failed'));
+            if (err != null) return callback(err);
+            else if (res.headers == null) return callback(new HttpError('HTTP request failed'));
             delete this.token;
-            return cb(err, this.token);
+            return callback(err, this.token);
         });
     }
 
-    public register(user: string, cb) {
+    public register(user: string, callback: TCallback<Error | IncomingMessageError, IncomingMessageF>) {
         httpPOST(
             this.mergeOptions({ path: '/api/user' }),
-            'registerLogin', user, cb
+            'registerLogin', user, callback
         );
     }
 
-    public registerLogin(user: string, cb) {
+    public registerLogin(user: string, callback: TCallback<Error | IncomingMessageError | IncomingMessageF, string>) {
         series([
-            callback => this.register(user, callback),
-            callback => this.login(user, callback),
-        ], (err, res: IncomingMessageF[]) => {
-            if (err) return cb(err);
-            else if (res[1].headers) this.token = res[1].headers['x-access-token'] as string;
-            return cb(err, this.token);
+            callb => this.register(user, callb),
+            callb => this.login(user, callb as any),
+        ], (err: Error, res: IncomingMessageF[]) => {
+            if (err != null) return callback(err);
+            else if (res[1].headers != null) this.token = res[1].headers['x-access-token'] as string;
+            return callback(err, this.token);
         });
     }
 
-    public unregister(user: string, cb) {
-        const unregisterUser = (_user, callback) => httpDELETE(
+    public unregister(user: string, callback) {
+        const unregisterUser = (_user: string, callb) => httpDELETE(
             this.mergeOptions({ path: '/api/user' }),
             'unregister', _user, (error, result) => {
-                if (error) return callback(error);
+                if (error != null) return callb(error);
                 else if (result.statusCode !== 204)
-                    return callback(new Error(`Expected status code of 204 got ${result.statusCode}`));
-                return callback(error, result.statusMessage);
+                    return callb(new Error(`Expected status code of 204 got ${result.statusCode}`));
+                return callb(error, result.statusMessage);
             }
         );
 
-        this.token ? unregisterUser(user, cb) : this.login(user, (err, access_token: string) =>
-            err ? cb() : unregisterUser(user, cb)
+        this.token ? unregisterUser(user, callback) : this.login(user, (err, access_token: string) =>
+            err ? callback() : unregisterUser(user, callback)
         );
     }
 

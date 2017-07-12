@@ -1,16 +1,16 @@
-import * as supertest from 'supertest';
-import { expect } from 'chai';
 import { map, series, waterfall } from 'async';
+import { expect } from 'chai';
 import { IModelRoute } from 'nodejs-utils';
-import { strapFramework } from 'restify-utils';
-import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
+import { strapFramework } from 'restify-utils';
+import * as supertest from 'supertest';
+import { Collection, Connection } from 'waterline';
+import { IUserBase } from '../../../api/user/models.d';
 import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
-import { AuthTestSDK } from './../auth/auth_test_sdk';
-import { AccessToken } from './../../../api/auth/models';
 import { tearDownConnections } from '../../shared_tests';
 import { IAuthSdk } from '../auth/auth_test_sdk.d';
-import { IUserBase } from '../../../api/user/models.d';
+import { AccessToken } from './../../../api/auth/models';
+import { AuthTestSDK } from './../auth/auth_test_sdk';
 import { user_mocks } from './user_mocks';
 
 declare const Object: IObjectCtor;
@@ -38,7 +38,7 @@ describe('User::routes', () => {
                 use_redis: true,
                 app_name: 'test-user-api',
                 callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
-                    if (err) return cb(err);
+                    if (err != null) return cb(err);
                     c.connections = _connections;
                     c.collections = _collections;
                     app = _app;
@@ -63,7 +63,7 @@ describe('User::routes', () => {
             waterfall([
                     cb => sdk.register(mocks[1], err => cb(err)),
                     cb => sdk.login(mocks[1], (err, res) =>
-                        err ? cb(err) : cb(null, res.body.access_token)
+                        err ? cb(err) : cb(null, res.body['access_token'])
                     ),
                     (access_token, cb) =>
                         sdk.get_user(access_token, mocks[1], cb)
@@ -74,9 +74,9 @@ describe('User::routes', () => {
 
         it('PUT should edit user', done =>
             waterfall([
-                    cb => sdk.register(mocks[2], err => cb(err)),
+                    cb => sdk.register(mocks[2], (err, _) => cb(err)),
                     cb => sdk.login(mocks[2], (err, res) =>
-                        err ? cb(err) : cb(null, res.body.access_token)
+                        err != null ? cb(err) : cb(null, res.body['access_token'])
                     ),
                     (access_token, cb) =>
                         supertest(app)
@@ -88,18 +88,24 @@ describe('User::routes', () => {
                     ,
                     (r, cb) => {
                         if (r.statusCode / 100 >= 3) return cb(new Error(JSON.stringify(r.text, null, 4)));
-                        expect(r.body).to.have.all.keys(['createdAt', 'email', 'title', 'updatedAt']);
-                        expect(r.body.title).equals('Mr');
-                        return cb();
+                        let err: Chai.AssertionError = null;
+                        try {
+                            expect(r.body).to.have.all.keys(['createdAt', 'email', 'roles', 'title', 'updatedAt']);
+                            expect(r.body.title).equals('Mr');
+                        } catch (e) {
+                            err = e as Chai.AssertionError;
+                        } finally {
+                            cb(err);
+                        }
                     }
                 ],
                 done
             )
         );
 
-        type AccessToken = string;
+        type AccessTokenType = string;
         it('GET /users should get all users', done =>
-            map(mocks.slice(4, 10), sdk.register_login.bind(sdk), (err, res: AccessToken[]) =>
+            map(mocks.slice(4, 10), sdk.register_login.bind(sdk), (err, res: AccessTokenType[]) =>
                 err ? done(err) : sdk.get_all(res[0], done)
             )
         );
@@ -108,18 +114,20 @@ describe('User::routes', () => {
             waterfall([
                     cb => sdk.register(mocks[3], err => cb(err)),
                     cb => sdk.login(mocks[3], (err, res) =>
-                        err ? cb(err) : cb(null, res.body.access_token)
+                        err ? cb(err) : cb(null, res.body['access_token'])
                     ),
                     (access_token, cb) =>
                         sdk.unregister({ access_token }, err =>
                             cb(err, access_token)
                         )
                     ,
-                    (access_token, cb) => AccessToken().findOne(access_token, e =>
-                        cb(!e ? new Error('Access token wasn\'t invalidated/removed') : null)
+                    (access_token, cb) => AccessToken.get().findOne(access_token, e =>
+                        cb(e != null && e.message === 'Nothing associated with that access token' ? null : e)
                     ),
-                    cb => sdk.login(mocks[3], e =>
-                        cb(!e ? new Error('User can login after unregister') : null)
+                    cb => sdk.login(mocks[3], e => cb(
+                        e != null && typeof e['text'] !== 'undefined' && e['text'] !== JSON.stringify({
+                            code: 'NotFoundError', message: 'User not found'
+                        }) ? e : null)
                     )
                 ],
                 done
