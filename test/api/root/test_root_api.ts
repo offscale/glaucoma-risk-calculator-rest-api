@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Server } from 'restify';
-import { strapFramework } from 'restify-utils';
+import { strapFramework } from 'restify-waterline-utils';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import { IObjectCtor, strapFrameworkKwargs } from '../../../main';

@@ -5,7 +5,7 @@ import { createLogger } from 'bunyan';
 import { Server } from 'restify';
 import { series } from 'async';
 import { IModelRoute, populateModelRoutes } from 'nodejs-utils';
-import { IStrapFramework, strapFramework } from 'restify-utils';
+import { IStrapFramework, strapFramework } from 'restify-waterline-utils';
 
 import { SampleData } from './test/SampleData';
 import { user_mocks } from './test/api/user/user_mocks';

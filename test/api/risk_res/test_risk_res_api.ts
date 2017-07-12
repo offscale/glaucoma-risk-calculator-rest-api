@@ -1,5 +1,5 @@
 import { IModelRoute } from 'nodejs-utils';
-import { strapFramework } from 'restify-utils';
+import { strapFramework } from 'restify-waterline-utils';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
 import { Response } from 'supertest';

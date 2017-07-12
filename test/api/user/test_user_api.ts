@@ -2,7 +2,7 @@ import { map, series, waterfall } from 'async';
 import { expect } from 'chai';
 import { IModelRoute } from 'nodejs-utils';
 import { Server } from 'restify';
-import { strapFramework } from 'restify-utils';
+import { strapFramework } from 'restify-waterline-utils';
 import * as supertest from 'supertest';
 import { Collection, Connection } from 'waterline';
 import { IUserBase } from '../../../api/user/models.d';

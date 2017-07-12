@@ -1,7 +1,7 @@
 import * as async from 'async';
 import { IModelRoute } from 'nodejs-utils';
 import { Server } from 'restify';
-import { strapFramework } from 'restify-utils';
+import { strapFramework } from 'restify-waterline-utils';
 import { Collection, Connection } from 'waterline';
 import { IContactBase } from '../../../api/contact/models.d';
 import { IUserBase } from '../../../api/user/models.d';

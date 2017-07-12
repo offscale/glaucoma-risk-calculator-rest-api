@@ -5,8 +5,8 @@
     "dependencies": {
         "glaucoma-risk-quiz-engine": "github:glaucoma-australia/glaucoma-risk-calculator-engine/glaucoma-risk-calculator-engine.d.ts",
         "nodejs-utils": "github:SamuelMarks/nodejs-utils/nodejs-utils.d.ts",
-        "custom-restify-errors": "github:SamuelMarks/custom-restify-errors/custom-restify-errors.d.ts#master",
-        "restify-utils": "github:SamuelMarks/restify-utils/restify-utils.d.ts#fb4eb98e7f5b700219fbac153a1c4e2dafa25d01",
+        "custom-restify-errors": "github:SamuelMarks/custom-restify-errors/custom-restify-errors.d.ts",
+        "restify-waterline-utils": "github:SamuelMarks/restify-waterline-utils/restify-waterline-utils.d.ts",
         "restify-validators": "github:SamuelMarks/restify-validators/restify-validators.d.ts",
         "waterline": "github:SamuelMarks/cust_typings/waterline/waterline.d.ts",
         "waterline-postgresql": "github:SamuelMarks/cust_typings/waterline-postgresql/waterline-postgresql.d.ts"

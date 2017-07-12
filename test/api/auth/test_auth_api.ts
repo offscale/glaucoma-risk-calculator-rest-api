@@ -2,7 +2,7 @@ import { series } from 'async';
 import { expect } from 'chai';
 import { IModelRoute } from 'nodejs-utils';
 import { Server } from 'restify';
-import { strapFramework } from 'restify-utils';
+import { strapFramework } from 'restify-waterline-utils';
 import { Collection, Connection, WLError } from 'waterline';
 import { IUserBase } from '../../../api/user/models.d';
 import { tearDownConnections } from '../../shared_tests';
