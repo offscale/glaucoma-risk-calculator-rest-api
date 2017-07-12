@@ -20,7 +20,7 @@ export const Contact = {
             const contact: IContact = this.toObject();
             Contact._omit.map(k => delete contact[k]);
             for (const key in contact)
-                if (contact.hasOwnProperty(key) && !contact[key]) delete contact[key];
+                if (contact.hasOwnProperty(key) && contact[key] == null) delete contact[key];
             return contact;
         }
     }

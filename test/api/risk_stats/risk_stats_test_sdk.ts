@@ -80,9 +80,9 @@ export class RiskStatsTestSDK {
                   updated_risk_stats: IRiskStatsBase, cb: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return cb(new TypeError('`access_token` argument to `update` must be defined'));
-        else if (!initial_risk_stats)
+        else if (initial_risk_stats == null)
             return cb(new TypeError('`initial_risk_stats` argument to `update` must be defined'));
-        else if (!updated_risk_stats)
+        else if (updated_risk_stats == null)
             return cb(new TypeError('`updated_risk_stats` argument to `update` must be defined'));
         else if (initial_risk_stats.createdAt !== updated_risk_stats.createdAt)
             return cb(new ReferenceError(`${initial_risk_stats.createdAt} != ${updated_risk_stats.createdAt}

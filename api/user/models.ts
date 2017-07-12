@@ -43,7 +43,7 @@ export const User = {
             const user: IUser = this.toObject();
             User._omit.map(k => delete user[k]);
             for (const key in user)
-                if (user.hasOwnProperty(key) && !user[key]) delete user[key];
+                if (user.hasOwnProperty(key) && user[key] == null) delete user[key];
             return user;
         }
     },

@@ -80,9 +80,7 @@ describe('Auth::routes', () => {
                         } finally {
                             done(err);
                         }
-                    }
-                    /* tslint:disable:one-line */
-                    else return done();
+                    } else return done();
                 }
             )
         );

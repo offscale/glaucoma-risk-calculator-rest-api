@@ -53,7 +53,7 @@ export const RiskRes = {
             const risk_res: IRiskRes = this.toObject();
             RiskRes._omit.map(k => delete risk_res[k]);
             for (const key in risk_res)
-                if (risk_res.hasOwnProperty(key) && !risk_res[key]) delete risk_res[key];
+                if (risk_res.hasOwnProperty(key) && risk_res[key] == null) delete risk_res[key];
             return risk_res;
         },
     }

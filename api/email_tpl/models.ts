@@ -13,7 +13,7 @@ export const EmailTpl = {
             const email_tpl: IEmailTpl = this.toObject();
             EmailTpl._omit.map(k => delete email_tpl[k]);
             for (const key in email_tpl)
-                if (email_tpl.hasOwnProperty(key) && !email_tpl[key]) delete email_tpl[key];
+                if (email_tpl.hasOwnProperty(key) && email_tpl[key] == null) delete email_tpl[key];
             return email_tpl;
         }
     }

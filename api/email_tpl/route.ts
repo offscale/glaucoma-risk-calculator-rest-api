@@ -24,7 +24,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
                 if (error != null) return next(fmtError(error));
                 else if (email_tpl == null) return next(new NotFoundError('EmailTpl'));
                 const tpl: IEmailTpl = Array.isArray(email_tpl) ? email_tpl[0] : email_tpl;
-                if (!tpl) return next(new NotFoundError('EmailTpl'));
+                if (tpl == null) return next(new NotFoundError('EmailTpl'));
                 res.json(tpl);
                 return next();
             });
@@ -44,7 +44,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 count: cb =>
                     EmailTpl.count(crit, (err: WLError, count: number) => {
                         if (err != null) return cb(err);
-                        else if (!count) return cb(new NotFoundError('EmailTpl'));
+                        else if (count == null) return cb(new NotFoundError('EmailTpl'));
                         return cb(null, count);
                     }),
                 update: cb => EmailTpl.update(crit, req.body, (e, email_tpls: IEmailTpl[]) => cb(e, email_tpls[0]))

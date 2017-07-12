@@ -31,14 +31,15 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
                 cb =>
                     EmailConf.find().limit(1).exec((err: WLError, email_conf: IEmailConf[]) => {
                         if (err != null) return cb(err);
-                        else if (!email_conf || !email_conf.length) return cb(new NotFoundError('EmailConf'));
+                        else if (email_conf == null || !email_conf.length) return cb(new NotFoundError('EmailConf'));
                         else return cb(null, email_conf[0]);
                     }),
                 (email_conf, cb) =>
                     EmailConf.update(email_conf, Object.assign({}, email_conf, req.body),
                         (e, email_confs: IEmailConf[]) => {
                             if (e) return cb(e);
-                            else if (!email_confs || !email_confs.length) return cb(new NotFoundError('EmailConf[]'));
+                            else if (email_confs == null || !email_confs.length)
+                                return cb(new NotFoundError('EmailConf[]'));
                             return cb(null, email_confs);
                         }
                     )
@@ -52,9 +53,7 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
                             }
                         );
                     else return next(fmtError(error));
-                }
-                /* tslint:disable:one-line */ // Bug in TSLint!
-                else if (!results || !results.length)
+                } else if (results == null || !results.length)
                     return next(new NotFoundError('EmailConf[]'));
                 else {
                     res.json(200, results[0]);

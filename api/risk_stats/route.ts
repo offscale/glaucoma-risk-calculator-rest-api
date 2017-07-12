@@ -24,7 +24,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
                 if (error != null) return next(fmtError(error));
                 else if (risk_stats == null) return next(new NotFoundError('RiskStats'));
                 const stats: IRiskStats = Array.isArray(risk_stats) ? risk_stats[0] : risk_stats;
-                if (!stats) return next(new NotFoundError('RiskStats'));
+                if (stats == null) return next(new NotFoundError('RiskStats'));
                 res.json(stats);
                 return next();
             });

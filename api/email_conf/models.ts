@@ -32,7 +32,7 @@ export const EmailConf = {
             const email_conf: IEmailConf = this.toObject();
             EmailConf._omit.map(k => delete email_conf[k]);
             for (const key in email_conf)
-                if (email_conf.hasOwnProperty(key) && !email_conf[key]) delete email_conf[key];
+                if (email_conf.hasOwnProperty(key) && email_conf[key] == null) delete email_conf[key];
             return email_conf;
         }
     }

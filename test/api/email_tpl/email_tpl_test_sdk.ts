@@ -75,9 +75,9 @@ export class EmailTplTestSDK {
                   updated_email_tpl: IEmailTplBase, callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `update` must be defined'));
-        else if (!initial_email_tpl)
+        else if (initial_email_tpl == null)
             return callback(new TypeError('`initial_email_tpl` argument to `update` must be defined'));
-        else if (!updated_email_tpl)
+        else if (updated_email_tpl == null)
             return callback(new TypeError('`updated_email_tpl` argument to `update` must be defined'));
         else if (initial_email_tpl.createdAt !== updated_email_tpl.createdAt)
             return callback(new ReferenceError(
