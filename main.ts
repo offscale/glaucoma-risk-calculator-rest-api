@@ -78,6 +78,8 @@ export const strapFrameworkKwargs: IStrapFramework = Object.freeze({
     app_logging: false,
     redis_cursors,
     onServerStart: (uri: string, connections: Connection[], collections: Query[], _app: Server, next) => {
+        c.connections = connections;
+        c.collections = collections;
         const authSdk = new AuthTestSDK(_app);
         const riskStatsSdk = new RiskStatsTestSDK(_app);
 
