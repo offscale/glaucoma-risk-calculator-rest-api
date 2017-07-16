@@ -6,6 +6,7 @@ import { Response } from 'supertest';
 import { IUser, IUserBase } from '../api/user/models.d';
 import { IAuthSdk } from './api/auth/auth_test_sdk.d';
 import { IncomingMessageError, TCallback } from './shared_types';
+import { raise } from 'nodejs-utils';
 
 export const tearDownConnections = (connections: Connection[], done: MochaDone) => {
     return connections ? parallel(Object.keys(connections).map(
@@ -53,3 +54,7 @@ export const superEndCb = (e: IncomingMessageError | Error, r: Response,
 
 export const debugCb = (name: string, callback: TCallback<any, any>) => /* tslint:disable:no-console */
     (e: any, r: any) => console.warn(`${name}::e =`, e, `;\n${name}::r =`, r, ';') || callback(e, r);
+
+export const debugObj = (obj: {} | any): {} | any => typeof obj === 'object' ?
+    console.info(Object.keys(obj).map(k => `obj.${k} = ${obj[k]};`).join('\n')) || obj
+    : raise(new TypeError(`obj ${obj} is not an Object`));

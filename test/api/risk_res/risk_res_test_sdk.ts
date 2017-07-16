@@ -3,12 +3,12 @@ import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import { sanitiseSchema } from 'nodejs-utils';
-import { fmtError } from 'custom-restify-errors';
 import * as chaiJsonSchema from 'chai-json-schema';
 import { IncomingMessageError } from '../../share_interfaces.d';
 import { IRiskRes, IRiskResBase } from '../../../api/risk_res/models.d';
 import { User } from '../../../api/user/models';
 import { TCallback } from '../../shared_types';
+import { getError, superEndCb } from '../../shared_tests';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -32,8 +32,8 @@ export class RiskResTestSDK {
             .send(risk_res)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return callback(err);
-                else if (res.error) return callback(fmtError(res.error));
+                if (err != null) return superEndCb(err, res, callback);
+                else if (res.error) return callback(getError(res.error));
 
                 try {
                     expect(res.status).to.be.equal(201);
@@ -85,7 +85,7 @@ export class RiskResTestSDK {
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err != null) return callback(err);
+                if (err != null) return superEndCb(err, res, callback);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.status).to.be.equal(204);

@@ -11,7 +11,7 @@ import { IRiskJson } from 'glaucoma-risk-quiz-engine';
 import { IncomingMessageError } from './share_interfaces.d';
 
 /* tslint:disable:no-var-requires */
-const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-engine/risk');
+export const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-engine/risk');
 
 export interface ISampleData {
     token: string;

@@ -3,14 +3,15 @@ import { Collection, Connection, Query } from 'waterline';
 import * as waterline_postgres from 'waterline-postgresql';
 import { createLogger } from 'bunyan';
 import { Server } from 'restify';
-import { series } from 'async';
+import { waterfall } from 'async';
 import { IModelRoute, populateModelRoutes } from 'nodejs-utils';
 import { IStrapFramework, strapFramework } from 'restify-waterline-utils';
 
-import { SampleData } from './test/SampleData';
+import { risk_json } from './test/SampleData';
 import { user_mocks } from './test/api/user/user_mocks';
 import { AuthTestSDK } from './test/api/auth/auth_test_sdk';
 import { IUserBase } from './api/user/models.d';
+import { RiskStatsTestSDK } from './test/api/risk_stats/risk_stats_test_sdk';
 
 /* tslint:disable:no-var-requires */
 export const package_ = Object.freeze(require('./package'));
@@ -77,25 +78,23 @@ export const strapFrameworkKwargs: IStrapFramework = Object.freeze({
     app_logging: false,
     redis_cursors,
     onServerStart: (uri: string, connections: Connection[], collections: Query[], _app: Server, next) => {
-        const sampleData = new SampleData(uri, connections, collections);
         const authSdk = new AuthTestSDK(_app);
-        // console.info('onServerStart');
-        // console.info('default_user =', default_user, ';');
-        series([
+        const riskStatsSdk = new RiskStatsTestSDK(_app);
+
+        waterfall([
                 cb => authSdk.unregister_all([default_user],
-                    (err, res) => cb(err, 'removed default user; next: adding')),
-                cb => authSdk.register_login(default_user, cb),
-                cb => logger.info(`${_app.name} listening from ${_app.url}`) || cb()
-            ], (e: Error) => e == null ? next(void 0, _app, connections, collections) : raise(e)
-        );
+                    (err, res) => cb(err != null && err.message != null && err.message.indexOf('NotFoundError') === -1 ?
+                        err : void 0, 'removed default user; next: adding')
+                ),
+                (msg: string, cb) => logger.info(msg) || authSdk.register_login(default_user, cb),
+                (access_token, cb) => riskStatsSdk.create(access_token, { risk_json, createdAt: new Date() },
+                    (err, res) => err == null && logger.info('loaded risk-json') || cb(err)),
+                cb => logger.info(`${_app.name} (still) listening from ${_app.url}`) || cb()
+            ],
+            (e: Error) => e == null ? next(void 0, _app, connections, collections) : raise(e)
+        )
+        ;
     }
-    /*createSampleData: true,
-     SampleData,
-     sampleDataToCreate: (sampleData: SampleData) => [
-     cb => sampleData.unregister(default_user, (err, res) => cb(err, 'removed default user; next: adding')),
-     cb => sampleData.registerLogin(default_user, cb),
-     cb => sampleData.loadRiskJson((err, res) => cb(err, 'loaded risk-json')),
-     ]*/
 } as IStrapFramework);
 
 if (require.main === module)
