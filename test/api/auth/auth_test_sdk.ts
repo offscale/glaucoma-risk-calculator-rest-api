@@ -44,7 +44,7 @@ export class AuthTestSDK implements IAuthSdk {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }
@@ -68,7 +68,7 @@ export class AuthTestSDK implements IAuthSdk {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }
@@ -93,7 +93,7 @@ export class AuthTestSDK implements IAuthSdk {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }
@@ -116,7 +116,7 @@ export class AuthTestSDK implements IAuthSdk {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }

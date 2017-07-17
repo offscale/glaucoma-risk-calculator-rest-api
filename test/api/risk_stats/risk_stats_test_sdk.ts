@@ -77,15 +77,15 @@ export class RiskStatsTestSDK {
     }
 
     public update(access_token: string, initial_risk_stats: IRiskStatsBase,
-                  updated_risk_stats: IRiskStatsBase, cb: TCallback<Error | IncomingMessageError, Response>) {
+                  updated_risk_stats: IRiskStatsBase, callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
-            return cb(new TypeError('`access_token` argument to `update` must be defined'));
+            return callback(new TypeError('`access_token` argument to `update` must be defined'));
         else if (initial_risk_stats == null)
-            return cb(new TypeError('`initial_risk_stats` argument to `update` must be defined'));
+            return callback(new TypeError('`initial_risk_stats` argument to `update` must be defined'));
         else if (updated_risk_stats == null)
-            return cb(new TypeError('`updated_risk_stats` argument to `update` must be defined'));
+            return callback(new TypeError('`updated_risk_stats` argument to `update` must be defined'));
         else if (initial_risk_stats.createdAt !== updated_risk_stats.createdAt)
-            return cb(new ReferenceError(`${initial_risk_stats.createdAt} != ${updated_risk_stats.createdAt}
+            return callback(new ReferenceError(`${initial_risk_stats.createdAt} != ${updated_risk_stats.createdAt}
                  (\`createdAt\`s between risk_stats')`)
             );
 
@@ -95,8 +95,8 @@ export class RiskStatsTestSDK {
             .set('X-Access-Token', access_token)
             .send(updated_risk_stats)
             .end((err, res: Response) => {
-                if (err != null) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return superEndCb(err, res, callback);
+                else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
                     Object.keys(updated_risk_stats).map(
@@ -106,7 +106,7 @@ export class RiskStatsTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    callback(err, res);
                 }
             });
     }

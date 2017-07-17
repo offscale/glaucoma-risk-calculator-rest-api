@@ -47,11 +47,11 @@ export class RiskResTestSDK {
             });
     }
 
-    public get(access_token: string, risk_res: IRiskRes, cb: TCallback<Error | IncomingMessageError, Response>) {
-        if (access_token == null) return cb(new TypeError('`access_token` argument to `getAll` must be defined'));
-        else if (risk_res == null) return cb(new TypeError('`risk_res` argument to `getAll` must be defined'));
+    public get(access_token: string, risk_res: IRiskRes, callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
+        else if (risk_res == null) return callback(new TypeError('`risk_res` argument to `getAll` must be defined'));
         /*else if (isNaN(risk_res.createdAt as any))
-         return cb(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
+         return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
 
         supertest(this.app)
             .get(`/api/risk_res/${risk_res.id}`)
@@ -60,15 +60,15 @@ export class RiskResTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return cb(err);
-                else if (res.error) return cb(res.error);
+                if (err != null) return superEndCb(err, res, callback);
+                else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
                     expect(res.body).to.be.jsonSchema(risk_res_schema);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    cb(err, res);
+                    callback(err, res);
                 }
             });
     }

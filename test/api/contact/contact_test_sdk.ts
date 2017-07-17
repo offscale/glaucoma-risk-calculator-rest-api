@@ -42,7 +42,7 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }
@@ -72,7 +72,7 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }
@@ -97,7 +97,7 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }
@@ -132,7 +132,7 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }
@@ -156,7 +156,7 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    superEndCb(err, res, callback);
+                    callback(err, res);
                 }
             });
     }
