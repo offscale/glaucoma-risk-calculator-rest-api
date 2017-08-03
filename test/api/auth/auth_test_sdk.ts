@@ -2,16 +2,16 @@ import { mapSeries, series, waterfall } from 'async';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { sanitiseSchema } from 'nodejs-utils';
+import { IncomingMessageError, sanitiseSchema } from 'nodejs-utils';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
+
 import { User } from '../../../api/user/models';
 import { IUser, IUserBase } from '../../../api/user/models.d';
 import { getError, superEndCb } from '../../shared_tests';
 import { HttpStrResp, TCallback } from '../../shared_types';
 import { user_mocks } from '../user/user_mocks';
 import { IAuthSdk } from './auth_test_sdk.d';
-import { IncomingMessageError } from '../../share_interfaces';
 // import { saltSeeker } from '../../../api/user/utils';
 // import { saltSeekerCb } from '../../../main';
 

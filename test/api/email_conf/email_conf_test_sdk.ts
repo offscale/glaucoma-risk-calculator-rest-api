@@ -2,9 +2,9 @@ import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import { sanitiseSchema } from 'nodejs-utils';
+import { IncomingMessageError, sanitiseSchema } from 'nodejs-utils';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { IncomingMessageError } from '../../share_interfaces.d';
+
 import { IEmailConfBase } from '../../../api/email_conf/models.d';
 import { User } from '../../../api/user/models';
 import { TCallback } from '../../shared_types';

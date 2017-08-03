@@ -5,7 +5,7 @@ import { strapFramework } from 'restify-waterline-utils';
 import { Collection, Connection } from 'waterline';
 import { IContactBase } from '../../../api/contact/models.d';
 import { IUserBase } from '../../../api/user/models.d';
-import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
+import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
 import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { IAuthSdk } from '../auth/auth_test_sdk.d';
@@ -16,9 +16,9 @@ import { ContactTestSDK } from './contact_test_sdk';
 declare const Object: IObjectCtor;
 
 const models_and_routes: IModelRoute = {
-    user: all_models_and_routes['user'],
-    auth: all_models_and_routes['auth'],
-    contact: all_models_and_routes['contact']
+    user: all_models_and_routes_as_mr['user'],
+    auth: all_models_and_routes_as_mr['auth'],
+    contact: all_models_and_routes_as_mr['contact']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';

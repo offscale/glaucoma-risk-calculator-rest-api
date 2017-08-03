@@ -2,7 +2,7 @@ import { IModelRoute } from 'nodejs-utils';
 import { strapFramework } from 'restify-waterline-utils';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
-import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
+import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
 import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
 import { EmailTplTestSDK } from './email_tpl_test_sdk';
 import { user_mocks } from '../user/user_mocks';
@@ -15,9 +15,9 @@ import { IEmailTpl } from '../../../api/email_tpl/models.d';
 declare const Object: IObjectCtor;
 
 const models_and_routes: IModelRoute = {
-    user: all_models_and_routes['user'],
-    auth: all_models_and_routes['auth'],
-    email_tpl: all_models_and_routes['email_tpl']
+    user: all_models_and_routes_as_mr['user'],
+    auth: all_models_and_routes_as_mr['auth'],
+    email_tpl: all_models_and_routes_as_mr['email_tpl']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';

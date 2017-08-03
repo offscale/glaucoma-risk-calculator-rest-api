@@ -3,7 +3,7 @@ import { strapFramework } from 'restify-waterline-utils';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
 import { Response } from 'supertest';
-import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
+import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
 import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
 import { RiskResTestSDK } from './risk_res_test_sdk';
 import { user_mocks } from '../user/user_mocks';
@@ -16,9 +16,9 @@ import { IRiskRes } from '../../../api/risk_res/models.d';
 declare const Object: IObjectCtor;
 
 const models_and_routes: IModelRoute = {
-    user: all_models_and_routes['user'],
-    auth: all_models_and_routes['auth'],
-    risk_res: all_models_and_routes['risk_res']
+    user: all_models_and_routes_as_mr['user'],
+    auth: all_models_and_routes_as_mr['auth'],
+    risk_res: all_models_and_routes_as_mr['risk_res']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';

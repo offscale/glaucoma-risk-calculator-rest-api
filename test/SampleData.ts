@@ -1,14 +1,12 @@
 import { series } from 'async';
 import { ClientRequest, IncomingMessage, request as http_request, RequestOptions } from 'http';
-import { trivial_merge } from 'nodejs-utils';
+import { IncomingMessageError, trivial_merge } from 'nodejs-utils';
 import { HttpError } from 'restify-errors';
 import * as url from 'url';
 import { AsyncResultCallback, Connection, Query } from 'waterline';
 import { c } from '../main';
 import { TCallback } from './shared_types';
-import { AuthTestSDK } from './api/auth/auth_test_sdk';
 import { IRiskJson } from 'glaucoma-risk-quiz-engine';
-import { IncomingMessageError } from './share_interfaces.d';
 
 /* tslint:disable:no-var-requires */
 export const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-engine/risk');
@@ -17,8 +15,11 @@ export interface ISampleData {
     token: string;
 
     login(user: string, callback: TCallback<HttpError, string>);
+
     registerLogin(user: string, callback: TCallback<Error | IncomingMessageError | IncomingMessageF, string>);
+
     unregister(user: string, callback: TCallback<HttpError, string>);
+
     loadRiskJson(callback);
 }
 

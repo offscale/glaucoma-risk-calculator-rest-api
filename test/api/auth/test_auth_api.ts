@@ -7,8 +7,7 @@ import { Collection, Connection, WLError } from 'waterline';
 import { IUserBase } from '../../../api/user/models.d';
 import { tearDownConnections } from '../../shared_tests';
 import { user_mocks } from '../user/user_mocks';
-import { AccessToken } from './../../../api/auth/models';
-import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from './../../../main';
+import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from './../../../main';
 import { AuthTestSDK } from './../auth/auth_test_sdk';
 import { IAuthSdk } from './auth_test_sdk.d';
 import IAssertionError = Chai.AssertionError;
@@ -16,8 +15,8 @@ import IAssertionError = Chai.AssertionError;
 declare const Object: IObjectCtor;
 
 const models_and_routes: IModelRoute = {
-    user: all_models_and_routes['user'],
-    auth: all_models_and_routes['auth']
+    user: all_models_and_routes_as_mr['user'],
+    auth: all_models_and_routes_as_mr['auth']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';

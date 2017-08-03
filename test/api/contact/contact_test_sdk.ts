@@ -1,14 +1,14 @@
 import * as chai from 'chai';
 import { expect } from 'chai';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { sanitiseSchema } from 'nodejs-utils';
+import { IncomingMessageError, sanitiseSchema } from 'nodejs-utils';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
+
 import { IContactBase } from '../../../api/contact/models.d';
 import { User } from '../../../api/user/models';
 import { TCallback } from '../../shared_types';
 import { getError, superEndCb } from '../../shared_tests';
-import { IncomingMessageError } from '../../share_interfaces';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);

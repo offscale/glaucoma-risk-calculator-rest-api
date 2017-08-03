@@ -4,7 +4,7 @@ import * as waterline_postgres from 'waterline-postgresql';
 import { createLogger } from 'bunyan';
 import { Server } from 'restify';
 import { waterfall } from 'async';
-import { IModelRoute, populateModelRoutes } from 'nodejs-utils';
+import { get_models_routes, IModelRoute, populateModelRoutes } from 'nodejs-utils';
 import { IStrapFramework, strapFramework } from 'restify-waterline-utils';
 
 import { risk_json } from './test/SampleData';
@@ -51,7 +51,8 @@ export const waterline_config = Object.freeze({
     }
 });
 
-export const all_models_and_routes: IModelRoute = populateModelRoutes('.');
+export const all_models_and_routes: Map<string, any> = populateModelRoutes(__dirname);
+export const all_models_and_routes_as_mr: IModelRoute = get_models_routes(all_models_and_routes);
 
 export const redis_cursors: {redis: Redis.Redis} = { redis: null };
 
@@ -66,7 +67,7 @@ export const cache = {};
 const default_user: IUserBase = user_mocks.successes[98];
 export const strapFrameworkKwargs: IStrapFramework = Object.freeze({
     app_name: package_.name,
-    models_and_routes: all_models_and_routes,
+    models_and_routes: all_models_and_routes_as_mr,
     logger,
     _cache,
     package_,

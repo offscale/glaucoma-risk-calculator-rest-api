@@ -6,7 +6,7 @@ import { strapFramework } from 'restify-waterline-utils';
 import * as supertest from 'supertest';
 import { Collection, Connection } from 'waterline';
 import { IUserBase } from '../../../api/user/models.d';
-import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
+import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
 import { tearDownConnections } from '../../shared_tests';
 import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AccessToken } from './../../../api/auth/models';
@@ -16,8 +16,8 @@ import { user_mocks } from './user_mocks';
 declare const Object: IObjectCtor;
 
 const models_and_routes: IModelRoute = {
-    user: all_models_and_routes['user'],
-    auth: all_models_and_routes['auth'],
+    user: all_models_and_routes_as_mr['user'],
+    auth: all_models_and_routes_as_mr['auth'],
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';

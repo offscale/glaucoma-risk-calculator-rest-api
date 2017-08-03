@@ -2,7 +2,7 @@ import { IModelRoute } from 'nodejs-utils';
 import { strapFramework } from 'restify-waterline-utils';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
-import { all_models_and_routes, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
+import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
 import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
 import { RiskStatsTestSDK } from './risk_stats_test_sdk';
 import { user_mocks } from '../user/user_mocks';
@@ -14,9 +14,9 @@ import { risk_stats_mocks } from './risk_stats_mocks';
 declare const Object: IObjectCtor;
 
 const models_and_routes: IModelRoute = {
-    user: all_models_and_routes['user'],
-    auth: all_models_and_routes['auth'],
-    risk_stats: all_models_and_routes['risk_stats']
+    user: all_models_and_routes_as_mr['user'],
+    auth: all_models_and_routes_as_mr['auth'],
+    risk_stats: all_models_and_routes_as_mr['risk_stats']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
