@@ -5,7 +5,7 @@ import { createLogger } from 'bunyan';
 import { Server } from 'restify';
 import { waterfall } from 'async';
 import { get_models_routes, IModelRoute, populateModelRoutes } from 'nodejs-utils';
-import { IStrapFramework, strapFramework } from 'restify-waterline-utils';
+import { IStrapFramework, strapFramework } from 'restify-orm-framework';
 
 import { risk_json } from './test/SampleData';
 import { user_mocks } from './test/api/user/user_mocks';
@@ -72,13 +72,15 @@ export const strapFrameworkKwargs: IStrapFramework = Object.freeze({
     _cache,
     package_,
     root: '/api',
-    skip_db: false,
+    skip_waterline: false,
+    skip_typeorm: true,
     collections: c.collections,
     waterline_config: waterline_config as any,
-    use_redis: true,
+    skip_redis: false,
     app_logging: false,
     redis_cursors,
-    onServerStart: (uri: string, connections: Connection[], collections: Query[], _app: Server, next) => {
+    onServerStart: (uri: string, connections: Connection[], collections: Query[],
+                    connection, _app: Server, next) => {
         c.connections = connections;
         c.collections = collections;
         const authSdk = new AuthTestSDK(_app);
@@ -102,7 +104,8 @@ export const strapFrameworkKwargs: IStrapFramework = Object.freeze({
 
 if (require.main === module)
     strapFramework(Object.assign({
-            start_app: true, callback: (err, _app: Server, _connections: Connection[], _collections: Collection[]) => {
+        skip_start_app: false,
+        callback: (err, _app: Server, _connections: Connection[], _collections: Collection[]) => {
                 if (err != null) throw err;
                 c.connections = _connections;
                 c.collections = _collections;

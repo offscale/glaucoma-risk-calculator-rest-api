@@ -1,5 +1,5 @@
 import { IModelRoute } from 'nodejs-utils';
-import { strapFramework } from 'restify-waterline-utils';
+import { strapFramework } from 'restify-orm-framework';
 import { Collection, Connection } from 'waterline';
 import { Server } from 'restify';
 import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
@@ -33,8 +33,8 @@ describe('EmailTpl::routes', () => {
     before('strapFramework', done => strapFramework(Object.assign({}, strapFrameworkKwargs, {
         models_and_routes,
         createSampleData: false,
-        start_app: false,
-        use_redis: true,
+        skip_start_app: true,
+        skip_redis: false,
         app_name: 'test-email-tpl-api',
         callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
             if (err != null) return done(err);

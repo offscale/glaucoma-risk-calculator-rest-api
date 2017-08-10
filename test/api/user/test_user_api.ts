@@ -2,7 +2,7 @@ import { map, series, waterfall } from 'async';
 import { expect } from 'chai';
 import { IModelRoute } from 'nodejs-utils';
 import { Server } from 'restify';
-import { strapFramework } from 'restify-waterline-utils';
+import { strapFramework } from 'restify-orm-framework';
 import * as supertest from 'supertest';
 import { Collection, Connection } from 'waterline';
 import { IUserBase } from '../../../api/user/models.d';
@@ -34,8 +34,8 @@ describe('User::routes', () => {
             cb => strapFramework(Object.assign({}, strapFrameworkKwargs, {
                 models_and_routes,
                 createSampleData: false,
-                start_app: false,
-                use_redis: true,
+                skip_start_app: true,
+                skip_redis: false,
                 app_name: 'test-user-api',
                 callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
                     if (err != null) return cb(err);

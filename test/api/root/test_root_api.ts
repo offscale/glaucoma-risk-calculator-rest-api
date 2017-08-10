@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Server } from 'restify';
-import { strapFramework } from 'restify-waterline-utils';
+import { strapFramework } from 'restify-orm-framework';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import { IObjectCtor, strapFrameworkKwargs } from '../../../main';
@@ -13,10 +13,10 @@ describe('Root::routes', () => {
     before(done =>
         strapFramework(Object.assign({}, strapFrameworkKwargs, {
             models_and_routes: {},
-            createSampleData: false,
-            skip_db: true,
-            use_redis: false,
-            start_app: false,
+            skip_waterline: true,
+            skip_typeorm: true,
+            skip_redis: true,
+            skip_start_app: true,
             app_name: 'test-root-api',
             callback: (err, _app: Server) => {
                 if (err != null) return done(err);
