@@ -54,6 +54,8 @@ describe('User::routes', () => {
         )
     );
 
+    after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
+
     describe('/api/user', () => {
         beforeEach(done => sdk.unregister_all(mocks, () => done()));
         afterEach(done => sdk.unregister_all(mocks, () => done()));
@@ -127,7 +129,7 @@ describe('User::routes', () => {
                     (access_token, cb) => AccessToken
                         .get(_orms_out.orms_out.redis.connection)
                         .findOne(access_token, e =>
-                            cb(e != null && e.message === 'Nothing associated with that access token' ? null : e)
+                            cb(e != null && e.message === 'Nothing associated with that access token' ? void 0 : e)
                         ),
                     cb => sdk.login(mocks[3], e => cb(
                         e != null && typeof e['text'] !== 'undefined' && e['text'] !== JSON.stringify({

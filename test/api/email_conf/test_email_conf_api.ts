@@ -59,6 +59,8 @@ describe('EmailConf::routes', () => {
         )
     );
 
+    after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
+
     describe('/api/email_conf', () => {
         it('POST should create EmailConf', done =>
             sdk.create(user_mocks_subset[0].access_token, email_conf_mocks.successes[0], done)

@@ -61,6 +61,8 @@ describe('RiskRes::routes', () => {
         )
     );
 
+    after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
+
     describe('/api/risk_res', () => {
         afterEach('deleteRiskRes', done =>
             sdk.destroy(user_mocks_subset[0].access_token, risk_res_mocks.successes[0], done));

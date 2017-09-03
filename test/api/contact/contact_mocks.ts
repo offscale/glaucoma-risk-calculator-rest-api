@@ -1,6 +1,6 @@
 import { IContactBase } from '../../../api/contact/models.d';
 import { IUserBase } from '../../../api/user/models.d';
-import { user_mocks_subset } from './test_contact_api';
+import { user_mocks } from '../user/user_mocks';
 
 export const contact_mocks: (users: IUserBase[]) => {successes: IContactBase[], failures: Array<{}>} =
     (users: IUserBase[]) => ({
@@ -22,5 +22,5 @@ export const contact_mocks: (users: IUserBase[]) => {successes: IContactBase[], 
 
 if (require.main === module) {
     /* tslint:disable:no-console */
-    console.info(contact_mocks(user_mocks_subset));
+    console.info(contact_mocks(user_mocks.successes.slice(20, 30)));
 }

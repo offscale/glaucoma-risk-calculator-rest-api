@@ -60,6 +60,8 @@ describe('EmailTpl::routes', () => {
         )
     );
 
+    after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
+
     describe('/api/email_tpl', () => {
         afterEach('deleteEmailTpl', done =>
             sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[0], done));

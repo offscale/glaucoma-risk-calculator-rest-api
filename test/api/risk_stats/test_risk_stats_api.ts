@@ -59,6 +59,8 @@ describe('RiskStats::routes', () => {
         )
     );
 
+    after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
+
     describe('routes', () => {
         describe('/api/risk_stats', () => {
             afterEach('deleteRiskStats', done =>

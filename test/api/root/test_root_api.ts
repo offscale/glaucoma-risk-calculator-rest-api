@@ -4,6 +4,7 @@ import { basename } from 'path';
 import { Server } from 'restify';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
+
 import { setupOrmApp } from '../../../main';
 
 const tapp_name = `test::${basename(__dirname)}`;

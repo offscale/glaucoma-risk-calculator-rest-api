@@ -1,4 +1,4 @@
-import { series, waterfall } from 'async';
+import * as async from 'async';
 import { createLogger } from 'bunyan';
 import { IModelRoute, model_route_to_map } from 'nodejs-utils';
 import { IOrmsOut, tearDownConnections } from 'orm-mw';
@@ -24,7 +24,7 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-export const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(20, 30);
+const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(20, 30);
 
 const tapp_name = `test::${basename(__dirname)}`;
 const logger = createLogger({ name: tapp_name });
@@ -36,7 +36,7 @@ describe('Contact::routes', () => {
     let mocks: {successes: IContactBase[], failures: Array<{}>};
 
     before(done =>
-        waterfall([
+        async.waterfall([
                 cb => tearDownConnections(_orms_out.orms_out, e => cb(e)),
                 cb => AccessToken.reset() || cb(void 0),
                 cb => setupOrmApp(
@@ -46,9 +46,11 @@ describe('Contact::routes', () => {
                 ),
                 (_app: Server, orms_out: IOrmsOut, cb) => {
                     AccessToken.reset();
+                    mocks = contact_mocks(user_mocks_subset);
+
                     auth_sdk = new AuthTestSDK(_app);
                     sdk = new ContactTestSDK(_app);
-                    mocks = contact_mocks(user_mocks_subset);
+
                     return cb(void 0);
                 },
                 cb => create_and_auth_users(user_mocks_subset, auth_sdk, cb)
@@ -59,6 +61,7 @@ describe('Contact::routes', () => {
 
     // Deregister database adapter waterline_c
     after('unregister all users', done => auth_sdk.unregister_all(user_mocks_subset, done));
+    after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/contact', () => {
         afterEach('deleteContact', done => sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[0], done));
@@ -67,7 +70,7 @@ describe('Contact::routes', () => {
             sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], done)
         );
 
-        it('GET should get all contacts', done => series([
+        it('GET should get all contacts', done => async.series([
                 cb => sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], cb),
                 cb => sdk.getAll(user_mocks_subset[0].access_token, mocks.successes[0], cb)
             ], done)
