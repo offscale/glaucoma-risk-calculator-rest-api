@@ -1,9 +1,12 @@
-import { IModelRoute } from 'nodejs-utils';
-import { strapFramework } from 'restify-orm-framework';
-import { Collection, Connection } from 'waterline';
+import { IModelRoute, model_route_to_map } from 'nodejs-utils';
 import { Server } from 'restify';
-import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
-import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
+import { createLogger } from 'bunyan';
+import { basename } from 'path';
+import { IOrmsOut, tearDownConnections } from 'orm-mw';
+import { waterfall } from 'async';
+
+import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
+import { create_and_auth_users } from '../../shared_tests';
 import { EmailTplTestSDK } from './email_tpl_test_sdk';
 import { user_mocks } from '../user/user_mocks';
 import { IAuthSdk } from '../auth/auth_test_sdk.d';
@@ -11,8 +14,8 @@ import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { IUserBase } from '../../../api/user/models.d';
 import { email_tpl_mocks } from './email_tpl_mocks';
 import { IEmailTpl } from '../../../api/email_tpl/models.d';
-
-declare const Object: IObjectCtor;
+import { AccessToken } from '../../../api/auth/models';
+import { _orms_out } from '../../../config';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -23,35 +26,39 @@ const models_and_routes: IModelRoute = {
 process.env['NO_SAMPLE_DATA'] = 'true';
 const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(30, 40);
 
+const tapp_name = `test::${basename(__dirname)}`;
+const logger = createLogger({ name: tapp_name });
+
 describe('EmailTpl::routes', () => {
     let sdk: EmailTplTestSDK;
     let auth_sdk: IAuthSdk;
     let app: Server;
 
-    before('tearDownConnections', done => tearDownConnections(c.connections, done));
+    before(done =>
+        waterfall([
+                cb => tearDownConnections(_orms_out.orms_out, e => cb(e)),
+                cb => AccessToken.reset() || cb(void 0),
+                cb => setupOrmApp(
+                    model_route_to_map(models_and_routes), { logger },
+                    { skip_start_app: true, app_name: tapp_name, logger },
+                    cb
+                ),
+                (_app: Server, orms_out: IOrmsOut, cb) => {
+                    AccessToken.reset();
+                    app = _app;
+                    _orms_out.orms_out = orms_out;
 
-    before('strapFramework', done => strapFramework(Object.assign({}, strapFrameworkKwargs, {
-        models_and_routes,
-        createSampleData: false,
-        skip_start_app: true,
-        skip_redis: false,
-        app_name: 'test-email-tpl-api',
-        callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
-            if (err != null) return done(err);
-            c.connections = _connections;
-            c.collections = _collections;
-            app = _app;
-            sdk = new EmailTplTestSDK(app);
-            auth_sdk = new AuthTestSDK(app);
-            return done();
-        }
-    })));
+                    auth_sdk = new AuthTestSDK(_app);
+                    sdk = new EmailTplTestSDK(app);
+                    auth_sdk = new AuthTestSDK(app);
 
-    before('Create & auth users', done => create_and_auth_users(user_mocks_subset, auth_sdk, done));
-
-    // Deregister database adapter connections
-    after('unregister all users', done => auth_sdk.unregister_all(user_mocks_subset, done));
-    after('tearDownConnections', done => tearDownConnections(c.connections, done));
+                    return cb(void 0);
+                },
+                cb => create_and_auth_users(user_mocks_subset, auth_sdk, cb)
+            ],
+            done
+        )
+    );
 
     describe('/api/email_tpl', () => {
         afterEach('deleteEmailTpl', done =>

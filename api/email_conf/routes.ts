@@ -4,19 +4,17 @@ import { Query, WLError } from 'waterline';
 import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { JsonSchema } from 'tv4';
-import { c, IObjectCtor } from '../../main';
 import { has_auth } from '../auth/middleware';
 import { IEmailConf } from './models.d';
-
-declare const Object: IObjectCtor;
+import { IOrmReq } from 'orm-mw';
 
 /* tslint:disable:no-var-requires */
 const email_tpl_schema: JsonSchema = require('./../../test/api/email_conf/schema');
 
 export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(email_tpl_schema, ['createdAt']),
-        (req: restify.Request, res: restify.Response, next: restify.Next) => {
-            const EmailConf: Query = c.collections['email_conf_tbl'];
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+            const EmailConf: Query = req.getOrm().waterline.collections['email_conf_tbl'];
 
             const _create = (cb) => {
                 EmailConf.create(req.body).exec((error: WLError | Error, email_conf: IEmailConf) => {
@@ -66,8 +64,8 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
 
 export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(namespace, has_auth(),
-        (req: restify.Request, res: restify.Response, next: restify.Next) => {
-            const EmailConf: Query = c.collections['email_conf_tbl'];
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+            const EmailConf: Query = req.getOrm().waterline.collections['email_conf_tbl'];
             EmailConf.find().limit(1).exec((error: WLError, email_conf: IEmailConf[]) => {
                 if (error != null) return next(fmtError(error));
                 else if (email_conf == null) return next(new NotFoundError('EmailConf'));

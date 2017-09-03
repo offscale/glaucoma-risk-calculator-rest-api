@@ -4,7 +4,8 @@ import { Query, WLError } from 'waterline';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { JsonSchema } from 'tv4';
-import { c } from '../../main';
+import { IOrmReq } from 'orm-mw';
+
 import { has_auth } from '../auth/middleware';
 import { IEmailTpl } from './models.d';
 
@@ -13,8 +14,8 @@ const email_tpl_schema: JsonSchema = require('./../../test/api/email_tpl/schema'
 
 export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:createdAt`, has_auth(),
-        (req: restify.Request, res: restify.Response, next: restify.Next) => {
-            const EmailTpl: Query = c.collections['email_tpl_tbl'];
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+            const EmailTpl: Query = req.getOrm().waterline.collections['email_tpl_tbl'];
 
             const q = req.params.createdAt === 'latest' ?
                 EmailTpl.find().sort('createdAt DESC')
@@ -34,8 +35,8 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 
 export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:createdAt`, has_auth(), has_body, mk_valid_body_mw_ignore(email_tpl_schema, ['createdAt']),
-        (req: restify.Request, res: restify.Response, next: restify.Next) => {
-            const EmailTpl: Query = c.collections['email_tpl_tbl'];
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+            const EmailTpl: Query = req.getOrm().waterline.collections['email_tpl_tbl'];
 
             req.body = Object.freeze({ tpl: req.body.tpl });
             const crit = Object.freeze({ createdAt: req.params.createdAt });
@@ -59,8 +60,8 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
 export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:createdAt`, has_auth(),
-        (req: restify.Request, res: restify.Response, next: restify.Next) => {
-            const EmailTpl: Query = c.collections['email_tpl_tbl'];
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+            const EmailTpl: Query = req.getOrm().waterline.collections['email_tpl_tbl'];
 
             EmailTpl.destroy({ createdAt: req.params.createdAt }).exec((error: WLError) => {
                 if (error != null) return next(fmtError(error));

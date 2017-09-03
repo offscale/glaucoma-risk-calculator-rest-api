@@ -1,24 +1,10 @@
-import { forEachOfLimit, parallel } from 'async';
+import { forEachOfLimit } from 'async';
 import { NotFoundError } from 'custom-restify-errors';
-import { Connection } from 'waterline';
+
 import { Response } from 'supertest';
 
 import { IUser, IUserBase } from '../api/user/models.d';
 import { IAuthSdk } from './api/auth/auth_test_sdk.d';
-import { IncomingMessageError, TCallback } from './shared_types';
-import { raise } from 'nodejs-utils';
-
-export const tearDownConnections = (connections: Connection[], done: MochaDone) => {
-    return connections ? parallel(Object.keys(connections).map(
-        connection => connections[connection]._adapter.teardown
-    ), () => {
-        Object.keys(connections).forEach(connection => {
-            if (['sails-tingo', 'waterline-nedb'].indexOf(connections[connection]._adapter.identity) < 0)
-                connections[connection]._adapter.connections.delete(connection);
-        });
-        return done();
-    }) : done();
-};
 
 interface IResponse extends Response {
     readonly body: ReadableStream | null | any | {access_token: string};
@@ -36,25 +22,3 @@ export const create_and_auth_users = (user_mocks_subset: IUserBase[], auth_sdk: 
         }), done
     );
 };
-
-export const getError = (err: IncomingMessageError | Error): IncomingMessageError | Error => {
-    if (err as any === false) return null;
-    if (typeof err['jse_shortmsg'] !== 'undefined') {
-        const e: IncomingMessageError = err as IncomingMessageError;
-        return e != null && e.body && e.body.error_message ? JSON.parse(e.body.error_message) : e;
-    }
-    if (err != null && typeof err['text'] !== 'undefined')
-        err.message += ' | ' + err['text'];
-    return err;
-};
-
-export const superEndCb = (e: IncomingMessageError | Error, r: Response,
-                           callback: TCallback<Error | IncomingMessageError, Response>) =>
-    callback(r != null && r.error != null ? getError(r.error) : getError(e), r);
-
-export const debugCb = (name: string, callback: TCallback<any, any>) => /* tslint:disable:no-console */
-    (e: any, r: any) => console.warn(`${name}::e =`, e, `;\n${name}::r =`, r, ';') || callback(e, r);
-
-export const debugObj = (obj: {} | any): {} | any => typeof obj === 'object' ?
-    console.info(Object.keys(obj).map(k => `obj.${k} = ${obj[k]};`).join('\n')) || obj
-    : raise(new TypeError(`obj ${obj} is not an Object`));

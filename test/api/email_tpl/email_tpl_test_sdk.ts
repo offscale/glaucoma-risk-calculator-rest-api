@@ -2,12 +2,11 @@ import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import { sanitiseSchema } from 'nodejs-utils';
+import { getError, sanitiseSchema, superEndCb } from 'nodejs-utils';
 import * as chaiJsonSchema from 'chai-json-schema';
 import { IEmailTplBase } from '../../../api/email_tpl/models.d';
 import { User } from '../../../api/user/models';
 import { IncomingMessageError, TCallback } from '../../shared_types';
-import { getError, superEndCb } from '../../shared_tests';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -31,7 +30,7 @@ export class EmailTplTestSDK {
             .send(email_tpl)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(getError(res.error));
 
                 try {
@@ -58,7 +57,7 @@ export class EmailTplTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.body).to.have.property('tpl');
@@ -90,7 +89,7 @@ export class EmailTplTestSDK {
             .set('X-Access-Token', access_token)
             .send(updated_email_tpl)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.body).to.be.an('object');
@@ -118,7 +117,7 @@ export class EmailTplTestSDK {
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.status).to.be.equal(204);

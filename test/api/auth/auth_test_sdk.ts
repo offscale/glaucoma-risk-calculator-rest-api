@@ -2,14 +2,12 @@ import { mapSeries, series, waterfall } from 'async';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { IncomingMessageError, sanitiseSchema } from 'nodejs-utils';
+import { getError, HttpStrResp, IncomingMessageError, sanitiseSchema, superEndCb, TCallback } from 'nodejs-utils';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
 
 import { User } from '../../../api/user/models';
 import { IUser, IUserBase } from '../../../api/user/models.d';
-import { getError, superEndCb } from '../../shared_tests';
-import { HttpStrResp, TCallback } from '../../shared_types';
 import { user_mocks } from '../user/user_mocks';
 import { IAuthSdk } from './auth_test_sdk.d';
 // import { saltSeeker } from '../../../api/user/utils';
@@ -34,7 +32,7 @@ export class AuthTestSDK implements IAuthSdk {
             .send(user)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(getError(res.error));
 
                 try {
@@ -44,7 +42,7 @@ export class AuthTestSDK implements IAuthSdk {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }
@@ -59,7 +57,7 @@ export class AuthTestSDK implements IAuthSdk {
             .expect('Content-Type', /json/)
             .expect(201)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
@@ -68,7 +66,7 @@ export class AuthTestSDK implements IAuthSdk {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }
@@ -82,7 +80,7 @@ export class AuthTestSDK implements IAuthSdk {
             .set('X-Access-Token', access_token)
             .set('Connection', 'keep-alive')
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
@@ -93,7 +91,7 @@ export class AuthTestSDK implements IAuthSdk {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }
@@ -106,7 +104,7 @@ export class AuthTestSDK implements IAuthSdk {
             .set('X-Access-Token', access_token)
             .set('Connection', 'keep-alive')
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
@@ -116,7 +114,7 @@ export class AuthTestSDK implements IAuthSdk {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }
@@ -144,14 +142,14 @@ export class AuthTestSDK implements IAuthSdk {
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', ident.access_token)
                 .expect(204)
-                .end((err, res) => superEndCb(err, res, callback));
+                .end((err, res) => superEndCb(callback)(err, res));
         else
             supertest(this.app)
                 .delete('/api/user')
                 .set('Connection', 'keep-alive')
                 .send({ email: ident.user_id })
                 .expect(204)
-                .end((err, res) => superEndCb(err, res, callback));
+                .end((err, res) => superEndCb(callback)(err, res));
     }
 
     public unregister_all(users: Array<IUser | IUserBase>,
@@ -159,7 +157,7 @@ export class AuthTestSDK implements IAuthSdk {
         mapSeries(users as any, (user: IUserBase, callb) =>
             waterfall([
                     call_back => this.login(user, (err, res) =>
-                        err == null ? call_back(null, res.header['x-access-token']) : call_back(err)
+                        err == null ? call_back(void 0, res.header['x-access-token']) : call_back(err)
                     ),
                     (access_token, call_back) => this.unregister({ access_token }, (err, res) =>
                         call_back(err, access_token)

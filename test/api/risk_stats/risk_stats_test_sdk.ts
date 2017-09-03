@@ -2,13 +2,12 @@ import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import { IncomingMessageError, sanitiseSchema } from 'nodejs-utils';
+import { getError, IncomingMessageError, sanitiseSchema, superEndCb } from 'nodejs-utils';
 import * as chaiJsonSchema from 'chai-json-schema';
 
 import { IRiskStatsBase } from '../../../api/risk_stats/models.d';
 import { User } from '../../../api/user/models';
 import { TCallback } from '../../shared_types';
-import { getError, superEndCb } from '../../shared_tests';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -34,7 +33,7 @@ export class RiskStatsTestSDK {
             .send(risk_stats)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(getError(res.error));
 
                 try {
@@ -63,7 +62,7 @@ export class RiskStatsTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.body).to.have.property('risk_json');
@@ -95,7 +94,7 @@ export class RiskStatsTestSDK {
             .set('X-Access-Token', access_token)
             .send(updated_risk_stats)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
@@ -123,7 +122,7 @@ export class RiskStatsTestSDK {
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.status).to.be.equal(204);

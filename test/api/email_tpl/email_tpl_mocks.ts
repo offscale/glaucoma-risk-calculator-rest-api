@@ -1,7 +1,4 @@
-import { IObjectCtor } from '../../../main';
 import { IEmailTplBase } from '../../../api/email_tpl/models.d';
-
-declare const Object: IObjectCtor;
 
 export const email_tpl_mocks: {successes: IEmailTplBase[], failures: Array<{}>} = {
     failures: [

@@ -1,10 +1,11 @@
-import * as restify from 'restify';
 import { waterfall } from 'async';
-import { Query, WLError } from 'waterline';
-import { has_body, mk_valid_body_mw, mk_valid_body_mw_ignore } from 'restify-validators';
 import { fmtError, NotFoundError } from 'custom-restify-errors';
+import { IOrmReq } from 'orm-mw';
+import * as restify from 'restify';
+import { has_body, mk_valid_body_mw, mk_valid_body_mw_ignore } from 'restify-validators';
 import { JsonSchema } from 'tv4';
-import { c } from '../../main';
+import { Query, WLError } from 'waterline';
+
 import { has_auth } from './../auth/middleware';
 import { IContact, IContactBase } from './models.d';
 
@@ -13,8 +14,8 @@ const contact_schema: JsonSchema = require('./../../test/api/contact/schema');
 
 export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:email`, has_auth(),
-        (req: restify.Request, res: restify.Response, next: restify.Next) => {
-            const Contact: Query = c.collections['contact_tbl'];
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+            const Contact: Query = req.getOrm().waterline.collections['contact_tbl'];
 
             Contact.findOne({ owner: req['user_id'], email: req.params.email }
             ).exec((error: WLError, contact: IContact) => {
@@ -30,8 +31,8 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:email`, has_body, mk_valid_body_mw(contact_schema, false),
         mk_valid_body_mw_ignore(contact_schema, ['Missing required property']), has_auth(),
-        (req: restify.Request, res: restify.Response, next: restify.Next) => {
-            const Contact: Query = c.collections['contact_tbl'];
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+            const Contact: Query = req.getOrm().waterline.collections['contact_tbl'];
 
             // TODO: Transaction
             waterfall([
@@ -54,8 +55,8 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
 export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:email`, has_auth(),
-        (req: restify.Request, res: restify.Response, next: restify.Next) => {
-            const Contact: Query = c.collections['contact_tbl'];
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+            const Contact: Query = req.getOrm().waterline.collections['contact_tbl'];
 
             Contact.destroy({ owner: req['user_id'], email: req.params.email }).exec((error: WLError) => {
                 if (error != null) return next(fmtError(error));

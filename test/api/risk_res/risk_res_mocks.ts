@@ -1,7 +1,4 @@
-import { IObjectCtor } from '../../../main';
 import { IRiskResBase } from '../../../api/risk_res/models.d';
-
-declare const Object: IObjectCtor;
 
 export const risk_res_mocks: {successes: IRiskResBase[], failures: Array<{}>} = {
     failures: [

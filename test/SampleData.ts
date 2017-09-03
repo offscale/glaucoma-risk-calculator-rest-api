@@ -4,9 +4,10 @@ import { IncomingMessageError, trivial_merge } from 'nodejs-utils';
 import { HttpError } from 'restify-errors';
 import * as url from 'url';
 import { AsyncResultCallback, Connection, Query } from 'waterline';
-import { c } from '../main';
+
 import { TCallback } from './shared_types';
 import { IRiskJson } from 'glaucoma-risk-quiz-engine';
+import { _orms_out } from '../config';
 
 /* tslint:disable:no-var-requires */
 export const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-engine/risk');
@@ -79,10 +80,10 @@ export class SampleData implements ISampleData {
     public token: string;
     private uri: url.Url;
 
-    constructor(uri: string, connections: Connection[], collections: Query[]) {
+    constructor(uri: string, connection: Connection[], collections: Query[]) {
         this.uri = url.parse(uri);
-        c.connections = connections;
-        c.collections = collections;
+        _orms_out.orms_out.waterline.connection = connection;
+        _orms_out.orms_out.waterline.collections = collections;
     }
 
     public login(user: string, callback: TCallback<HttpError, string>) {

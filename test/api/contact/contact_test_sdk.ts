@@ -1,14 +1,11 @@
 import * as chai from 'chai';
 import { expect } from 'chai';
 import * as chaiJsonSchema from 'chai-json-schema';
-import { IncomingMessageError, sanitiseSchema } from 'nodejs-utils';
+import { IncomingMessageError, sanitiseSchema, superEndCb, TCallback } from 'nodejs-utils';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
-
 import { IContactBase } from '../../../api/contact/models.d';
 import { User } from '../../../api/user/models';
-import { TCallback } from '../../shared_types';
-import { getError, superEndCb } from '../../shared_tests';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -32,8 +29,8 @@ export class ContactTestSDK {
             .send(contact)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
-                else if (res.error) return callback(getError(res.error));
+                if (err != null) return superEndCb(callback)(err);
+                else if (res.error != null) return superEndCb(callback)(res.error);
 
                 try {
                     expect(res.status).to.be.equal(201);
@@ -42,7 +39,7 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }
@@ -59,8 +56,8 @@ export class ContactTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
-                else if (res.error) return callback(getError(res.error));
+                if (err != null) return superEndCb(callback)(err);
+                else if (res.error != null) return superEndCb(callback)(res.error);
                 try {
                     expect(res.body).to.have.property('owner');
                     expect(res.body).to.have.property('contacts');
@@ -72,7 +69,7 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }
@@ -89,15 +86,15 @@ export class ContactTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
-                else if (res.error) return callback(getError(res.error));
+                if (err != null) return superEndCb(callback)(err);
+                else if (res.error != null) return superEndCb(callback)(res.error);
                 try {
                     expect(res.body).to.be.an('object');
                     expect(res.body).to.be.jsonSchema(contact_schema);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }
@@ -121,8 +118,8 @@ export class ContactTestSDK {
             .set('X-Access-Token', access_token)
             .send(updated_contact)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
-                else if (res.error) return callback(getError(res.error));
+                if (err != null) return superEndCb(callback)(err);
+                else if (res.error != null) return superEndCb(callback)(res.error);
                 try {
                     expect(res.body).to.be.an('object');
                     Object.keys(updated_contact).map(
@@ -132,7 +129,7 @@ export class ContactTestSDK {
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }
@@ -149,14 +146,14 @@ export class ContactTestSDK {
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
-                else if (res.error) return callback(getError(res.error));
+                if (err != null) return superEndCb(callback)(err);
+                else if (res.error != null) return superEndCb(callback)(res.error);
                 try {
                     expect(res.status).to.be.equal(204);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
-                    callback(err, res);
+                    superEndCb(callback)(err, res);
                 }
             });
     }

@@ -2,13 +2,12 @@ import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import { IncomingMessageError, sanitiseSchema } from 'nodejs-utils';
+import { getError, IncomingMessageError, sanitiseSchema, superEndCb } from 'nodejs-utils';
 import * as chaiJsonSchema from 'chai-json-schema';
 
 import { IEmailConfBase } from '../../../api/email_conf/models.d';
 import { User } from '../../../api/user/models';
 import { TCallback } from '../../shared_types';
-import { getError, superEndCb } from '../../shared_tests';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -34,7 +33,7 @@ export class EmailConfTestSDK {
             .send(email_conf)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(getError(res.error));
 
                 try {
@@ -64,7 +63,7 @@ export class EmailConfTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(err, res, callback);
+                if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.body).to.be.jsonSchema(email_conf_schema);

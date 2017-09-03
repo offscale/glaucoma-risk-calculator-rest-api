@@ -1,19 +1,21 @@
-import * as async from 'async';
-import { IModelRoute } from 'nodejs-utils';
+import { series, waterfall } from 'async';
+import { createLogger } from 'bunyan';
+import { IModelRoute, model_route_to_map } from 'nodejs-utils';
+import { IOrmsOut, tearDownConnections } from 'orm-mw';
+import { basename } from 'path';
 import { Server } from 'restify';
-import { strapFramework } from 'restify-orm-framework';
-import { Collection, Connection } from 'waterline';
+
+import { AccessToken } from '../../../api/auth/models';
 import { IContactBase } from '../../../api/contact/models.d';
 import { IUserBase } from '../../../api/user/models.d';
-import { all_models_and_routes_as_mr, c, IObjectCtor, strapFrameworkKwargs } from '../../../main';
-import { create_and_auth_users, tearDownConnections } from '../../shared_tests';
+import { _orms_out } from '../../../config';
+import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
+import { create_and_auth_users } from '../../shared_tests';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { user_mocks } from '../user/user_mocks';
 import { contact_mocks } from './contact_mocks';
 import { ContactTestSDK } from './contact_test_sdk';
-
-declare const Object: IObjectCtor;
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -22,39 +24,41 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(20, 30);
+export const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(20, 30);
+
+const tapp_name = `test::${basename(__dirname)}`;
+const logger = createLogger({ name: tapp_name });
 
 describe('Contact::routes', () => {
     let sdk: ContactTestSDK;
     let auth_sdk: IAuthSdk;
-    let app: Server;
+
     let mocks: {successes: IContactBase[], failures: Array<{}>};
 
-    before('tearDownConnections', done => tearDownConnections(c.connections, done));
+    before(done =>
+        waterfall([
+                cb => tearDownConnections(_orms_out.orms_out, e => cb(e)),
+                cb => AccessToken.reset() || cb(void 0),
+                cb => setupOrmApp(
+                    model_route_to_map(models_and_routes), { logger },
+                    { skip_start_app: true, app_name: tapp_name, logger },
+                    cb
+                ),
+                (_app: Server, orms_out: IOrmsOut, cb) => {
+                    AccessToken.reset();
+                    auth_sdk = new AuthTestSDK(_app);
+                    sdk = new ContactTestSDK(_app);
+                    mocks = contact_mocks(user_mocks_subset);
+                    return cb(void 0);
+                },
+                cb => create_and_auth_users(user_mocks_subset, auth_sdk, cb)
+            ],
+            done
+        )
+    );
 
-    before('strapFramework', done => strapFramework(Object.assign({}, strapFrameworkKwargs, {
-        models_and_routes,
-        createSampleData: false,
-        skip_start_app: true,
-        skip_redis: false,
-        app_name: 'test-contact-api',
-        callback: (err, _app, _connections: Connection[], _collections: Collection[]) => {
-            if (err != null) return done(err);
-            c.connections = _connections;
-            c.collections = _collections;
-            app = _app;
-            sdk = new ContactTestSDK(app);
-            auth_sdk = new AuthTestSDK(app);
-            mocks = contact_mocks(user_mocks_subset);
-            return done();
-        }
-    })));
-
-    before('Create & auth users', done => create_and_auth_users(user_mocks_subset, auth_sdk, done));
-
-    // Deregister database adapter connections
+    // Deregister database adapter waterline_c
     after('unregister all users', done => auth_sdk.unregister_all(user_mocks_subset, done));
-    after('tearDownConnections', done => tearDownConnections(c.connections, done));
 
     describe('/api/contact', () => {
         afterEach('deleteContact', done => sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[0], done));
@@ -63,7 +67,7 @@ describe('Contact::routes', () => {
             sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], done)
         );
 
-        it('GET should get all contacts', done => async.series([
+        it('GET should get all contacts', done => series([
                 cb => sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], cb),
                 cb => sdk.getAll(user_mocks_subset[0].access_token, mocks.successes[0], cb)
             ], done)
