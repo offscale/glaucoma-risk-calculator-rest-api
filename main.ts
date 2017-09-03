@@ -30,7 +30,8 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                             callback: (err: Error, app?: TApp, orms_out?: IOrmsOut) => void) => waterfall([
     cb => ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),
     (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut, cb) =>
-        routesMerger(Object.assign({}, {
+        routesMerger(Object.assign({
+            with_app, logger,
             routes: models_and_routes,
             server_type: 'restify',
             package_: { version: package_.version },
@@ -40,8 +41,6 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
             skip_start_app: false,
             skip_app_logging: false,
             listen_port: process.env.PORT || 3000,
-            with_app,
-            logger,
             onServerStart: (uri: string, app: Server, next) => {
                 AccessToken.reset();
 
@@ -49,13 +48,17 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                 const riskStatsSdk = new RiskStatsTestSDK(app);
                 const default_user: IUserBase = user_mocks.successes[0];
 
+                const log_prev = (msg: string, callb) => logger.info(msg) || callb(void 0);
+
                 waterfall([
                         callb => authSdk.unregister_all([default_user], (err: Error & {status: number}) =>
                             callb(err != null && err.status !== 404 ? err : void 0,
                                 'removed default user; next: adding')),
+                        log_prev,
                         callb => authSdk.register_login(default_user, callb),
                         (access_token, callb) => riskStatsSdk.create(access_token, { risk_json, createdAt: new Date() },
-                            (err, res) => err == null && logger.info('loaded risk-json') || callb(err)),
+                            err => callb(err, 'loaded risk-json')),
+                        log_prev,
                         callb => logger.info(`${app.name} listening from ${app.url}`) || callb(void 0)
                     ], (e: Error) => e == null ? next(void 0, app, orms_out) : raise(e)
                 );

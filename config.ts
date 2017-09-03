@@ -1,6 +1,7 @@
 import * as Logger from 'bunyan';
 import { WaterlineError } from 'custom-restify-errors';
 import { IormMwConfig, IOrmsOut, RequestHandler } from 'orm-mw';
+import { Server } from 'restify';
 import { IRoutesMergerConfig } from 'routes-merger';
 import { ConfigOptions, WLError } from 'waterline';
 import * as waterline_postgres from 'waterline-postgresql';
@@ -58,7 +59,7 @@ export const getOrmMwConfig = (models: Map<string, any>, logger: Logger,
             throw e;
         }
         _orms_out.orms_out = orms_out;
-        return cb(void 0, _app => {
+        return cb(void 0, (_app: Server) => {
             _app.use(mw);
             _app.on('WLError', (req, res, err: WLError, next) =>
                 next(new WaterlineError(err))
