@@ -4,10 +4,10 @@ import { Query, WLError } from 'waterline';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { JsonSchema } from 'tv4';
+import { IOrmReq } from 'orm-mw';
 
 import { has_auth } from '../auth/middleware';
 import { IRiskStats } from './models.d';
-import { IOrmReq } from 'orm-mw';
 
 /* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
@@ -18,7 +18,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const RiskStats: Query = req.getOrm().waterline.collections['risk_stats_tbl'];
 
             const q = req.params.createdAt === 'latest' ?
-                RiskStats.find().sort('createdAt DESC')
+                RiskStats.find().sort('createdAt')
                     .limit(1) :
                 RiskStats.findOne({ createdAt: req.params.createdAt });
             q.exec((error: WLError, risk_stats: IRiskStats | IRiskStats[]) => {
