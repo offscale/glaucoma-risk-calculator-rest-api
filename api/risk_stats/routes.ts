@@ -1,12 +1,13 @@
 import * as restify from 'restify';
-import { Query, WLError } from 'waterline';
+
 import { fmtError, NotFoundError } from 'custom-restify-errors';
+import { IOrmReq } from 'orm-mw';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { JsonSchema } from 'tv4';
+import { Query, WLError } from 'waterline';
 
 import { has_auth } from '../auth/middleware';
 import { IRiskStats } from './models.d';
-import { IOrmReq } from 'orm-mw';
 
 /* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');

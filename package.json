@@ -46,7 +46,7 @@
         "@types/mocha": "^2.2.43",
         "@types/node": "^8.0.28",
         "@types/redis": "^2.6.0",
-        "@types/restify": "^5.0.2",
+        "@types/restify": "^5.0.3",
         "@types/restify-errors": "^4.3.2",
         "@types/superagent": "^3.5.5",
         "@types/supertest": "^2.0.3",
@@ -55,7 +55,7 @@
         "chai": "^4.1.2",
         "chai-json-schema": "^1.5.0",
         "chai-json-schema-ajv": "^0.2.4",
-        "mocha": "^3.5.2",
+        "mocha": "^3.5.3",
         "supertest": "^3.0.0",
         "ts-node": "^3.3.0",
         "typescript": "^2.5.2"

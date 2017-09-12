@@ -1,5 +1,6 @@
 import * as restify from 'restify';
 import * as async from 'async';
+
 import { Query, WLError } from 'waterline';
 import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
 import { fmtError, NotFoundError } from 'custom-restify-errors';
@@ -18,7 +19,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const RiskStats: Query = req.getOrm().waterline.collections['risk_stats_tbl'];
 
             const q = req.params.createdAt === 'latest' ?
-                RiskStats.find().sort('createdAt')
+                RiskStats.find().sort('createdAt DESC')
                     .limit(1) :
                 RiskStats.findOne({ createdAt: req.params.createdAt });
             q.exec((error: WLError, risk_stats: IRiskStats | IRiskStats[]) => {
