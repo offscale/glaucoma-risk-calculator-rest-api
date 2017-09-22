@@ -44,7 +44,7 @@
         "@types/ioredis": "0.0.25",
         "@types/mathjs": "0.0.35",
         "@types/mocha": "^2.2.43",
-        "@types/node": "^8.0.28",
+        "@types/node": "^8.0.29",
         "@types/redis": "^2.6.0",
         "@types/restify": "^5.0.4",
         "@types/restify-errors": "^4.3.2",
