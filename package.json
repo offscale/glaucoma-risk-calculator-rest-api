@@ -1,6 +1,6 @@
 {
     "name": "glaucoma-risk-calculator-rest-api",
-    "version": "0.0.24",
+    "version": "0.0.25",
     "description": "REST API backend written on Node.JS in TypeScript with restify and waterline.",
     "main": "main.js",
     "author": "Samuel Marks <samuel@offscale.io>",
@@ -37,16 +37,16 @@
         "waterline-postgresql": "^0.14.8"
     },
     "devDependencies": {
-        "@types/async": "^2.0.42",
+        "@types/async": "^2.0.43",
         "@types/bunyan": "1.8.3",
         "@types/chai": "^4.0.4",
         "@types/faker": "^4.1.1",
         "@types/ioredis": "0.0.25",
         "@types/mathjs": "0.0.35",
         "@types/mocha": "^2.2.43",
-        "@types/node": "^8.0.29",
+        "@types/node": "^8.0.31",
         "@types/redis": "^2.6.0",
-        "@types/restify": "^5.0.4",
+        "@types/restify": "^5.0.5",
         "@types/restify-errors": "^4.3.2",
         "@types/superagent": "^3.5.5",
         "@types/supertest": "^2.0.3",
@@ -58,6 +58,6 @@
         "mocha": "^3.5.3",
         "supertest": "^3.0.0",
         "ts-node": "^3.3.0",
-        "typescript": "^2.5.2"
+        "typescript": "^2.5.3"
     }
 }
