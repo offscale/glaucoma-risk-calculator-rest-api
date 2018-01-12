@@ -32,7 +32,7 @@ export class AccessToken {
     }
 
     public deleteOne(access_token: string, callback: numCb) {
-        return this.redis.del(access_token, callback);
+        return this.redis.del(access_token, callback as any);
     }
 
     public logout(arg: LogoutArg, callback: (err?: Error | RestError) => void) {
