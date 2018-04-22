@@ -64,30 +64,33 @@ describe('RiskRes::routes', () => {
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/risk_res', () => {
-        afterEach('deleteRiskRes', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, risk_res_mocks.successes[0], done));
+        afterEach('deleteRiskRes', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, risk_res_mocks.successes[0], done);
+        });
 
-        it('POST should create RiskRes', done =>
-            sdk.create(user_mocks_subset[0].access_token, risk_res_mocks.successes[0], done)
-        );
+        it('POST should create RiskRes', done => {
+            sdk.create(user_mocks_subset[0].access_token, risk_res_mocks.successes[0], done);
+        });
     });
 
     describe('/api/risk_res/:createdAt', () => {
-        before('createRiskRes', done =>
+        before('createRiskRes', done => {
             sdk.create(user_mocks_subset[0].access_token, risk_res_mocks.successes[1],
                 (e, r: Response) => {
                     if (e == null && r != null) risk_res_mocks.successes[1] = r.body as any;
                     return done();
-                }));
-        after('deleteRiskRes', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, risk_res_mocks.successes[1], done));
+                });
+        });
+        after('deleteRiskRes', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, risk_res_mocks.successes[1], done);
+        });
 
-        it('GET should retrieve RiskRes', done =>
-            sdk.get(user_mocks_subset[0].access_token, risk_res_mocks.successes[1] as IRiskRes, done)
-        );
+        it('GET should retrieve RiskRes', done => {
+            sdk.get(user_mocks_subset[0].access_token, risk_res_mocks.successes[1] as IRiskRes, done);
+        });
 
-        it('DELETE should destroy RiskRes', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, risk_res_mocks.successes[1], done)
-        );
+        it('DELETE should destroy RiskRes', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, risk_res_mocks.successes[1], done);
+        });
     });
 });

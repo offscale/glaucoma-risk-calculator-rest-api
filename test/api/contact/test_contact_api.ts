@@ -64,11 +64,13 @@ describe('Contact::routes', () => {
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/contact', () => {
-        afterEach('deleteContact', done => sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[0], done));
+        afterEach('deleteContact', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[0], done);
+        });
 
-        it('POST should create contact', done =>
-            sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], done)
-        );
+        it('POST should create contact', done => {
+            sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], done);
+        });
 
         it('GET should get all contacts', done => async.series([
                 cb => sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], cb),
@@ -78,24 +80,28 @@ describe('Contact::routes', () => {
     });
 
     describe('/api/contact/:email', () => {
-        before('createContact', done => sdk.create(user_mocks_subset[0].access_token, mocks.successes[1], _ => done()));
-        after('deleteContact', done => sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[1], done));
+        before('createContact', done => {
+            sdk.create(user_mocks_subset[0].access_token, mocks.successes[1], _ => done());
+        });
+        after('deleteContact', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[1], done);
+        });
 
-        it('GET should retrieve contact', done =>
-            sdk.retrieve(user_mocks_subset[0].access_token, mocks.successes[1], done)
-        );
+        it('GET should retrieve contact', done => {
+            sdk.retrieve(user_mocks_subset[0].access_token, mocks.successes[1], done);
+        });
 
-        it('PUT should update contact', done =>
+        it('PUT should update contact', done => {
             sdk.update(user_mocks_subset[0].access_token, mocks.successes[1],
                 {
                     owner: mocks.successes[1].owner,
                     email: mocks.successes[1].email,
                     name: `NAME: ${mocks.successes[1].email}`
-                } as IContactBase, done)
-        );
+                } as IContactBase, done);
+        });
 
-        it('DELETE should destroy contact', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[1], done)
-        );
+        it('DELETE should destroy contact', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[1], done);
+        });
     });
 });

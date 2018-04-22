@@ -63,32 +63,36 @@ describe('RiskStats::routes', () => {
 
     describe('routes', () => {
         describe('/api/risk_stats', () => {
-            afterEach('deleteRiskStats', done =>
-                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[0], done));
+            afterEach('deleteRiskStats', done => {
+                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[0], done);
+            });
 
-            it('POST should create RiskStats', done =>
-                sdk.create(user_mocks_subset[0].access_token, risk_stats_mocks.successes[0], done)
-            );
+            it('POST should create RiskStats', done => {
+                sdk.create(user_mocks_subset[0].access_token, risk_stats_mocks.successes[0], done);
+            });
         });
 
         describe('/api/risk_stats/:createdAt', () => {
-            before('createRiskStats', done =>
-                sdk.create(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], _ => done()));
-            after('deleteRiskStats', done =>
-                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done));
+            before('createRiskStats', done => {
+                sdk.create(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], _ => done());
+            });
+            after('deleteRiskStats', done => {
+                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done);
+            });
 
-            it('GET should retrieve RiskStats', done =>
-                sdk.get(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done)
-            );
+            it('GET should retrieve RiskStats', done => {
+                sdk.get(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done);
+            });
 
-            it('PUT should update RiskStats', done =>
+            it('PUT should update RiskStats', done => {
                 sdk.update(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1],
-                    { risk_json: 'json_risk', createdAt: risk_stats_mocks.successes[1].createdAt }, done)
-            );
+                    { risk_json: 'json_risk', createdAt: risk_stats_mocks.successes[1].createdAt },
+                    done);
+            });
 
-            it('DELETE should destroy RiskStats', done =>
-                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done)
-            );
+            it('DELETE should destroy RiskStats', done => {
+                sdk.destroy(user_mocks_subset[0].access_token, risk_stats_mocks.successes[1], done);
+            });
         });
     });
 });

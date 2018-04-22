@@ -63,31 +63,34 @@ describe('EmailTpl::routes', () => {
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/email_tpl', () => {
-        afterEach('deleteEmailTpl', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[0], done));
+        afterEach('deleteEmailTpl', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[0], done);
+        });
 
-        it('POST should create EmailTpl', done =>
-            sdk.create(user_mocks_subset[0].access_token, email_tpl_mocks.successes[0], done)
-        );
+        it('POST should create EmailTpl', done => {
+            sdk.create(user_mocks_subset[0].access_token, email_tpl_mocks.successes[0], done);
+        });
     });
 
     describe('/api/email_tpl/:createdAt', () => {
-        before('createEmailTpl', done =>
-            sdk.create(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], _ => done()));
-        after('deleteEmailTpl', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done));
+        before('createEmailTpl', done => {
+            sdk.create(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], _ => done());
+        });
+        after('deleteEmailTpl', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done);
+        });
 
-        it('GET should retrieve EmailTpl', done =>
-            sdk.get(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done)
-        );
+        it('GET should retrieve EmailTpl', done => {
+            sdk.get(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done);
+        });
 
-        it('PUT should update EmailTpl', done =>
+        it('PUT should update EmailTpl', done => {
             sdk.update(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1],
-                { tpl: 'foo', createdAt: email_tpl_mocks.successes[1].createdAt } as IEmailTpl, done)
-        );
+                { tpl: 'foo', createdAt: email_tpl_mocks.successes[1].createdAt } as IEmailTpl, done);
+        });
 
-        it('DELETE should destroy EmailTpl', done =>
-            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done)
-        );
+        it('DELETE should destroy EmailTpl', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done);
+        });
     });
 });
