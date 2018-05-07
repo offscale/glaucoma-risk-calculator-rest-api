@@ -1,6 +1,6 @@
-import { IEmailConfBase } from '../../../api/email_conf/models.d';
+import { IConfigBase } from '../../../api/config/models.d';
 
-export const email_conf_mocks: {successes: IEmailConfBase[], failures: Array<{}>} = {
+export const config_mocks: {successes: IConfigBase[], failures: Array<{}>} = {
     failures: [
         {}, { client_id: 0, tenant_id: '' }, { client_id: '', tenant_id: '' }
     ],
@@ -12,5 +12,5 @@ export const email_conf_mocks: {successes: IEmailConfBase[], failures: Array<{}>
 
 if (require.main === module) {
     /* tslint:disable:no-console */
-    console.info(email_conf_mocks);
+    console.info(config_mocks);
 }

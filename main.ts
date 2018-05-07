@@ -7,7 +7,6 @@ import { IRoutesMergerConfig, routesMerger, TApp } from 'routes-merger';
 
 import { AccessToken } from './api/auth/models';
 import { AuthTestSDK } from './test/api/auth/auth_test_sdk';
-import { risk_json } from './test/SampleData';
 import { RiskStatsTestSDK } from './test/api/risk_stats/risk_stats_test_sdk';
 import { IUserBase } from './api/user/models.d';
 import * as config from './config';
@@ -53,14 +52,15 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                 const log_prev = (msg: string, callb) => logger.info(msg) || callb(void 0);
 
                 waterfall([
-                        callb => authSdk.unregister_all([admin_user], (err: Error & {status: number}) =>
-                            callb(err != null && err.status !== 404 ? err : void 0,
-                                'removed default user; next: adding')),
-                        log_prev,
-                        callb => authSdk.register_login(admin_user, callb),
-                        (access_token, callb) => riskStatsSdk.create(access_token, { risk_json, createdAt: new Date() },
-                            err => callb(err, 'loaded risk-json')),
-                        log_prev,
+                    /*callb => authSdk.unregister_all([admin_user], (err: Error & {status: number}) =>
+                        callb(err != null && err.status !== 404 ? err : void 0,
+                            'removed default user; next: adding')),
+                    log_prev,
+                    callb => authSdk.register_login(admin_user, callb),
+                    (access_token, callb) => riskStatsSdk.create(access_token, { risk_json, createdAt: new Date() },
+                        err => callb(err, 'loaded risk-json')),
+                    log_prev,
+                    */
                         callb => logger.info(`${app.name} listening from ${app.url}`) || callb(void 0)
                     ], (e: Error) => e == null ? next(void 0, app, orms_out) : raise(e)
                 );

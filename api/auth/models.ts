@@ -26,7 +26,8 @@ export class AccessToken {
     public findOne(access_token: string, callback: strCbV) {
         return this.redis.get(access_token, (err: Error, user_id: string) => {
             if (err != null) return callback(err);
-            else if (user_id == null) return callback(new AuthError('Nothing associated with that access token'));
+            else if (user_id == null)
+                return callback(new AuthError('Nothing associated with that access token'));
             return callback(void 0, user_id);
         });
     }
@@ -43,8 +44,9 @@ export class AccessToken {
                 this.redis.multi().del(...access_tokens).exec(errors =>
                     callback(errors != null && errors['length'] ? new GenericError({
                         statusCode: 400,
-                        error: 'LogoutErrors',
-                        error_message: JSON.stringify(errors)
+                        name: 'LogoutErrors',
+                        cause: errors[0], // TODO: Multi-error with VError
+                        message: JSON.stringify(errors)
                     }) : null)
                 );
             });
@@ -53,15 +55,17 @@ export class AccessToken {
                 if (err != null) return callback(err);
                 else if (user_id == null) return callback(new GenericError({
                     statusCode: 410,
-                    error: 'AlreadyDone',
-                    error_message: 'User already logged out'
+                    name: 'AlreadyDone',
+                    message: 'User already logged out',
+                    cause: new Error()
                 }));
                 return this.logout({ user_id }, callback);
             });
         else return callback(new GenericError({
+                cause: new Error(),
                 statusCode: 400,
-                error: 'ConstraintError',
-                error_message: 'Can\'t logout without user_id or access token'
+                name: 'ConstraintError',
+                message: 'Can\'t logout without user_id or access token'
             }));
     }
 

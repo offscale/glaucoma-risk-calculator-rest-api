@@ -1,7 +1,7 @@
-import { IEmailConf } from './models.d';
+import { IConfig } from './models.d';
 
-export const EmailConf = {
-    identity: 'email_conf_tbl',
+export const Config = {
+    identity: 'config_tbl',
     connection: 'main_db',
     _omit: [/*'uuid'*/],
     attributes: {
@@ -29,11 +29,11 @@ export const EmailConf = {
             type: 'string'
         },
         toJSON: function toJSON() {
-            const email_conf: IEmailConf = this.toObject();
-            EmailConf._omit.map(k => delete email_conf[k]);
-            for (const key in email_conf)
-                if (email_conf.hasOwnProperty(key) && email_conf[key] == null) delete email_conf[key];
-            return email_conf;
+            const config: IConfig = this.toObject();
+            Config._omit.map(k => delete config[k]);
+            for (const key in config)
+                if (config.hasOwnProperty(key) && config[key] == null) delete config[key];
+            return config;
         }
     }
 };

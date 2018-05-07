@@ -7,20 +7,20 @@ import { waterfall } from 'async';
 
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { create_and_auth_users } from '../../shared_tests';
-import { EmailTplTestSDK } from './email_tpl_test_sdk';
+import { TemplateTestSDK } from './template_test_sdk';
 import { user_mocks } from '../user/user_mocks';
 import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { IUserBase } from '../../../api/user/models.d';
-import { email_tpl_mocks } from './email_tpl_mocks';
-import { IEmailTpl } from '../../../api/email_tpl/models.d';
+import { template_mocks } from './template_mocks';
+import { ITemplate } from '../../../api/template/models.d';
 import { AccessToken } from '../../../api/auth/models';
 import { _orms_out } from '../../../config';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
     auth: all_models_and_routes_as_mr['auth'],
-    email_tpl: all_models_and_routes_as_mr['email_tpl']
+    template: all_models_and_routes_as_mr['template']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
@@ -29,8 +29,8 @@ const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(30, 40);
 const tapp_name = `test::${basename(__dirname)}`;
 const logger = createLogger({ name: tapp_name });
 
-describe('EmailTpl::routes', () => {
-    let sdk: EmailTplTestSDK;
+describe('Template::routes', () => {
+    let sdk: TemplateTestSDK;
     let auth_sdk: IAuthSdk;
     let app: Server;
 
@@ -49,7 +49,7 @@ describe('EmailTpl::routes', () => {
                     _orms_out.orms_out = orms_out;
 
                     auth_sdk = new AuthTestSDK(_app);
-                    sdk = new EmailTplTestSDK(app);
+                    sdk = new TemplateTestSDK(app);
                     auth_sdk = new AuthTestSDK(app);
 
                     return cb(void 0);
@@ -62,35 +62,35 @@ describe('EmailTpl::routes', () => {
 
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
-    describe('/api/email_tpl', () => {
-        afterEach('deleteEmailTpl', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[0], done);
+    describe('/api/template', () => {
+        afterEach('deleteTemplate', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, template_mocks.successes[0], done);
         });
 
-        it('POST should create EmailTpl', done => {
-            sdk.create(user_mocks_subset[0].access_token, email_tpl_mocks.successes[0], done);
+        it('POST should create Template', done => {
+            sdk.create(user_mocks_subset[0].access_token, template_mocks.successes[0], done);
         });
     });
 
-    describe('/api/email_tpl/:createdAt', () => {
-        before('createEmailTpl', done => {
-            sdk.create(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], _ => done());
+    describe('/api/template/:createdAt', () => {
+        before('createTemplate', done => {
+            sdk.create(user_mocks_subset[0].access_token, template_mocks.successes[1], _ => done());
         });
-        after('deleteEmailTpl', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done);
-        });
-
-        it('GET should retrieve EmailTpl', done => {
-            sdk.get(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done);
+        after('deleteTemplate', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, template_mocks.successes[1], done);
         });
 
-        it('PUT should update EmailTpl', done => {
-            sdk.update(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1],
-                { tpl: 'foo', createdAt: email_tpl_mocks.successes[1].createdAt } as IEmailTpl, done);
+        it('GET should retrieve Template', done => {
+            sdk.get(user_mocks_subset[0].access_token, template_mocks.successes[1], done);
         });
 
-        it('DELETE should destroy EmailTpl', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, email_tpl_mocks.successes[1], done);
+        it('PUT should update Template', done => {
+            sdk.update(user_mocks_subset[0].access_token, template_mocks.successes[1],
+                { contents: 'foo', createdAt: template_mocks.successes[1].createdAt } as ITemplate, done);
+        });
+
+        it('DELETE should destroy Template', done => {
+            sdk.destroy(user_mocks_subset[0].access_token, template_mocks.successes[1], done);
         });
     });
 });

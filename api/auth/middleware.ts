@@ -1,6 +1,7 @@
-import { GenericError } from 'custom-restify-errors';
+import { AuthError } from 'custom-restify-errors';
 import { IOrmReq } from 'orm-mw';
 import * as restify from 'restify';
+
 import { AccessToken } from './models';
 
 export const has_auth = (scope = 'login') =>
@@ -9,21 +10,14 @@ export const has_auth = (scope = 'login') =>
             if (req.params.access_token != null)
                 req.headers['x-access-token'] = req.params.access_token;
             else
-                return next(new GenericError({
-                    error: 'NotFound',
-                    error_message: 'X-Access-Token header must be included',
-                    statusCode: 403
-                }));
+                return next(new AuthError('X-Access-Token header must be included', 403));
 
         AccessToken
             .get(req.getOrm().redis.connection)
             .findOne(req.headers['x-access-token'] as string, (err: Error, user_id: string) => {
                 if (err != null) return next(err);
-                else if (user_id == null) return next(new GenericError({
-                    error: 'NotFound',
-                    error_message: 'Invalid access token used',
-                    statusCode: 403
-                }));
+                else if (user_id == null)
+                    return next(new AuthError('Invalid access token used', 403));
                 req['user_id'] = user_id;
                 return next();
             });

@@ -1,6 +1,6 @@
 {
     "name": "glaucoma-risk-calculator-rest-api",
-    "version": "0.0.29",
+  "version": "0.0.30",
     "description": "REST API backend written on Node.JS in TypeScript with restify and waterline.",
     "main": "main.js",
     "author": "Samuel Marks <samuel@offscale.io>",
@@ -14,7 +14,8 @@
         "test": "mocha test --recursive"
     },
     "dependencies": {
-        "argon2": "0.17.3",
+      "ajv": "^6.4.0",
+      "argon2": "0.18.3",
         "async": "^2.6.0",
         "async-es": "^2.6.0",
         "bunyan": "^1.8.12",
@@ -23,9 +24,9 @@
         "glaucoma-risk-calculator-engine": "https://api.github.com/repos/glaucoma-australia/glaucoma-risk-calculator-engine-dist/tarball",
         "hiredis": "^0.5.0",
         "ioredis": "^3.2.2",
-        "mathjs": "^4.1.2",
+      "mathjs": "^4.2.1",
+      "nodejs-utils": "https://api.github.com/repos/SamuelMarks/nodejs-utils-dist/tarball",
         "orm-mw": "https://api.github.com/repos/SamuelMarks/orm-mw-dist/tarball",
-        "nodejs-utils": "https://api.github.com/repos/SamuelMarks/nodejs-utils-dist/tarball",
         "redis": "^2.8.0",
         "restify": "^7.1.1",
         "restify-errors": "^6.0.0",
@@ -44,7 +45,7 @@
         "@types/ioredis": "3.2.7",
         "@types/mathjs": "3.20.0",
         "@types/mocha": "^5.2.0",
-        "@types/node": "^9.6.6",
+      "@types/node": "^10.0.2",
         "@types/redis": "^2.8.6",
         "@types/restify": "^5.0.7",
         "@types/restify-errors": "^4.3.2",
@@ -57,7 +58,7 @@
         "chai-json-schema-ajv": "^3.0.0",
         "mocha": "^5.1.1",
         "supertest": "^3.0.0",
-        "ts-node": "^6.0.0",
+      "ts-node": "^6.0.2",
         "typescript": "^2.8.3"
     }
 }

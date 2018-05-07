@@ -1,11 +1,11 @@
 import { Model, Record } from 'waterline';
 
-export interface IEmailConf extends Model, Record {
+export interface IConfig extends Model, Record {
     id?: number;
     updatedAt: Date;
 }
 
-export interface IEmailConfBase {
+export interface IConfigBase {
     state?: string;
     id_token?: string;
     access_token?: string;

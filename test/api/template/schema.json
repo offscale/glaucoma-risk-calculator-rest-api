@@ -1,0 +1,24 @@
+{
+  "title": "Template",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "_primaryKey": true,
+      "minLength": 1
+    },
+    "contents": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "_primaryKey": true
+    }
+  },
+  "required": [
+    "contents",
+    "createdAt",
+    "kind"
+  ]
+}

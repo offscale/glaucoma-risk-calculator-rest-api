@@ -5,32 +5,32 @@ import { expect } from 'chai';
 import { getError, IncomingMessageError, sanitiseSchema, superEndCb } from 'nodejs-utils';
 import * as chaiJsonSchema from 'chai-json-schema';
 
-import { IEmailConfBase } from '../../../api/email_conf/models.d';
+import { IConfigBase } from '../../../api/config/models.d';
 import { User } from '../../../api/user/models';
 import { TCallback } from '../../shared_types';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
-const email_conf_schema = require('./schema.json');
+const config_schema = require('./schema.json');
 
 chai.use(chaiJsonSchema);
 
-export class EmailConfTestSDK {
+export class ConfigTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, email_conf: IEmailConfBase,
+    public create(access_token: string, config: IConfigBase,
                   callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `create` must be defined'));
-        else if (email_conf == null)
-            return callback(new TypeError('`email_conf` argument to `create` must be defined'));
+        else if (config == null)
+            return callback(new TypeError('`config` argument to `create` must be defined'));
 
         supertest(this.app)
-            .post('/api/email_conf')
+            .post('/api/config')
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
-            .send(email_conf)
+            .send(config)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
                 if (err != null) return superEndCb(callback)(err, res);
@@ -40,7 +40,7 @@ export class EmailConfTestSDK {
                     expect(res.status).to.be.above(199);
                     expect(res.status).to.be.below(202);
                     expect(res.body).to.be.an('object');
-                    expect(res.body).to.be.jsonSchema(email_conf_schema);
+                    expect(res.body).to.be.jsonSchema(config_schema);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
@@ -49,15 +49,15 @@ export class EmailConfTestSDK {
             });
     }
 
-    public get(access_token: string, email_conf: IEmailConfBase,
+    public get(access_token: string, config: IConfigBase,
                callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
-        else if (email_conf == null)
-            return callback(new TypeError('`email_conf` argument to `getAll` must be defined'));
+        else if (config == null)
+            return callback(new TypeError('`config` argument to `getAll` must be defined'));
 
         supertest(this.app)
-            .get('/api/email_conf')
+            .get('/api/config')
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .expect('Content-Type', /json/)
@@ -66,7 +66,7 @@ export class EmailConfTestSDK {
                 if (err != null) return superEndCb(callback)(err, res);
                 else if (res.error) return callback(res.error);
                 try {
-                    expect(res.body).to.be.jsonSchema(email_conf_schema);
+                    expect(res.body).to.be.jsonSchema(config_schema);
                 } catch (e) {
                     err = e as Chai.AssertionError;
                 } finally {
