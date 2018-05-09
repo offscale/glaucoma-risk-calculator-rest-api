@@ -1,6 +1,6 @@
 import { Model, Record } from 'waterline';
 
-export interface IConfig extends Model, Record {
+export interface IConfig extends IConfigBase, Model, Record {
     id?: number;
     updatedAt: Date;
 }

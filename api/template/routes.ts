@@ -8,6 +8,7 @@ import { IOrmReq } from 'orm-mw';
 import { has_auth } from '../auth/middleware';
 import { ITemplate, ITemplateBase } from './models.d';
 import { map } from 'async';
+import { readManyTemplates } from './sdk';
 
 /* tslint:disable:no-var-requires */
 const template_schema: JsonSchema = require('../../test/api/template/schema');
@@ -68,16 +69,11 @@ export const createBatch = (app: restify.Server, namespace: string = ''): void =
 export const readBatch = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}s/latest`,
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const Template: Query = req.getOrm().waterline.collections['template_tbl'];
-            Template.query(`SELECT DISTINCT ON (kind) * FROM template_tbl
-                                             ORDER BY kind, "createdAt" DESC;`, [],
-                (error, templates: {command: string, rowCount: number, oid: null, rows: ITemplate[]}) => {
-                    if (error != null) return next(fmtError(error));
-                    else if (templates == null) return next(new NotFoundError('Template'));
-                    res.json({ templates: templates.rows });
-                    return next();
-                }
-            );
+            readManyTemplates(req, (err, templates) => {
+                if (err != null) return next(fmtError(err));
+                res.json(templates);
+                return next();
+            });
         }
     );
 };

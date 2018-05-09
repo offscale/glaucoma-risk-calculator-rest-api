@@ -7,6 +7,7 @@ import { JsonSchema } from 'tv4';
 import { has_auth } from '../auth/middleware';
 import { IConfig } from './models.d';
 import { IOrmReq } from 'orm-mw';
+import { getConfig } from './sdk';
 
 /* tslint:disable:no-var-requires */
 const template_schema: JsonSchema = require('./../../test/api/config/schema');
@@ -65,11 +66,9 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
 export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(namespace, has_auth(),
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const Config: Query = req.getOrm().waterline.collections['config_tbl'];
-            Config.find().limit(1).exec((error: WLError, config: IConfig[]) => {
-                if (error != null) return next(fmtError(error));
-                else if (config == null) return next(new NotFoundError('Config'));
-                res.json(config[0]);
+            getConfig(req, (err, config) => {
+                if (err != null) return fmtError(err);
+                res.json(config);
                 return next();
             });
         }
