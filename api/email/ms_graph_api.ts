@@ -5,12 +5,12 @@ import { IMail } from './ms_graph_api.d';
 
 export class MSGraphAPI {
     protected static _instance: MSGraphAPI;
+    public tenant_id?: string;
+    public client_id?: string;
+    public refresh_token?: string;
+    public access_token?: string;
 
-    constructor(public tenant_id?: string,
-                public client_id?: string,
-                public refresh_token?: string,
-                public access_token?: string) {
-    }
+    constructor() {}
 
     public static instance(config?: IConfig) {
         if (this._instance == null)
@@ -25,11 +25,11 @@ export class MSGraphAPI {
         return this._instance;
     }
 
+    // TODO: Implement refresh_token->access_token flow
+
     public sendEmail(mail: IMail, cb: (error: Error, mail?: IMail) => void): void {
-        const headers = new Headers({
-            'Authorization': `Bearer ${this.access_token}`,
-            'Content-Type': 'application/json'
-        });
+        console.info('sendEmail::mail:', mail, ';');
+
         const body = {
             message: {
                 subject: mail.subject,
