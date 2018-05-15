@@ -1,22 +1,22 @@
 {
-    "type": "object",
-    "properties": {
-        "risk_json": {
-            "oneOf": [
-                {
-                    "type": "string"
-                },
-                {
-                    "type": "object"
-                }
-            ]
+  "type": "object",
+  "properties": {
+    "risk_json": {
+      "oneOf": [
+        {
+          "type": "string"
         },
-        "createdAt": {
-            "type": "string"
+        {
+          "type": "object"
         }
+      ]
     },
-    "required": [
-        "risk_json",
-        "createdAt"
-    ]
+    "createdAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "risk_json",
+    "createdAt"
+  ]
 }

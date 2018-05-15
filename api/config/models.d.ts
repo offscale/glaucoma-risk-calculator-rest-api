@@ -12,5 +12,7 @@ export interface IConfigBase {
     from?: string;
     session_state?: string;
     client_id: string;
+    // TODO: Move this somewhere encrypted
+    client_secret?: string;
     tenant_id: string;
 }

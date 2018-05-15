@@ -1,18 +1,18 @@
 {
-    "type": "object",
-    "properties": {
-        "name": {
-            "type": "string"
-        },
-        "email": {
-            "type": "string"
-        },
-        "owner": {
-            "type": "string"
-        }
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
     },
-    "required": [
-        "email",
-        "owner"
-    ]
+    "email": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "email",
+    "owner"
+  ]
 }

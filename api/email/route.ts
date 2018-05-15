@@ -11,7 +11,6 @@ import { IRiskRes } from '../risk_res/models.d';
 import { MSGraphAPI } from './ms_graph_api';
 import { IMail } from './ms_graph_api.d';
 
-
 export const sendEmail = (app: restify.Server, namespace: string = ''): void => {
     app.post(`${namespace}/:recipient/:risk_id`, has_auth(),
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {

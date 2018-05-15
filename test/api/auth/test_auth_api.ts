@@ -74,7 +74,7 @@ describe('Auth::routes', () => {
                     if (err != null) {
                         const expected_err = 'E_UNIQUE';
                         try {
-                            expect(err['text']).to.contain(expected_err);
+                            expect(JSON.parse(err['text']).error).to.be.eql('WaterlineError');
                             err = null;
                         } catch (e) {
                             err = e as IAssertionError;

@@ -1,18 +1,18 @@
 {
-    "type": "object",
-    "properties": {
-        "email": {
-            "type": "string"
-        },
-        "password": {
-            "type": "string"
-        },
-        "title": {
-            "type": "string"
-        }
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string"
     },
-    "required": [
-        "email",
-        "password"
-    ]
+    "password": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "email",
+    "password"
+  ]
 }

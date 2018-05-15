@@ -9,6 +9,10 @@ export const Config = {
             type: 'string',
             required: true
         },
+        // TODO: Move this somewhere encrypted
+        client_secret: {
+            type: 'string'
+        },
         tenant_id: {
             type: 'string',
             required: true
