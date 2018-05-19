@@ -83,10 +83,11 @@ export const msAuth = (app: restify.Server, namespace: string = ''): void => {
                     const token_response = (err == null ? r : err).read();
                     if (err != null) {
                         console.error('msAuth::err:', err, ';');
-                        return next(fmtError(token_response));
+                        console.error('msAuth::token_response:', token_response, ';');
+                        // return next(fmtError(token_response));
                     }
                     // TODO: Update config here with response
-                    res.json(token_response);
+                    res.send(200, token_response);
                     return next();
                 }
             );
