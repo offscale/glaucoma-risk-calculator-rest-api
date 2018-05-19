@@ -3,13 +3,92 @@ import * as restify from 'restify';
 import { IOrmReq } from 'orm-mw';
 import { fmtError } from 'custom-restify-errors';
 import { Query } from 'waterline';
+import * as querystring from 'querystring';
+import { has_body, mk_valid_body_mw } from 'restify-validators';
 
 import { has_auth } from '../auth/middleware';
 import { getConfig } from '../config/sdk';
 import { readManyTemplates } from '../template/sdk';
 import { IRiskRes } from '../risk_res/models.d';
+import { http } from '../../test/SampleData';
+import { IMail, ITokenResponse } from './ms_graph_api.d';
 import { MSGraphAPI } from './ms_graph_api';
-import { IMail } from './ms_graph_api.d';
+
+const tokenOutputSchema = {
+    type: 'object',
+    properties: {
+        token_type: {
+            type: 'string'
+        },
+        scope: {
+            type: 'string'
+        },
+        expires_in: {
+            type: 'number'
+        },
+        access_token: {
+            type: 'string'
+        },
+        refresh_token: {
+            type: 'string'
+        }
+    },
+    required: [
+        'token_type', 'scope', 'expires_in', 'access_token', 'refresh_token'
+    ]
+};
+
+const tokenInputSchema = {
+    type: 'object',
+    properties: {
+        client_id: {
+            type: 'string'
+        },
+        client_secret: {
+            type: 'string'
+        },
+        grant_type: {
+            type: 'string'
+        },
+        scope: {
+            type: 'string'
+        },
+        code: {
+            type: 'string'
+        },
+        redirect_uri: {
+            type: 'string'
+        }
+    },
+    required: [
+        'client_id', 'grant_type', 'scope', 'code'
+    ]
+};
+
+export const msAuth = (app: restify.Server, namespace: string = ''): void => {
+    app.post(`${namespace}/ms-auth`, has_auth(), has_body, mk_valid_body_mw(tokenInputSchema),
+        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+
+            const qs = querystring.stringify(req.body);
+
+            http.post({
+                    host: 'https://login.microsoftonline.com',
+                    path: '/common/oauth2/v2.0/token',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Length': Buffer.byteLength(qs)
+                    }
+                }, 'msAuth', qs,
+                (err, token_response: ITokenResponse) => {
+                    if (err != null) return next(fmtError(err));
+                    // TODO: Update config here with response
+                    res.json(token_response);
+                    return next();
+                }
+            );
+        }
+    );
+};
 
 export const sendEmail = (app: restify.Server, namespace: string = ''): void => {
     app.post(`${namespace}/:recipient/:risk_id`, has_auth(),

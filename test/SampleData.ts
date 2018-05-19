@@ -1,5 +1,6 @@
 import { series } from 'async';
 import { ClientRequest, IncomingMessage, request as http_request, RequestOptions } from 'http';
+import { request as https_request } from 'https';
 import { IncomingMessageError, trivial_merge } from 'nodejs-utils';
 import { HttpError } from 'restify-errors';
 import * as url from 'url';
@@ -31,7 +32,14 @@ export interface IncomingMessageF extends IncomingMessage {
     func_name: string;
 }
 
-const httpF = (method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') => {
+type THttpMethod = 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE';
+
+type THttp = (options: RequestOptions,
+              func_name: string,
+              body_or_cb: string | Callback | Cb | AsyncResultCallback<{}>,
+              callback?: Callback | Cb | AsyncResultCallback<{}>) => ClientRequest;
+
+const httpF = (method: THttpMethod): THttp => {
     return (options: RequestOptions,
             func_name: string,
             body_or_cb: string | Callback | Cb | AsyncResultCallback<{}>,
@@ -43,15 +51,25 @@ const httpF = (method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') => 
 
         options['method'] = method;
 
+        let protocol_method = http_request;
+
         if (body_or_cb != null)
             if (options == null)
                 options = { headers: { 'Content-Length': Buffer.byteLength(body_or_cb as string) } };
-            else if (options.headers == null)
-                options.headers = { 'Content-Length': Buffer.byteLength(body_or_cb as string) };
-            else if (options.headers['Content-Length'] == null)
-                options.headers['Content-Length'] = Buffer.byteLength(body_or_cb as string);
+            else {
+                const sw = 'https://';
+                if (options.host.startsWith(sw)) {
+                    options.host = options.host.slice(sw.length);
+                    protocol_method = https_request;
+                }
 
-        const req = http_request(options, (res: IncomingMessageF) => {
+                if (options.headers == null)
+                    options.headers = { 'Content-Length': Buffer.byteLength(body_or_cb as string) };
+                else if (options.headers['Content-Length'] == null)
+                    options.headers['Content-Length'] = Buffer.byteLength(body_or_cb as string);
+            }
+
+        const req = protocol_method(options, (res: IncomingMessageF) => {
             res.func_name = func_name;
             if (res == null) return (callback as Cb)(res);
             /* tslint:disable:no-bitwise */
@@ -66,6 +84,12 @@ const httpF = (method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') => 
         return req;
     };
 };
+
+export const http: {[method: string]: THttp} = ([
+    'HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
+] as THttpMethod[]).reduce((obj: {}, key: THttpMethod) =>
+    Object.assign(obj, { [key.toLowerCase()]: httpF(key) }), {}
+);
 
 const httpHEAD = httpF('HEAD');
 const httpGET = httpF('GET');
