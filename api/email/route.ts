@@ -10,8 +10,8 @@ import { has_auth } from '../auth/middleware';
 import { getConfig } from '../config/sdk';
 import { readManyTemplates } from '../template/sdk';
 import { IRiskRes } from '../risk_res/models.d';
-import { http } from '../../test/SampleData';
-import { IMail, ITokenResponse } from './ms_graph_api.d';
+import { http, IncomingMessageF } from '../../test/SampleData';
+import { IMail } from './ms_graph_api.d';
 import { MSGraphAPI } from './ms_graph_api';
 
 const tokenOutputSchema = {
@@ -79,8 +79,12 @@ export const msAuth = (app: restify.Server, namespace: string = ''): void => {
                         'Content-Length': Buffer.byteLength(qs)
                     }
                 }, 'msAuth', qs,
-                (err, token_response: ITokenResponse) => {
-                    if (err != null) return next(fmtError(err));
+                (err, r: IncomingMessageF) => {
+                    const token_response = (err == null ? r : err).read();
+                    if (err != null) {
+                        console.error('msAuth::err:', err, ';');
+                        return next(fmtError(token_response));
+                    }
                     // TODO: Update config here with response
                     res.json(token_response);
                     return next();
