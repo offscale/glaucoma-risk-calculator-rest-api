@@ -55,19 +55,19 @@ export const httpRequest = <T>(options: RequestOptions, payload?): Promise<T> =>
         }
 
         const req = protocol_method(options, res => {
-            /* tslint:disable:no-bitwise */
-            if ((res.statusCode / 100 | 0) > 3)
-                return reject(fmtError(res));
-
-            // cumulate data
             const body = [];
-            res.on('data', chunk => {
-                body.push(chunk);
-            });
+            res.on('data', chunk => body.push(chunk));
             // resolve on end
             res.on('end', () => {
                 try {
-                    resolve(JSON.parse(Buffer.concat(body).toString()));
+                    const d = Buffer.concat(body).toString();
+
+                    /* tslint:disable:no-bitwise */
+                    if ((res.statusCode / 100 | 0) > 3) {
+                        res['text'] = /*res.method =*/ d; // hack
+                        return reject(fmtError(res));
+                    }
+                    resolve(JSON.parse(d));
                 } catch (e) {
                     reject(e);
                 }
