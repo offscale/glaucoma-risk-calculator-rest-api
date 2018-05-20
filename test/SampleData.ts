@@ -5,10 +5,11 @@ import { IncomingMessageError, trivial_merge } from 'nodejs-utils';
 import { HttpError } from 'restify-errors';
 import * as url from 'url';
 import { AsyncResultCallback, Connection, Query } from 'waterline';
-
-import { TCallback } from './shared_types';
+import { fmtError } from 'custom-restify-errors';
 import { IRiskJson } from 'glaucoma-risk-quiz-engine';
+
 import { _orms_out } from '../config';
+import { TCallback } from './shared_types';
 
 /* tslint:disable:no-var-requires */
 export const risk_json: IRiskJson = require('../node_modules/glaucoma-risk-calculator-engine/risk');
@@ -38,6 +39,47 @@ type THttp = (options: RequestOptions,
               func_name: string,
               body_or_cb: string | Callback | Cb | AsyncResultCallback<{}>,
               callback?: Callback | Cb | AsyncResultCallback<{}>) => ClientRequest;
+
+export const httpRequest = <T>(options: RequestOptions, payload?): Promise<T> => {
+    return new Promise((resolve, reject) => {
+        let protocol_method = http_request;
+
+        if (payload != null && (options.headers == null || !Object.keys(options.headers).length
+            || options.headers['Content-Length'] == null))
+            options = { headers: { 'Content-Length': Buffer.byteLength(payload) } };
+
+        const sw = 'https://';
+        if (options.host.startsWith(sw)) {
+            options.host = options.host.slice(sw.length);
+            protocol_method = https_request;
+        }
+
+        const req = protocol_method(options, res => {
+            /* tslint:disable:no-bitwise */
+            if ((res.statusCode / 100 | 0) > 3)
+                return reject(fmtError(res));
+
+            // cumulate data
+            const body = [];
+            res.on('data', chunk => {
+                body.push(chunk);
+            });
+            // resolve on end
+            res.on('end', () => {
+                try {
+                    resolve(JSON.parse(Buffer.concat(body).toString()));
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+        req.on('error', reject);
+        /* tslint:disable:no-unused-expression */
+        payload && req.write(payload);
+
+        req.end();
+    });
+};
 
 const httpF = (method: THttpMethod): THttp => {
     return (options: RequestOptions,

@@ -10,8 +10,8 @@ import { has_auth } from '../auth/middleware';
 import { getConfig } from '../config/sdk';
 import { readManyTemplates } from '../template/sdk';
 import { IRiskRes } from '../risk_res/models.d';
-import { http, IncomingMessageF } from '../../test/SampleData';
-import { IMail } from './ms_graph_api.d';
+import { httpRequest } from '../../test/SampleData';
+import { IMail, ITokenResponse } from './ms_graph_api.d';
 import { MSGraphAPI } from './ms_graph_api';
 
 const tokenOutputSchema = {
@@ -68,29 +68,27 @@ const tokenInputSchema = {
 export const msAuth = (app: restify.Server, namespace: string = ''): void => {
     app.post(`${namespace}/ms-auth`, has_auth(), has_body, mk_valid_body_mw(tokenInputSchema),
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-
             const qs = querystring.stringify(req.body);
 
-            http.post({
+            httpRequest<ITokenResponse>({
+                    method: 'POST',
                     host: 'https://login.microsoftonline.com',
                     path: '/common/oauth2/v2.0/token',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'Content-Length': Buffer.byteLength(qs)
                     }
-                }, 'msAuth', qs,
-                (err, r: IncomingMessageF) => {
-                    const token_response = (err == null ? r : err).read();
-                    if (err != null) {
-                        console.error('msAuth::err:', err, ';');
-                        console.error('msAuth::token_response:', token_response, ';');
-                        // return next(fmtError(token_response));
-                    }
-                    // TODO: Update config here with response
-                    res.send(200, token_response);
+                }, qs
+            )
+                .then(token_response => {
+                    console.info('msAuth::token_response:', token_response, ';');
+                    res.json(token_response);
                     return next();
-                }
-            );
+                })
+                .catch(err => {
+                    console.error('msAuth::err:', err, ';');
+                    return next(fmtError(err));
+                });
         }
     );
 };
