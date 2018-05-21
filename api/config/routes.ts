@@ -14,8 +14,8 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(template_schema, ['createdAt']),
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
             upsertConfig(req, (err, config) => {
-                if (err == null) return next(fmtError(err));
-                res.json(201, config);
+                if (err != null) return next(fmtError(err));
+                res.json(config);
                 return next();
             });
         }

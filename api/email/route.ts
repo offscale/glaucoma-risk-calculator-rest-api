@@ -85,7 +85,7 @@ export const msAuth = (app: restify.Server, namespace: string = ''): void => {
                     req.body = token_response;
 
                     upsertConfig(req, (err, config) => {
-                        if (err == null) return next(fmtError(err));
+                        if (err != null) return next(fmtError(err));
                         res.json(201, config);
                         return next();
                     });
