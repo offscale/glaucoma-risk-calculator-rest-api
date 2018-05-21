@@ -64,7 +64,7 @@ export const httpRequest = <T>(options: RequestOptions, payload?): Promise<T> =>
 
                     /* tslint:disable:no-bitwise */
                     if ((res.statusCode / 100 | 0) > 3) {
-                        res['text'] = /*res.method =*/ d; // hack
+                        res['text'] = res.method = d; // hack
                         return reject(fmtError(res));
                     }
                     resolve(JSON.parse(d));
