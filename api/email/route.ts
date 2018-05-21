@@ -99,7 +99,7 @@ export const msAuth = (app: restify.Server, namespace: string = ''): void => {
 };
 
 export const sendEmail = (app: restify.Server, namespace: string = ''): void => {
-    app.post(`${namespace}/:recipient/:risk_id`, has_auth(),
+    app.post(`${namespace}/:recipient/:risk_id`,
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
             waterfall([
                     cb => getConfig(req, cb),
