@@ -17,7 +17,6 @@
     "ajv": "^6.5.0",
     "argon2": "0.19.2",
     "async": "^2.6.0",
-    "async-es": "^2.6.0",
     "bunyan": "^1.8.12",
     "custom-restify-errors": "https://api.github.com/repos/SamuelMarks/custom-restify-errors-dist/tarball",
     "faker": "^4.1.0",

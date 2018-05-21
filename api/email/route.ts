@@ -1,3 +1,4 @@
+import * as async from 'async';
 import { waterfall } from 'async';
 import * as restify from 'restify';
 import { IOrmReq } from 'orm-mw';
@@ -5,7 +6,6 @@ import { fmtError } from 'custom-restify-errors';
 import { Query } from 'waterline';
 import * as querystring from 'querystring';
 import { has_body, mk_valid_body_mw } from 'restify-validators';
-import tryEach from 'async/tryEach';
 
 import { httpRequest } from '../../test/SampleData';
 import { has_auth } from '../auth/middleware';
@@ -133,7 +133,7 @@ export const sendEmail = (app: restify.Server, namespace: string = ''): void => 
                     });
                 },
                 (config: IConfig, mail: IMail, cb) =>
-                    tryEach([
+                    (async as any as {tryEach: typeof async['each']}).tryEach([
                         c_b => MSGraphAPI
                             .instance(config)
                             .sendEmail(mail, c_b),
