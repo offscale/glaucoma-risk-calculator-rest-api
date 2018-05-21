@@ -6,11 +6,11 @@ import { Query } from 'waterline';
 import * as querystring from 'querystring';
 import { has_body, mk_valid_body_mw } from 'restify-validators';
 
+import { httpRequest } from '../../test/SampleData';
 import { has_auth } from '../auth/middleware';
-import { getConfig } from '../config/sdk';
+import { getConfig, upsertConfig } from '../config/sdk';
 import { readManyTemplates } from '../template/sdk';
 import { IRiskRes } from '../risk_res/models.d';
-import { httpRequest } from '../../test/SampleData';
 import { IMail, ITokenResponse } from './ms_graph_api.d';
 import { MSGraphAPI } from './ms_graph_api';
 
@@ -82,8 +82,13 @@ export const msAuth = (app: restify.Server, namespace: string = ''): void => {
             )
                 .then(token_response => {
                     console.info('msAuth::token_response:', token_response, ';');
-                    res.json(token_response);
-                    return next();
+                    req.body = token_response;
+
+                    upsertConfig(req, (err, config) => {
+                        if (err == null) return next(fmtError(err));
+                        res.json(201, config);
+                        return next();
+                    });
                 })
                 .catch(err => {
                     console.error('msAuth::err:', err, ';');

@@ -9,6 +9,7 @@ export interface IConfigBase {
     state?: string;
     id_token?: string;
     access_token?: string;
+    refresh_token?: string;
     from?: string;
     session_state?: string;
     client_id: string;

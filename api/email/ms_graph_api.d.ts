@@ -8,7 +8,8 @@ export interface IMail {
 interface ITokenResponse {
     token_type: 'Bearer';
     scope: string;
-    expires_in: number;
+    expires_in: number; // 3600
+    ext_espires_in: 0;
     access_token: string;
     refresh_token: string;
 }

@@ -23,6 +23,9 @@ export const Config = {
         access_token: {
             type: 'string'
         },
+        refresh_token: {
+            type: 'string'
+        },
         state: {
             type: 'string'
         },
