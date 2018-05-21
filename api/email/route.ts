@@ -108,7 +108,7 @@ export const sendEmail = (app: restify.Server, namespace: string = ''): void => 
                     ),
                     (config, templates, cb) => {
                         const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl'];
-                        RiskRes.findOne({ _id: req.params.risk_id }).exec((err, risk_res) =>
+                        RiskRes.findOne({ id: req.params.risk_id }).exec((err, risk_res) =>
                             cb(err, risk_res, config, templates));
                     },
                     (risk_res: IRiskRes, config, templates, cb) => {
