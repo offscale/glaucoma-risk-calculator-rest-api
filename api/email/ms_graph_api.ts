@@ -1,5 +1,4 @@
-import * as superagent from 'superagent';
-
+import { httpRequest } from '../../test/SampleData';
 import { IConfig } from '../config/models.d';
 import { IMail } from './ms_graph_api.d';
 
@@ -27,10 +26,10 @@ export class MSGraphAPI {
 
     // TODO: Implement refresh_token->access_token flow
 
-    public sendEmail(mail: IMail, cb: (error: Error, mail?: IMail) => void): void {
+    public sendEmail(mail: IMail, callback: (error: Error, mail?: IMail) => void): void {
         console.info('sendEmail::mail:', mail, ';');
 
-        const body = {
+        const body = JSON.stringify({
             message: {
                 subject: mail.subject,
                 toRecipients: [{
@@ -43,18 +42,20 @@ export class MSGraphAPI {
                     contentType: 'html'
                 }
             }
-        };
+        });
 
-        superagent
-            .post('https://graph.microsoft.com/v1.0/users/me/sendMail')
-            .send(body)
-            .set('Authorization', `Bearer ${this.access_token}`)
-            .set('Content-Type', 'application/json')
-            .then((response) => {
-                if (response.status !== 202)
-                    return cb(new Error(`Expected response.status of 202 got ${response.status}.
-           Body: ${response.body}`));
-                return cb(void 0, JSON.parse(response.body));
-            });
+        httpRequest<IMail>({
+                method: 'POST',
+                host: 'https://graph.microsoft.com',
+                path: '/v1.0/users/me/sendMail',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(body),
+                    'Authorization': `Bearer ${this.access_token}`
+                }
+            }, body
+        )
+            .then(token_response => callback(void 0, token_response))
+            .catch(callback);
     }
 }
