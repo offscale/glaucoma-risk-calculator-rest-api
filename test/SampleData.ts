@@ -54,6 +54,9 @@ export const httpRequest = <T>(options: RequestOptions, payload?): Promise<T> =>
             protocol_method = https_request;
         }
 
+        console.info('httpRequest::options', options, ';');
+        console.info('httpRequest::payload', payload, ';');
+
         const req = protocol_method(options, res => {
             const body = [];
             res.on('data', chunk => body.push(chunk));
