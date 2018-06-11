@@ -9,7 +9,7 @@ export class MSGraphAPI {
     public tenant_id?: string;
     public client_id?: string;
 
-    public static instance(config?: IConfig) {
+    public static instance(config?: IConfig): MSGraphAPI {
         if (this._instance == null)
             this._instance = new MSGraphAPI();
 
@@ -56,6 +56,7 @@ export class MSGraphAPI {
 
     public sendEmail(mail: IMail, callback: (error: Error, mail?: IMail) => void): void {
         console.info('MSGraphAPI::sendEmail::mail:', mail, ';');
+        console.info('MSGraphAPI::sendEmail::this:', this, ';');
 
         const body = JSON.stringify({
             message: {
