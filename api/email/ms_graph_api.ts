@@ -15,6 +15,7 @@ export class MSGraphAPI {
 
         /* tslint:disable:no-unused-expression */
         config != null && Object.keys(config).map(k => {
+            console.info(`MSGraphAPI::_instance.hasOwnProperty(${k}) = ${config[k]}`);
             if (this._instance.hasOwnProperty(k))
                 this._instance[k] = config[k];
         });
