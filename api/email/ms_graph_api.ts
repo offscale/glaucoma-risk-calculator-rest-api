@@ -86,7 +86,7 @@ export class MSGraphAPI {
         const headers = {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(body),
-            'Authorization': `Bearer ${MSGraphAPI.access_token}`
+            'Authorization': `Bearer ${MSGraphAPI._storage.get('access_token')}`
         };
 
         console.info('MSGraphAPI::sendEmail::headers:', headers, ';');
