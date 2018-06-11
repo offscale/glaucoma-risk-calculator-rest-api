@@ -21,6 +21,7 @@ export class MSGraphAPI {
 
         return this._instance;
     }
+
     public refresh_token?: string;
     public access_token?: string;
 
@@ -47,12 +48,13 @@ export class MSGraphAPI {
                 }
             }, body
         )
-            .then(token_response => callback(void 0, token_response))
+            .then(token_response => console.info('MSGraphAPI::getNewAccessToken::token_response:',
+                token_response, ';') || callback(void 0, token_response))
             .catch(callback);
     }
 
     public sendEmail(mail: IMail, callback: (error: Error, mail?: IMail) => void): void {
-        console.info('sendEmail::mail:', mail, ';');
+        console.info('MSGraphAPI::sendEmail::mail:', mail, ';');
 
         const body = JSON.stringify({
             message: {
