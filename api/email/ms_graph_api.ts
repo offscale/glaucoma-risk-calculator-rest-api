@@ -3,6 +3,7 @@ import { IConfig } from '../config/models.d';
 import { IMail } from './ms_graph_api.d';
 
 export class MSGraphAPI {
+    private static _storage = new Map<string, string>();
     public client_secret?: string;
 
     protected static _instance: MSGraphAPI;
@@ -10,17 +11,25 @@ export class MSGraphAPI {
     public client_id?: string;
 
     public static instance(config?: IConfig): MSGraphAPI {
-        if (this._instance == null)
-            this._instance = new MSGraphAPI();
+        if (MSGraphAPI._instance == null)
+            MSGraphAPI._instance = new MSGraphAPI();
 
         /* tslint:disable:no-unused-expression */
         config != null && Object.keys(config).map(k => {
             console.info(`MSGraphAPI::_instance.hasOwnProperty(${k}) = ${config[k]}`);
-            if (this._instance.hasOwnProperty(k))
-                this._instance[k] = config[k];
+            if (MSGraphAPI._instance.hasOwnProperty(k))
+                MSGraphAPI._instance[k] = config[k];
+            MSGraphAPI._storage.set(k, config[k]);
         });
 
         return this._instance;
+    }
+
+    private static setAll() {
+        MSGraphAPI._storage.forEach((k, v) => {
+            if (MSGraphAPI._instance.hasOwnProperty(k))
+                MSGraphAPI._instance[k] = MSGraphAPI._storage.get(k);
+        });
     }
 
     public refresh_token?: string;
@@ -29,6 +38,7 @@ export class MSGraphAPI {
     public getNewAccessToken(callback: (error: Error, mail?: IMail) => void): any {
         // https://github.com/microsoftgraph/microsoft-graph-docs/blob/master/concepts/auth_v2_user.md
         // #5-use-the-refresh-token-to-get-a-new-access-token
+        MSGraphAPI.setAll();
 
         const body = JSON.stringify({
             client_id: this.client_id,
@@ -56,7 +66,9 @@ export class MSGraphAPI {
 
     public sendEmail(mail: IMail, callback: (error: Error, mail?: IMail) => void): void {
         console.info('MSGraphAPI::sendEmail::mail:', mail, ';');
+        MSGraphAPI.setAll();
         console.info('MSGraphAPI::sendEmail::this:', this, ';');
+        console.info('MSGraphAPI::sendEmail::MSGraphAPI:', MSGraphAPI, ';');
 
         const body = JSON.stringify({
             message: {
