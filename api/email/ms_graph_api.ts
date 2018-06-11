@@ -4,11 +4,13 @@ import { IMail } from './ms_graph_api.d';
 
 export class MSGraphAPI {
     private static _storage = new Map<string, string>();
-    public client_secret?: string;
-
     protected static _instance: MSGraphAPI;
-    public tenant_id?: string;
-    public client_id?: string;
+
+    public static client_secret?: string;
+    public static tenant_id?: string;
+    public static client_id?: string;
+    public static refresh_token?: string;
+    public static access_token?: string;
 
     public static instance(config?: IConfig): MSGraphAPI {
         if (MSGraphAPI._instance == null)
@@ -22,7 +24,7 @@ export class MSGraphAPI {
             MSGraphAPI._storage.set(k, config[k]);
         });
 
-        return this._instance;
+        return MSGraphAPI._instance;
     }
 
     private static setAll() {
@@ -32,18 +34,15 @@ export class MSGraphAPI {
         });
     }
 
-    public refresh_token?: string;
-    public access_token?: string;
-
     public getNewAccessToken(callback: (error: Error, mail?: IMail) => void): any {
         // https://github.com/microsoftgraph/microsoft-graph-docs/blob/master/concepts/auth_v2_user.md
         // #5-use-the-refresh-token-to-get-a-new-access-token
         MSGraphAPI.setAll();
 
         const body = JSON.stringify({
-            client_id: this.client_id,
-            client_secret: this.client_secret,
-            refresh_token: this.refresh_token,
+            client_id: MSGraphAPI.client_id,
+            client_secret: MSGraphAPI.client_secret,
+            refresh_token: MSGraphAPI.refresh_token,
             grant_type: 'refresh_token',
             scope: 'mail.send offline_access',
             redirect_uri: 'https://glaucoma.org.au/admin/email'
@@ -67,8 +66,7 @@ export class MSGraphAPI {
     public sendEmail(mail: IMail, callback: (error: Error, mail?: IMail) => void): void {
         console.info('MSGraphAPI::sendEmail::mail:', mail, ';');
         MSGraphAPI.setAll();
-        console.info('MSGraphAPI::sendEmail::this:', this, ';');
-        console.info('MSGraphAPI::sendEmail::MSGraphAPI:', MSGraphAPI, ';');
+        console.info('MSGraphAPI::sendEmail::MSGraphAPI._storage:', MSGraphAPI._storage, ';');
 
         const body = JSON.stringify({
             message: {
@@ -88,7 +86,7 @@ export class MSGraphAPI {
         const headers = {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(body),
-            'Authorization': `Bearer ${this.access_token}`
+            'Authorization': `Bearer ${MSGraphAPI.access_token}`
         };
 
         console.info('MSGraphAPI::sendEmail::headers:', headers, ';');
