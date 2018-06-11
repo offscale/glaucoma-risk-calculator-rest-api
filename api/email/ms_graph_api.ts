@@ -72,15 +72,19 @@ export class MSGraphAPI {
             }
         });
 
+        const headers = {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body),
+            'Authorization': `Bearer ${this.access_token}`
+        };
+
+        console.info('MSGraphAPI::sendEmail::headers:', headers, ';');
+
         httpRequest<IMail>({
                 method: 'POST',
                 host: 'https://graph.microsoft.com',
                 path: '/v1.0/users/me/sendMail',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(body),
-                    'Authorization': `Bearer ${this.access_token}`
-                }
+            headers
             }, body
         )
             .then(token_response => callback(void 0, token_response))
