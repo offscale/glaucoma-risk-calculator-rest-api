@@ -71,6 +71,10 @@ describe('RiskRes::routes', () => {
         it('POST should create RiskRes', done => {
             sdk.create(user_mocks_subset[0].access_token, risk_res_mocks.successes[0], done);
         });
+
+        it('GET should retrieve all RiskRes', done => {
+            sdk.getAll(user_mocks_subset[0].access_token, done);
+        });
     });
 
     describe('/api/risk_res/:createdAt', () => {

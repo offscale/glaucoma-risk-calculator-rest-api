@@ -16,6 +16,12 @@
     "other_info": {
       "type": "string"
     },
+    "parent": {
+      "type": "boolean"
+    },
+    "myopia": {
+      "type": "boolean"
+    },
     "email": {
       "type": "string"
     },

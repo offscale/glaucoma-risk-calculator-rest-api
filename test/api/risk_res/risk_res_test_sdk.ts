@@ -72,6 +72,33 @@ export class RiskResTestSDK {
             });
     }
 
+    public getAll(access_token: string, callback: TCallback<Error | IncomingMessageError, Response>) {
+        if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
+        /*else if (isNaN(risk_res.createdAt as any))
+         return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
+
+        supertest(this.app)
+            .get('/api/risk_res')
+            .set('Connection', 'keep-alive')
+            .set('X-Access-Token', access_token)
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .end((err, res: Response) => {
+                if (err != null) return superEndCb(callback)(err, res);
+                else if (res.error) return callback(getError(res.error));
+                try {
+                    expect(res.body).to.be.an('object');
+                    expect(res.body).to.have.property('risk_res');
+                    expect(res.body.risk_res).to.be.an.instanceOf(Array);
+                    res.body.risk_res.forEach(risk_res => expect(risk_res).to.be.jsonSchema(risk_res_schema));
+                } catch (e) {
+                    err = e as Chai.AssertionError;
+                } finally {
+                    callback(err, res);
+                }
+            });
+    }
+
     public destroy(access_token: string, risk_res: IRiskResBase,
                    callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
