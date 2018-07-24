@@ -34,8 +34,12 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
             RiskRes.find().exec((error: WLError | Error, risk_res: IRiskRes[]) => {
                 if (error != null) return next(fmtError(error));
                 else if (risk_res == null || !risk_res.length) return next(new NotFoundError('RiskRes'));
-                res.json({ risk_res });
-                return next();
+
+                RiskRes.query(`SELECT ethnicity, COUNT(*) FROM risk_res_tbl GROUP BY ethnicity;`, [], (e, r) => {
+                    if (e != null) return next(fmtError(e));
+                    res.json({ risk_res, ethnicity_agg: r.rows });
+                    return next();
+                });
             });
         }
     );
