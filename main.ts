@@ -50,7 +50,7 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                     password: process.env.DEFAULT_ADMIN_PASSWORD || 'bar'
                 };
 
-                const log_prev = (msg: string, callb) => logger.info(msg) || callb(void 0);
+                const log_prev = (msg: string, callb) => logger.info(msg) as any || callb(void 0);
 
                 if (process.env.NO_DEBUG) return next(void 0, app, orms_out);
                 waterfall([
@@ -62,7 +62,7 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                     (access_token, callb) => riskStatsSdk.create(access_token, { risk_json, createdAt: new Date() },
                         err => callb(err, 'loaded risk-json')),
                     log_prev,
-                        callb => logger.info(`${app.name} listening from ${app.url}`) || callb(void 0)
+                        callb => logger.info(`${app.name} listening from ${app.url}`) as any || callb(void 0)
                     ], (e: Error) => e == null ? next(void 0, app, orms_out) : raise(e)
                 );
             },

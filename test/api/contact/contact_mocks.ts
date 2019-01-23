@@ -17,7 +17,7 @@ export const contact_mocks: (users: IUserBase[]) => {successes: IContactBase[], 
                 email: user.email,
                 owner: users[idx === 0 ? 1 : 0].email
             } as IContactBase)))(new Date())
-        ) || ob)() as IContactBase[]
+        ) as any || ob)() as IContactBase[]
     });
 
 if (require.main === module) {

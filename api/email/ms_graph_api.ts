@@ -59,7 +59,7 @@ export class MSGraphAPI {
             }, body
         )
             .then(token_response => console.info('MSGraphAPI::getNewAccessToken::token_response:',
-                token_response, ';') || callback(void 0, token_response))
+                token_response, ';') as any || callback(void 0, token_response))
             .catch(callback);
     }
 

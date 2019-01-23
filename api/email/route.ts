@@ -134,11 +134,11 @@ export const sendEmail = (app: restify.Server, namespace: string = ''): void => 
                 },
                 (config: IConfig, mail: IMail, cb) =>
                     console.info('sendEmail::config:', config, ';'
-                    ) || (async as any as {tryEach: typeof async['each']}).tryEach([
-                        c_b => console.info('sendEmail::sendEmail') || MSGraphAPI
+                    ) as any || (async as any as {tryEach: typeof async['each']}).tryEach([
+                        c_b => console.info('sendEmail::sendEmail') as any || MSGraphAPI
                             .instance(config)
                             .sendEmail(mail, c_b),
-                        c_b => console.info('sendEmail::getNewAccessToken') || MSGraphAPI
+                        c_b => console.info('sendEmail::getNewAccessToken') as any || MSGraphAPI
                             .instance(config)
                             .getNewAccessToken((e, tokens) => {
                                 if (e != null) return c_b(e);
@@ -150,7 +150,7 @@ export const sendEmail = (app: restify.Server, namespace: string = ''): void => 
                                     return c_b(void 0, re);
                                 });
                             }),
-                        c_b => console.info('sendEmail::sendEmail') || MSGraphAPI
+                        c_b => console.info('sendEmail::sendEmail') as any || MSGraphAPI
                             .instance(config)
                             .sendEmail(mail, c_b),
                     ], cb)

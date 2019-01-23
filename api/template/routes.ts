@@ -40,7 +40,7 @@ export const createBatch = (app: restify.Server, namespace: string = ''): void =
             map(req.body,
                 (_template: ITemplateBase, cb) =>
                     Template.create(_template).exec((error: WLError | Error, template: ITemplate) => {
-                        if (error != null) return cb(error);
+                        if (error != null) return cb(error as any as Error);
                         else if (template == null) return cb(new NotFoundError('Template'));
                         return cb(void 0, template);
                     }),

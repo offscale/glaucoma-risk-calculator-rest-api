@@ -52,11 +52,13 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             async.series({
                 count: cb =>
                     Template.count(crit, (err: WLError, count: number) => {
-                        if (err != null) return cb(err);
+                        if (err != null) return cb(err as any as Error);
                         else if (count == null) return cb(new NotFoundError('Template'));
                         return cb(null, count);
                     }),
-                update: cb => Template.update(crit, req.body, (e, templates: ITemplate[]) => cb(e, templates[0]))
+                update: cb => Template.update(crit, req.body, (e, templates: ITemplate[]) =>
+                    cb(e as any as Error, templates[0])
+                )
             }, (error, results: {count: number, update: string}) => {
                 if (error != null) return next(fmtError(error));
                 res.json(200, results.update);

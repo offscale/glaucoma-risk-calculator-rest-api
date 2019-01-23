@@ -45,7 +45,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             async.series({
                 count: cb =>
                     RiskStats.count(crit, (err: WLError, count: number) => {
-                        if (err != null) return cb(err);
+                        if (err != null) return cb(err as any as Error);
                         else if (!count) return cb(new NotFoundError('RiskStats'));
                         return cb(null, count);
                     }),
