@@ -3,14 +3,13 @@ import { IConfig } from '../config/models.d';
 import { IMail } from './ms_graph_api.d';
 
 export class MSGraphAPI {
-    private static _storage = new Map<string, string>();
-    protected static _instance: MSGraphAPI;
-
     public static client_secret?: string;
     public static tenant_id?: string;
     public static client_id?: string;
     public static refresh_token?: string;
     public static access_token?: string;
+    protected static _instance: MSGraphAPI;
+    private static _storage = new Map<string, string>();
 
     public static instance(config?: IConfig): MSGraphAPI {
         if (MSGraphAPI._instance == null)
@@ -95,7 +94,7 @@ export class MSGraphAPI {
                 method: 'POST',
                 host: 'https://graph.microsoft.com',
                 path: '/v1.0/users/me/sendMail',
-            headers
+                headers
             }, body
         )
             .then(token_response => callback(void 0, token_response))

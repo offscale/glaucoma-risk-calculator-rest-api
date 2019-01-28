@@ -52,16 +52,15 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
 
                 const log_prev = (msg: string, callb) => logger.info(msg) as any || callb(void 0);
 
-                if (process.env.NO_DEBUG) return next(void 0, app, orms_out);
                 waterfall([
-                    callb => authSdk.unregister_all([admin_user], (err: Error & {status: number}) =>
-                        callb(err != null && err.status !== 404 ? err : void 0,
-                            'removed default user; next: adding')),
-                    log_prev,
-                    callb => authSdk.register_login(admin_user, callb),
-                    (access_token, callb) => riskStatsSdk.create(access_token, { risk_json, createdAt: new Date() },
-                        err => callb(err, 'loaded risk-json')),
-                    log_prev,
+                        callb => authSdk.unregister_all([admin_user], (err: Error & {status: number}) =>
+                            callb(err != null && err.status !== 404 ? err : void 0,
+                                'removed default user; next: adding')),
+                        log_prev,
+                        callb => authSdk.register_login(admin_user, callb),
+                        (access_token, callb) => riskStatsSdk.create(access_token, { risk_json, createdAt: new Date() },
+                            err => callb(err, 'loaded risk-json')),
+                        log_prev,
                         callb => logger.info(`${app.name} listening from ${app.url}`) as any || callb(void 0)
                     ], (e: Error) => e == null ? next(void 0, app, orms_out) : raise(e)
                 );

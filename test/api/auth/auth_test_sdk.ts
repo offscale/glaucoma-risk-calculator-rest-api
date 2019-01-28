@@ -1,4 +1,4 @@
-import { mapSeries, series, waterfall } from 'async';
+import { mapSeries, waterfall } from 'async';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import * as chaiJsonSchema from 'chai-json-schema';
@@ -9,7 +9,7 @@ import { Response } from 'supertest';
 import { User } from '../../../api/user/models';
 import { IUser, IUserBase } from '../../../api/user/models.d';
 import { user_mocks } from '../user/user_mocks';
-import { IAuthSdk } from './auth_test_sdk.d';
+import { IAuthSdk, THttpCallback } from './auth_test_sdk.d';
 // import { saltSeeker } from '../../../api/user/utils';
 // import { saltSeekerCb } from '../../../main';
 
@@ -166,19 +166,19 @@ export class AuthTestSDK implements IAuthSdk {
             ), callback as any);
     }
 
-    public register_login(user: IUserBase, num_or_done: number | TCallback<Error | IncomingMessageError, string>,
-                          callback?: TCallback<Error | IncomingMessageError, string>) {
-        if (callback == null) {
-            callback = num_or_done as TCallback<Error | IncomingMessageError, string>;
+    public register_login(user: IUserBase, num_or_done: THttpCallback<string> | number, done?: THttpCallback<string>) {
+        if (done == null) {
+            done = num_or_done as THttpCallback<string>;
             num_or_done = 0;
         }
         user = user || user_mocks.successes[num_or_done as number];
-        series([
-            callb => this.register(user, callb),
-            callb => this.login(user, callb)
-        ], (err: Error, results: Response[]) => {
-            if (err != null) return callback(err);
-            return callback(err, results[1].get('x-access-token'));
+
+        this.register(user, (err) => {
+            if (err != null) return done(err);
+            this.login(user, (e, user_resp) => {
+                if (e != null) return done(e);
+                return done(void 0, user_resp.get('x-access-token'));
+            });
         });
     }
 

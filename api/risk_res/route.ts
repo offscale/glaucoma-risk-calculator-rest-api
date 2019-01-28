@@ -40,7 +40,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             // TODO: Transaction
             async.series({
                 count: cb =>
-                    RiskRes.count(crit, (err: WLError|Error, count: number) => {
+                    RiskRes.count(crit, (err: WLError | Error, count: number) => {
                         if (err != null) return cb(err as any as Error);
                         else if (!count) return cb(new NotFoundError('RiskRes'));
                         return cb(null, count);

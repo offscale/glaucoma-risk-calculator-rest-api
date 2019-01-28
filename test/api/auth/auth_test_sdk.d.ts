@@ -3,6 +3,9 @@ import { Response } from 'supertest';
 
 import { IUser, IUserBase } from '../../../api/user/models.d';
 
+
+export type THttpCallback<T> = (error: Error | IncomingMessageError, result?: T) => void;
+
 export interface IAuthSdk {
     register(user: IUserBase, callback: TCallback<Error | IncomingMessageError, Response>): void;
 
@@ -20,7 +23,7 @@ export interface IAuthSdk {
 
     unregister_all(users: Array<IUser | IUserBase>, done: TCallback<Error | IncomingMessageError, Response>);
 
-    register_login(user: IUserBase, done: TCallback<Error | IncomingMessageError, string>);
+    register_login(user: IUserBase, num_or_done: THttpCallback<string> | number, done?: THttpCallback<string>): void;
 
     logout_unregister(user: IUserBase, done: TCallback<Error | IncomingMessageError, Response>);
 }
