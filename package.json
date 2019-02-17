@@ -11,6 +11,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "node main.js | bunyan",
+    "build_start": "rm -rf node_modules; [ -f typings.json ] && typings i; npm i && tsc && node main.js | bunyan",
     "test": "mocha test --recursive"
   },
   "dependencies": {
