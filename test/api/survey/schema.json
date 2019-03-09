@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "properties": {
+    "perceived_risk": {
+      "type": "float"
+    },
+    "recruiter": {
+      "type": "string"
+    },
+    "eye_test_frequency": {
+      "type": "string"
+    },
+    "glasses_use": {
+      "type": "string"
+    },
+    "behaviour_change": {
+      "type": "string"
+    },
+    "id": {
+      "type": "integer"
+    },
+    "updatedAt": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "perceived_risk",
+    "recruiter",
+    "eye_test_frequency",
+    "glasses_use",
+    "behaviour_change"
+  ],
+  "additionalProperties": false
+}

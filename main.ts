@@ -7,11 +7,11 @@ import { IRoutesMergerConfig, routesMerger, TApp } from 'routes-merger';
 
 import { AuthTestSDK } from './test/api/auth/auth_test_sdk';
 import { RiskStatsTestSDK } from './test/api/risk_stats/risk_stats_test_sdk';
+import { risk_json } from './test/SampleData';
 import { IUserBase } from './api/user/models.d';
 import { AccessToken } from './api/auth/models';
 import * as config from './config';
 import { getOrmMwConfig } from './config';
-import { risk_json } from './test/SampleData';
 
 /* tslint:disable:no-var-requires */
 export const package_ = Object.freeze(require('./package'));
