@@ -33,11 +33,12 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 };
 
 export const update = (app: restify.Server, namespace: string = ''): void => {
-    app.put(`${namespace}/:id`, has_body, mk_valid_body_mw(survey_schema),
+    app.put(`${namespace}/:id`, has_body,
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
             const Survey: Query = req.getOrm().waterline.collections['survey_tbl'];
 
             const crit = Object.freeze({ id: req.params.id });
+
             // TODO: Transaction
             async.series({
                 count: cb =>

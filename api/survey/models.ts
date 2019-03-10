@@ -7,7 +7,7 @@ export const Survey = {
     attributes: {
         perceived_risk: {
             type: 'float',
-            required: true
+            required: false
         },
         recruiter: {
             type: 'string',
@@ -23,7 +23,11 @@ export const Survey = {
         },
         behaviour_change: {
             type: 'string',
-            required: true
+            required: false
+        },
+        risk_res_id: {
+            type: 'integer',
+            required: false
         },
         toJSON: function toJSON() {
             const survey: ISurvey = this.toObject();
