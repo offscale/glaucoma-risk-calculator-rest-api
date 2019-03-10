@@ -1,9 +1,16 @@
+import * as path from 'path';
+import { createWriteStream } from 'fs';
+import { homedir } from 'os';
+
 import { waterfall } from 'async';
 import { createLogger } from 'bunyan';
+import * as restify from 'restify';
+import { Server } from 'restify';
+import * as morgan from 'morgan';
+
+import { IRoutesMergerConfig, routesMerger, TApp } from 'routes-merger';
 import { get_models_routes, IModelRoute, populateModelRoutes, raise } from 'nodejs-utils';
 import { IormMwConfig, IOrmsOut, ormMw } from 'orm-mw';
-import { Server } from 'restify';
-import { IRoutesMergerConfig, routesMerger, TApp } from 'routes-merger';
 
 import { AuthTestSDK } from './test/api/auth/auth_test_sdk';
 import { RiskStatsTestSDK } from './test/api/risk_stats/risk_stats_test_sdk';
@@ -12,6 +19,7 @@ import { IUserBase } from './api/user/models.d';
 import { AccessToken } from './api/auth/models';
 import * as config from './config';
 import { getOrmMwConfig } from './config';
+
 
 /* tslint:disable:no-var-requires */
 export const package_ = Object.freeze(require('./package'));
@@ -30,7 +38,39 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
     cb => ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),
     (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut, cb) =>
         routesMerger(Object.assign({
-            with_app, logger,
+            logger,
+            with_app: (app: Server) => {
+                // create a write stream (in append mode)
+                const accessLogStream = createWriteStream(path.join(
+                    process.env.WORKING_DIR || path.join(homedir(), 'glaucoma-risk-calculator-data'), 'access.log'),
+                    { flags: 'a' }
+                );
+                const bodyLogStream = createWriteStream(path.join(
+                    process.env.WORKING_DIR || path.join(homedir(), 'glaucoma-risk-calculator-data'), 'body.log'),
+                    { flags: 'a' }
+                );
+
+                app.use(restify.plugins.queryParser());
+                app.use(restify.plugins.bodyParser());
+
+                app.use(((req, res, next) => {
+                    if (req.body && req.contentType() === 'application/json') {
+                        bodyLogStream.write('`');
+                        bodyLogStream.write(new Date().toISOString());
+                        bodyLogStream.write('`\t`');
+                        bodyLogStream.write(req.method);
+                        bodyLogStream.write('`\t`');
+                        bodyLogStream.write(req.getUrl().path);
+                        bodyLogStream.write('`\t`');
+                        bodyLogStream.write(JSON.stringify(req.body));
+                        bodyLogStream.write('`\n');
+                    }
+                    return next();
+                }));
+                app.use(morgan('combined', { stream: accessLogStream }));
+
+                return with_app(app);
+            },
             routes: models_and_routes,
             server_type: 'restify',
             package_: { version: package_.version },
@@ -39,6 +79,7 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
             skip_app_version_routes: false,
             skip_start_app: false,
             skip_app_logging: false,
+            skip_use: true,
             listen_port: process.env.PORT || 3000,
             onServerStart: (uri: string, app: Server, next) => {
                 AccessToken.reset();
