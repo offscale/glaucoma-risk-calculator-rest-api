@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { createWriteStream } from 'fs';
+import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import { homedir } from 'os';
 
 import { waterfall } from 'async';
@@ -28,6 +28,9 @@ export const logger = createLogger({ name: 'main' });
 /* tslint:disable:no-unused-expression */
 process.env['NO_DEBUG'] || logger.info(Object.keys(process.env).sort().map(k => ({ [k]: process.env[k] })));
 
+const parent = process.env.WORKING_DIR || path.join(homedir(), 'glaucoma-risk-calculator-data');
+if (!existsSync(parent)) mkdirSync(parent);
+
 export const all_models_and_routes: Map<string, any> = populateModelRoutes(__dirname);
 export const all_models_and_routes_as_mr: IModelRoute = get_models_routes(all_models_and_routes);
 
@@ -41,14 +44,8 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
             logger,
             with_app: (app: Server) => {
                 // create a write stream (in append mode)
-                const accessLogStream = createWriteStream(path.join(
-                    process.env.WORKING_DIR || path.join(homedir(), 'glaucoma-risk-calculator-data'), 'access.log'),
-                    { flags: 'a' }
-                );
-                const bodyLogStream = createWriteStream(path.join(
-                    process.env.WORKING_DIR || path.join(homedir(), 'glaucoma-risk-calculator-data'), 'body.log'),
-                    { flags: 'a' }
-                );
+                const accessLogStream = createWriteStream(path.join(parent, 'access.log'), { flags: 'a' });
+                const bodyLogStream = createWriteStream(path.join(parent, 'body.log'), { flags: 'a' });
 
                 app.use(restify.plugins.queryParser());
                 app.use(restify.plugins.bodyParser());
