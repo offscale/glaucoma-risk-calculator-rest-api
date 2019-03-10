@@ -10,7 +10,7 @@ import { has_body } from "restify-validators";
 const parent = process.env.WORKING_DIR || path.join(homedir(), 'glaucoma-risk-calculator-data');
 if (!existsSync(parent)) mkdirSync(parent);
 
-const emails_txt = path.join(parent, 'emails.txt');
+export const emails_txt = path.join(parent, 'emails.txt');
 
 
 export const post = (app: restify.Server, namespace: string = ''): void => {

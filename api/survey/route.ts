@@ -1,13 +1,15 @@
 import * as restify from 'restify';
 import * as async from 'async';
 import { Query, WLError } from 'waterline';
-import { has_body, mk_valid_body_mw } from 'restify-validators';
+import { has_body } from 'restify-validators';
 import { fmtError, NotFoundError } from 'custom-restify-errors';
 import { JsonSchema } from 'tv4';
 import { IOrmReq } from 'orm-mw';
 
 import { has_auth } from '../auth/middleware';
 import { ISurvey } from './models.d';
+import { writeFile } from 'fs';
+import { emails_txt } from '../email/route';
 
 
 /* tslint:disable:no-var-requires */
@@ -39,6 +41,16 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
             const crit = Object.freeze({ id: req.params.id });
 
+            const email = (() => {
+                if (req.body.hasOwnProperty('email')) {
+                    const thisEmail = req.body.email;
+                    delete req.body.email;
+                    return thisEmail
+                } else {
+                    return null
+                }
+            })();
+
             // TODO: Transaction
             async.series({
                 count: cb =>
@@ -49,8 +61,10 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                     }),
                 update: cb => Survey.update(crit, req.body).exec((e, survey: ISurvey[]) =>
                     cb(e, survey[0])
-                )
-            }, (error, results: {count: number, update: string}) => {
+                ),
+                email: cb => email == null ? cb() :
+                    writeFile(emails_txt, `${JSON.stringify({ email })}\n`, { flag: 'a' }, cb),
+            }, (error, results: {count: number, update: string, email: undefined}) => {
                 if (error != null) return next(fmtError(error));
                 res.json(200, results.update);
                 return next();

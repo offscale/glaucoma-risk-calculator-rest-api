@@ -54,6 +54,8 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                     if (req.body && req.contentType() === 'application/json') {
                         bodyLogStream.write('`');
                         bodyLogStream.write(new Date().toISOString());
+                        /*bodyLogStream.write('`\t`');
+                        bodyLogStream.write(req.);*/
                         bodyLogStream.write('`\t`');
                         bodyLogStream.write(req.method);
                         bodyLogStream.write('`\t`');
