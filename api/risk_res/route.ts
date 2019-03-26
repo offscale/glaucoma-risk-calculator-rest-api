@@ -15,7 +15,7 @@ const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
 export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:id`,
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl'];
+            const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl0'];
             const q = req.params.id === 'latest' ?
                 RiskRes.find().sort('createdAt DESC').limit(1)
                 : RiskRes.findOne({ id: req.params.id });
@@ -34,7 +34,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:id`, has_body, mk_valid_body_mw(risk_res_schema),
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl'];
+            const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl0'];
 
             const crit = Object.freeze({ id: req.params.id });
             // TODO: Transaction
@@ -60,7 +60,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:id`, has_auth(),
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl'];
+            const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl0'];
 
             RiskRes.destroy({ createdAt: req.params.id }).exec((error: WLError) => {
                 if (error != null) return next(fmtError(error));

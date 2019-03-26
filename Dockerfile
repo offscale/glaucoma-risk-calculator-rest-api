@@ -1,30 +1,51 @@
-FROM node:10.15.1-alpine as node
-ENV REST_API /rest-api
-ADD . ${REST_API}
-WORKDIR ${REST_API}
+FROM node:10.15.3-alpine
 
-ADD https://raw.githubusercontent.com/DrizlyInc/wait-for/master/wait-for /bin/wait_for_it.sh
-RUN apk add --no-cache make openssl g++ netcat-openbsd python && \
-    chmod +x /bin/wait_for_it.sh && \
-    npm i -g npm; npm i -g typings typescript tslint mocha bunyan && \
-    rm -rf node_modules; [ -f typings.json ] && typings i; npm i && tsc
+ENV RDBMS_URI ''
+ENV REDIS_HOST 'localhost'
+ENV REDIS_PORT 6379
 
-CMD npm start
+WORKDIR /rest-api
 
-#FROM alpine
-#ENV REST_API /rest-api
-#ADD . ${REST_API}
-#WORKDIR ${REST_API}
+#RUN addgroup -g 1500 -S nodejs \
+#    && adduser -u 1500 -S nodejs -G nodejs \
+#    && chown -R nodejs:nodejs /usr/local/lib/node_modules /usr/local/bin /rest-api
+#USER nodejs
+
+ADD https://raw.githubusercontent.com/wilsonsilva/wait-for/8b86892/wait-for /bin/wait_for_it.sh
+
+#    chmod +x /bin/wait_for_it.sh && \
+
+ADD . .
+
+RUN apk --no-cache --virtual build-dependencies add \
+    git \
+    python \
+    build-base \
+    openssl \
+    netcat-openbsd \
+    && npm i -g npm \
+    && mkdir -p /root/.node-gyp/10.15.3 /usr/local/lib/node_modules/bunyan/node_modules/dtrace-provider \
+    && npm i -g \
+    typings \
+    typescript@'3.3.3333' \
+    tslint \
+    bunyan \
+    mocha \
+    && npm i -g --unsafe-perms --allow-root node-gyp \
+    && typings install \
+    && npm install --unsafe-perms --allow-root \
+    && apk del build-dependencies
+
+ENTRYPOINT ["/usr/local/bin/node", "main.js"]
+
+# CMD npm run-script build_start
+
+#FROM scratch
 #
-#COPY --from=0 "$REST_API" "$REST_API"
-#COPY --from=0 /usr/local/bin/mocha /usr/local/bin/
-#COPY --from=0 /usr/local/bin/tslint /usr/local/bin/
-#COPY --from=0 /usr/local/bin/tsc /usr/local/bin/
-#COPY --from=0 /usr/local/bin/typings /usr/local/bin/
-#COPY --from=0 /usr/local/bin/bunyan /usr/local/bin/
-#COPY --from=0 /usr/local/bin/npm /usr/local/bin/
-#COPY --from=0 /usr/local/bin/npx /usr/local/bin/
-#COPY --from=0 /usr/local/bin/node /usr/local/bin/
-#COPY --from=0 /usr/local/lib/node_modules /usr/local/lib/node_modules
+#WORKDIR /rest-api
 #
-#CMD npm start
+#COPY --from=0 /rest-api /rest-api
+#
+#ADD https://nodejs.org/dist/v10.15.3/node-v10.15.3-linux-x64.tar.xz /
+#
+#RUN ["/node-v10.15.3-linux-x64/bin/node", "main.js"]

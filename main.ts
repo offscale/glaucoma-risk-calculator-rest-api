@@ -18,7 +18,7 @@ import { risk_json } from './test/SampleData';
 import { IUserBase } from './api/user/models.d';
 import { AccessToken } from './api/auth/models';
 import * as config from './config';
-import { getOrmMwConfig } from './config';
+import { _orms_out, getOrmMwConfig } from './config';
 
 
 /* tslint:disable:no-var-requires */

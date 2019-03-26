@@ -1,7 +1,7 @@
 import { IRiskRes } from './models.d';
 
 export const RiskRes = {
-    identity: 'risk_res_tbl',
+    identity: 'risk_res_tbl0',
     connection: 'main_db',
     _omit: [/*'uuid'*/],
     attributes: {
