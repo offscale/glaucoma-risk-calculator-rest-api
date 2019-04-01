@@ -34,6 +34,7 @@ RUN apk --no-cache --virtual build-dependencies add \
     && npm i -g --unsafe-perms --allow-root node-gyp \
     && typings install \
     && npm install --unsafe-perms --allow-root \
+    && tsc \
     && apk del build-dependencies
 
 ENTRYPOINT ["/usr/local/bin/node", "main.js"]

@@ -73,5 +73,6 @@ You can now confirm that it worked with:
 ```
 $ az aks get-credentials --resource-group calc-rg0 --name calc-kube0
 $ kubectl get nodes
+$ az aks show --resource-group calc-rg0 --name calc-kube0 --query 'nodeResourceGroup'
 ```
 
