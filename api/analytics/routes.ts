@@ -30,19 +30,39 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl0'];
 
+            const [condition, valuesToEscape] = ((): [string, string[]] => {
+                if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
+                    return ['', []];
+
+                req.query.startDatetime = decodeURIComponent(req.query.startDatetime);
+                req.query.endDatetime = decodeURIComponent(req.query.endDatetime);
+                return [`"createdAt" >= $1 AND "updatedAt" <= $2`, [req.query.startDatetime, req.query.endDatetime]];
+            })();
+
             parallel({
                 risk_res:
-                    callb => RiskRes.find().exec((error: WLError | Error, risk_res: IRiskRes[]) => {
-                        if (error != null) return callb(error as Error);
-                        else if (risk_res == null || !risk_res.length) return next(new NotFoundError('RiskRes'));
-                        return callb(void 0, risk_res);
-                    }),
+                    callb => RiskRes
+                        .find(condition ? {
+                            where: {
+                                createdAt: { '>=': req.query.startDatetime },
+                                updatedAt: { '<=': req.query.endDatetime }
+                            }
+                        } : {})
+                        .exec((error: WLError | Error, risk_res: IRiskRes[]) => {
+                            if (error != null) return callb(error as Error);
+                            else if (risk_res == null || !risk_res.length) return next(new NotFoundError('RiskRes'));
+                            return callb(void 0, risk_res);
+                        }),
                 ethnicity_agg:
                     callb => RiskRes.query(
-                        `SELECT ethnicity, COUNT(*) FROM risk_res_tbl0 GROUP BY ethnicity;`, [], (e, r) => {
+                        `SELECT ethnicity, COUNT(*)
+                        FROM risk_res_tbl0
+                        ${condition ? 'WHERE ' + condition : ''} 
+                        GROUP BY ethnicity ;`,
+                        valuesToEscape, (e, r) => {
                             if (e != null) return next(fmtError(e));
                             else if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
-                            return callb(void 0, r.rows.map(el => ({ name: el.ethnicity, value: el.count })));
+                            return callb(void 0, r.rows.map(el => ({ name: el.ethnicity, value: parseInt(el.count) })));
                         }),
                 step_2: callb =>
                     RiskRes.query(`
@@ -52,14 +72,15 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                         COUNT(client_risk) filter (WHERE client_risk > 25 AND client_risk <= 50) AS average,
                         COUNT(client_risk) filter (WHERE client_risk > 50 AND client_risk <= 75) AS high,
                         COUNT(client_risk) filter (WHERE client_risk > 75) AS greatest
-                    FROM risk_res_tbl0;`, [], (e, r) => {
+                    FROM risk_res_tbl0
+                    ${condition ? 'WHERE ' + condition : ''} ;`, valuesToEscape, (e, r) => {
                         if (e != null) return next(fmtError(e));
                         else if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
                         return callb(void 0, r.rows.map(row =>
                             Object.keys(row)
                                 .map(k => ({ [k]: isNaN(row[k]) ? row[k] : parseInt(row[k]) }))
                                 .reduce((a, b) => Object.assign(a, b), {})
-                        )[0]);
+                         )[0]);
                     })
             }, (err, results) => {
                 if (err != null) return next(fmtError(err));
