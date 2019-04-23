@@ -7,8 +7,10 @@ import { JsonSchema } from 'tv4';
 import { resolveIntFromObject } from 'nodejs-utils'
 import { IOrmReq } from 'orm-mw';
 import * as simpleStatistics from 'simple-statistics';
-
+import { ttest } from 'ttest/hypothesis';
 import { IRiskRes } from '../risk_res/models.d';
+import { ISurvey } from '../survey/models.d';
+// const jStat = require('jstat');
 
 /* tslint:disable:no-var-requires */
 const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
@@ -30,37 +32,82 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
 
 // const funcs = Object.freeze(['average', 'mean', 'max', 'min']);
 
+type DeepReadonly<T> =
+    T extends any[] ? DeepReadonlyArray<T[number]> :
+        T extends object ? DeepReadonlyObject<T> :
+            T;
 
-const funcs = Object.freeze([
-    'min',
-    'max',
-    'sum',
+interface DeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
 
-    'mean',
-    'mode',
-    'median',
-    'harmonicMean',
-    'geometricMean',
-    'rootMeanSquare',
-    'sampleSkewness',
+type DeepReadonlyObject<T> = T &
+    { readonly [P in keyof T]: DeepReadonly<T[P]> };
+/*
+// Can't automatically acquire with `func.name`
+export const funcs: DeepReadonlyArray<[string, (ns: number[]|{}) => number[]][]> = Object.freeze([
+    ['min', simpleStatistics.min],
+    ['max', simpleStatistics.max],
+    ['sum', simpleStatistics.sum],
 
-    'variance',
-    'sampleVariance',
-    'standardDeviation',
-    'sampleStandardDeviation',
-    'medianAbsoluteDeviation',
-    'interquartileRange'
+    ['mean', simpleStatistics.mean],
+    ['mode', simpleStatistics.mode],
+    ['median', simpleStatistics.median],
+    ['harmonicMean', simpleStatistics.harmonicMean],
+    ['geometricMean', simpleStatistics.geometricMean],
+    ['rootMeanSquare', simpleStatistics.rootMeanSquare],
+    ['sampleSkewness', simpleStatistics.sampleSkewness],
+
+    ['variance', simpleStatistics.variance],
+    ['sampleVariance', simpleStatistics.sampleVariance],
+    ['standardDeviation', simpleStatistics.standardDeviation],
+    ['sampleStandardDeviation', simpleStatistics.sampleStandardDeviation],
+    ['medianAbsoluteDeviation', simpleStatistics.medianAbsoluteDeviation],
+    ['interquartileRange', simpleStatistics.interquartileRange],
+
+    ['tukeyhsd', jStat.tukeyhsd]
 ]);
 
-const f = (func: readonly string[], obj: {}): {} =>
-    funcs
-        .map(func => ({ [func]: simpleStatistics[func](obj) }))
+const f = (fs: DeepReadonlyArray<[string, (ns: number[]|{}) => number[]][]>, obj: {}): {} =>
+    fs
+        .map(func => ({ [func[0] as any as string]: (func[1] as any as (ns: number[]|{}) => number[])(obj) }))
+        .reduce((a, b) => Object.assign(a, b), {});
+*/
+
+export const funcs: DeepReadonlyArray<[string, string]> = Object.freeze([
+    ['min', 'simpleStatistics'],
+    ['max', 'simpleStatistics'],
+    ['sum', 'simpleStatistics'],
+
+    ['mean', 'simpleStatistics'],
+    ['mode', 'simpleStatistics'],
+    ['median', 'simpleStatistics'],
+    ['harmonicMean', 'simpleStatistics'],
+    ['geometricMean', 'simpleStatistics'],
+    ['rootMeanSquare', 'simpleStatistics'],
+    ['sampleSkewness', 'simpleStatistics'],
+
+    ['variance', 'simpleStatistics'],
+    ['sampleVariance', 'simpleStatistics'],
+    ['standardDeviation', 'simpleStatistics'],
+    ['sampleStandardDeviation', 'simpleStatistics'],
+    ['medianAbsoluteDeviation', 'simpleStatistics'],
+    ['interquartileRange', 'simpleStatistics'],
+
+    // ['tukeyhsd', 'jStat']
+]);
+
+const f = (fs: typeof funcs, obj: {}): {} =>
+    fs
+        .map(func => ({
+            [func[0]]: (
+                func[1] === 'simpleStatistics' ? simpleStatistics : (s) => s /*require('jStat')*/)[func[0]](obj)
+        }))
         .reduce((a, b) => Object.assign(a, b), {});
 
 export const getAll = (app: restify.Server, namespace: string = ''): void => {
     app.get(namespace,//has_auth('admin'),
         (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
             const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl0'];
+            const Survey: Query = req.getOrm().waterline.collections['survey_tbl'];
 
             const [condition, where_condition, valuesToEscape] = ((): [string, string, string[]] => {
                 if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
@@ -89,17 +136,31 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                             if (error != null) return callb(error as Error);
                             else if (risk_res == null || !risk_res.length) return next(new NotFoundError('RiskRes'));
 
+                            /*
+                            console.info('tukeyhsd:',
+                                jStat.tukeyhsd([[1, 2], [3, 4, 5], [6], [7, 8]]), ';');
+
+                             */
+
+                            return callb(void 0, { risk_res });
+                            /*
                             return callb(void 0,
                                 Object.assign(
                                     // Object.keys(risk_res[0])
                                     {
                                         column: ['age', 'client_risk']
-                                            .map(col => ({ [col]: f(funcs, risk_res.map(rr => rr[col])) }))
+                                            .map(col => ({
+                                                    [col]: Object.assign(f(funcs, risk_res.map(rr => rr[col])))
+                                                        , // Object.assign(f(funcs, risk_res.map(rr => rr[col])),
+                                                    // { ttest: ttest(risk_res.map(rr => rr[col]), void 0) }
+                                                })
+                                            )
                                             .reduce((prev, curr) => Object.assign(prev, curr), {})
                                     },
                                     { risk_res }
                                 )
                             );
+                             */
                         }),
                 ethnicity_agg:
                     callb => RiskRes.query(
@@ -125,7 +186,40 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                         if (e != null) return next(fmtError(e));
                         else if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
                         return callb(void 0, r.rows.map(resolveIntFromObject)[0]);
-                    })
+                    }),
+                survey_tbl: callb => Survey
+                    .find(condition ? {
+                        where: {
+                            createdAt: { '>=': req.query.startDatetime },
+                            updatedAt: { '<=': req.query.endDatetime }
+                        }
+                    } : {})
+                    .exec((error: WLError | Error, survey: ISurvey[]) => {
+                        if (error != null) return callb(error as Error);
+                        else if (survey == null || !survey.length) return next(new NotFoundError('Survey'));
+
+                        return callb(void 0, survey);
+                    }),
+                joint: callb => Survey.query(`
+                    SELECT r.age, r.client_risk, r.gender, r.ethnicity, r.other_info, r.email, r.sibling, r.parent,
+                           r.study, r.myopia, r.diabetes, r.id AS risk_id, r."createdAt", r."updatedAt",
+                           s.perceived_risk, s.recruiter, s.eye_test_frequency, s.glasses_use, s.behaviour_change,
+                           s.risk_res_id, s.id, s."createdAt", s."updatedAt"
+                    FROM survey_tbl s
+                    FULL JOIN risk_res_tbl r
+                    ON s.risk_res_id = r.id
+                    ${where_condition.replace(/ "/g, ' s."')} ;`, valuesToEscape, (e, r) => {
+
+                    if (e != null) return next(fmtError(e));
+                    else if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
+                    const joint = r.rows.map(resolveIntFromObject);
+                    console.info('ttest:', ttest([1, 2, 2, 2, 4], {
+                        mu: 2,
+                        alpha: 0.05,
+                        alternative: 'not equal'
+                    }), ';');
+                    return callb(void 0, joint);
+                })
             }, (err, results) => {
                 if (err != null) return next(fmtError(err));
                 res.json(200, results);
