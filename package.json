@@ -1,6 +1,6 @@
 {
   "name": "glaucoma-risk-calculator-rest-api",
-  "version": "0.0.49",
+  "version": "0.0.50",
   "description": "REST API backend written on Node.JS in TypeScript with restify and waterline.",
   "main": "main.js",
   "author": "Samuel Marks <samuel@offscale.io>",
@@ -26,7 +26,7 @@
     "mathjs": "^5.9.0",
     "morgan": "^1.9.1",
     "nodejs-utils": "https://api.github.com/repos/SamuelMarks/nodejs-utils-dist/tarball",
-    "orm-mw": "https://api.github.com/repos/SamuelMarks/orm-mw-dist/tarball",
+    "orm-mw": "https://api.github.com/repos/SamuelMarks/orm-mw-dist/tarball/master",
     "redis": "^2.8.0",
     "restify": "^8.3.0",
     "restify-errors": "^7.0.0",
