@@ -111,7 +111,7 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
 
             const [condition, where_condition, valuesToEscape] = ((): [string, string, string[]] => {
                 if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
-                    return ['', '', []];
+                    return ['', '',  []];
 
                 req.query.startDatetime = decodeURIComponent(req.query.startDatetime);
                 req.query.endDatetime = decodeURIComponent(req.query.endDatetime);
@@ -142,8 +142,6 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
 
                              */
 
-                            return callb(void 0, { risk_res });
-                            /*
                             return callb(void 0,
                                 Object.assign(
                                     // Object.keys(risk_res[0])
@@ -160,7 +158,6 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                                     { risk_res }
                                 )
                             );
-                             */
                         }),
                 ethnicity_agg:
                     callb => RiskRes.query(
