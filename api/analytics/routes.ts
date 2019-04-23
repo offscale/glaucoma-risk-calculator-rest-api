@@ -203,7 +203,7 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                            s.perceived_risk, s.recruiter, s.eye_test_frequency, s.glasses_use, s.behaviour_change,
                            s.risk_res_id, s.id, s."createdAt", s."updatedAt"
                     FROM survey_tbl s
-                    FULL JOIN risk_res_tbl r
+                    FULL JOIN risk_res_tbl0 r
                     ON s.risk_res_id = r.id
                     ${where_condition.replace(/ "/g, ' s."')} ;`, valuesToEscape, (e, r) => {
 
