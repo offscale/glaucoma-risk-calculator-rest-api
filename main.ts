@@ -10,7 +10,7 @@ import * as morgan from 'morgan';
 
 import { IRoutesMergerConfig, routesMerger, TApp } from 'routes-merger';
 import { get_models_routes, IModelRoute, populateModelRoutes, raise } from 'nodejs-utils';
-import { IormMwConfig, IOrmsOut, ormMw } from 'orm-mw';
+import { IOrmMwConfig, IOrmsOut, ormMw } from 'orm-mw';
 
 import { AuthTestSDK } from './test/api/auth/auth_test_sdk';
 import { RiskStatsTestSDK } from './test/api/risk_stats/risk_stats_test_sdk';
@@ -35,7 +35,7 @@ export const all_models_and_routes: Map<string, any> = populateModelRoutes(__dir
 export const all_models_and_routes_as_mr: IModelRoute = get_models_routes(all_models_and_routes);
 
 export const setupOrmApp = (models_and_routes: Map<string, any>,
-                            mergeOrmMw: Partial<IormMwConfig>,
+                            mergeOrmMw: Partial<IOrmMwConfig>,
                             mergeRoutesConfig: Partial<IRoutesMergerConfig>,
                             callback: (err: Error, app?: TApp, orms_out?: IOrmsOut) => void) => waterfall([
     cb => ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),

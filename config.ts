@@ -1,6 +1,6 @@
 import * as Logger from 'bunyan';
 import { WaterlineError } from 'custom-restify-errors';
-import { IormMwConfig, IOrmsOut, RequestHandler } from 'orm-mw';
+import { IOrmMwConfig, IOrmsOut, RequestHandler } from 'orm-mw';
 import { Server } from 'restify';
 import { IRoutesMergerConfig } from 'routes-merger';
 import { ConfigOptions, WLError } from 'waterline';
@@ -36,7 +36,7 @@ export const _orms_out: {orms_out: IOrmsOut} = { orms_out: undefined };
 export const getOrmMwConfig = (models: Map<string, any>, logger: Logger,
                                cb: (err: Error,
                                     with_app?: IRoutesMergerConfig['with_app'],
-                                    orms_out?: IOrmsOut) => void): IormMwConfig => ({
+                                    orms_out?: IOrmsOut) => void): IOrmMwConfig => ({
     models, logger,
     orms_in: {
         redis: {
