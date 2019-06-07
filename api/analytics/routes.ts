@@ -8,6 +8,7 @@ import { resolveIntFromObject } from 'nodejs-utils'
 import { IOrmReq } from 'orm-mw';
 import * as simpleStatistics from 'simple-statistics';
 import { ttest } from 'ttest/hypothesis';
+
 import { IRiskRes } from '../risk_res/models.d';
 import { ISurvey } from '../survey/models.d';
 // const jStat = require('jstat');
@@ -92,14 +93,27 @@ export const funcs: DeepReadonlyArray<[string, string]> = Object.freeze([
     ['medianAbsoluteDeviation', 'simpleStatistics'],
     ['interquartileRange', 'simpleStatistics'],
 
+    ['ttest', 'ttest']
+
     // ['tukeyhsd', 'jStat']
 ]);
+
+const get_func = (func: DeepReadonlyArray<string>, input: {}): ((a: {}) => number) => {
+    console.info('func:', func, ';');
+    console.info('input:', input, ';');
+    return (b: {}): number => 5;
+};
+/*
+    console.info('func', func, ';\n', (
+    func[1] === 'simpleStatistics' ? simpleStatistics : ident => ident)[func[0]], ';') as any || input == null? ident => ({ident: 0})
+    : ;
+*/
 
 const f = (fs: typeof funcs, obj: {}): {} =>
     fs
         .map(func => ({
-            [func[0]]: (
-                func[1] === 'simpleStatistics' ? simpleStatistics : (s) => s /*require('jStat')*/)[func[0]](obj)
+            [func[0]]:
+                get_func(func, obj)(obj)
         }))
         .reduce((a, b) => Object.assign(a, b), {});
 
@@ -111,7 +125,7 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
 
             const [condition, where_condition, valuesToEscape] = ((): [string, string, string[]] => {
                 if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
-                    return ['', '',  []];
+                    return ['', '', []];
 
                 req.query.startDatetime = decodeURIComponent(req.query.startDatetime);
                 req.query.endDatetime = decodeURIComponent(req.query.endDatetime);
@@ -148,8 +162,10 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                                     {
                                         column: ['age', 'client_risk']
                                             .map(col => ({
-                                                    [col]: Object.assign(f(funcs, risk_res.map(rr => rr[col])))
-                                                        , // Object.assign(f(funcs, risk_res.map(rr => rr[col])),
+                                                    [col]: Object.assign(
+                                                        f(funcs, risk_res.map(rr => console.info('col:', col, ';\nrr:', rr, ';') as any || rr[col]))
+                                                    )
+                                                    , // Object.assign(f(funcs, risk_res.map(rr => rr[col])),
                                                     // { ttest: ttest(risk_res.map(rr => rr[col]), void 0) }
                                                 })
                                             )
@@ -219,7 +235,7 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                 })
             }, (err, results) => {
                 if (err != null) return next(fmtError(err));
-                res.json(200, results);
+                res.json(results);
                 return next();
             });
         }
