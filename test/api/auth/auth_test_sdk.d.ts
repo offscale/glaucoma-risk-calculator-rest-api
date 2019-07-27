@@ -1,29 +1,13 @@
-import { HttpStrResp, IncomingMessageError, TCallback } from 'nodejs-utils';
+import { Server } from 'restify';
 import { Response } from 'supertest';
-
-import { IUser, IUserBase } from '../../../api/user/models.d';
-
-
-export type THttpCallback<T> = (error: Error | IncomingMessageError, result?: T) => void;
-
-export interface IAuthSdk {
-    register(user: IUserBase, callback: TCallback<Error | IncomingMessageError, Response>): void;
-
-    login(user: IUserBase | IUser, callback: TCallback<Error | IncomingMessageError, Response>): void;
-
-    get_user(access_token: string, user: IUser | IUserBase,
-             callback: TCallback<Error | IncomingMessageError, Response>);
-
-    get_all(access_token: string, callback: TCallback<Error | IncomingMessageError, Response>);
-
-    logout(access_token: string, callback: HttpStrResp): void;
-
-    unregister(ident: {access_token?: string, user_id?: string},
-               callback: TCallback<Error | IncomingMessageError, Response>): void;
-
-    unregister_all(users: Array<IUser | IUserBase>, done: TCallback<Error | IncomingMessageError, Response>);
-
-    register_login(user: IUserBase, num_or_done: THttpCallback<string> | number, done?: THttpCallback<string>): void;
-
-    logout_unregister(user: IUserBase, done: TCallback<Error | IncomingMessageError, Response>);
+import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
+import { User } from '../../../api/user/models';
+export declare class AuthTestSDK {
+    app: Server;
+    private user_sdk;
+    constructor(app: Server);
+    login(user: User): Promise<Response>;
+    unregister_all(users: User[]): Promise<Response[]>;
+    register_login(user?: User, num?: number): Promise<AccessTokenType>;
+    logout_unregister(user: User, num?: number): Promise<unknown>;
 }

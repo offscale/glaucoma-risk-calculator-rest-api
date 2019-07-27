@@ -1,20 +1,20 @@
-import { series, waterfall } from 'async';
+import { waterfall } from 'async';
 import { createLogger } from 'bunyan';
-import { expect } from 'chai';
-import { IModelRoute, model_route_to_map } from 'nodejs-utils';
-import { tearDownConnections } from 'orm-mw';
+import * as path from 'path';
 import { basename } from 'path';
 import { Server } from 'restify';
-import { WLError } from 'waterline';
+
+import { model_route_to_map } from '@offscale/nodejs-utils';
+import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
+import { IOrmsOut } from '@offscale/orm-mw/interfaces';
 
 import { AccessToken } from '../../../api/auth/models';
-import { IUserBase } from '../../../api/user/models.d';
+import { User } from '../../../api/user/models';
 import { _orms_out } from '../../../config';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { user_mocks } from '../user/user_mocks';
-import { AuthTestSDK } from './../auth/auth_test_sdk';
-import { IAuthSdk } from './auth_test_sdk.d';
-import IAssertionError = Chai.AssertionError;
+import { closeApp, tearDownConnections, unregister_all } from '../../shared_tests';
+import { AuthTestSDK } from './auth_test_sdk';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -23,77 +23,48 @@ const models_and_routes: IModelRoute = {
 
 process.env['NO_SAMPLE_DATA'] = 'true';
 
-const mocks: IUserBase[] = user_mocks.successes.slice(0, 10);
+const mocks: User[] = user_mocks.successes.slice(0, 12);
 
 const tapp_name = `test::${basename(__dirname)}`;
+const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
+
 const logger = createLogger({ name: tapp_name });
 
 describe('Auth::routes', () => {
-    let sdk: IAuthSdk;
+    let sdk: AuthTestSDK;
 
     before(done =>
         waterfall([
-                cb => tearDownConnections(_orms_out.orms_out, e => cb(e)),
-                cb => AccessToken.reset() as any || cb(void 0),
-                cb => setupOrmApp(
-                    model_route_to_map(models_and_routes), { logger },
+                tearDownConnections,
+                cb => typeof AccessToken.reset() === 'undefined' && cb(void 0),
+                cb => setupOrmApp(model_route_to_map(models_and_routes), { connection_name, logger },
                     { skip_start_app: true, app_name: tapp_name, logger },
                     cb
                 ),
-            ],
-            (err: Error, _app: Server) => {
-                if (err != null) return done(err);
-                AccessToken.reset();
-                sdk = new AuthTestSDK(_app);
-                return done(void 0);
-            }
+                (_app: Server, orms_out: IOrmsOut, cb) => {
+                    _orms_out.orms_out = orms_out;
+
+                    sdk = new AuthTestSDK(_app);
+
+                    return cb(void 0);
+                },
+            ], done
         )
     );
 
-    after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
+    after('tearDownConnections', tearDownConnections);
+    after('closeApp', done => closeApp(sdk!.app)(done));
 
     describe('/api/auth', () => {
-        beforeEach(done => sdk.unregister_all(mocks, () => done()));
-        afterEach(done => sdk.unregister_all(mocks, () => done()));
+        before(async () => await unregister_all(sdk, mocks));
+        after(async () => await unregister_all(sdk, mocks));
 
-        it('POST should login user', done => {
-            series([
-                    cb => sdk.register(mocks[1], cb),
-                    cb => sdk.login(mocks[1], cb)
-                ],
-                done
-            );
+        it('POST should login user', async () => await sdk.register_login(mocks[1]));
+
+        it('DELETE should logout user', async () => {
+            const user_mock = mocks[2];
+            await sdk.register_login(user_mock);
+            await sdk.unregister_all([user_mock]);
         });
-
-        it('POST should fail to register user twice', done =>
-            series([
-                    cb => sdk.register(mocks[2], cb),
-                    cb => sdk.register(mocks[2], cb)
-                ],
-                (err: WLError | Error) => {
-                    if (err != null) {
-                        const expected_err = 'E_UNIQUE';
-                        try {
-                            expect(JSON.parse(err['text']).error).to.be.eql('WaterlineError');
-                            err = null;
-                        } catch (e) {
-                            err = e as IAssertionError;
-                        } finally {
-                            done(err);
-                        }
-                    } else return done();
-                }
-            )
-        );
-
-        it('DELETE should logout user', done =>
-            sdk.unregister_all([mocks[3]],
-                (error: Error) => done(typeof error['text'] === 'string' && error['text'] === JSON.stringify({
-                        code: 'NotFoundError',
-                        message: 'User not found'
-                    }) ? null : error
-                )
-            )
-        );
     });
 });

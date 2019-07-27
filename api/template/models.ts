@@ -14,6 +14,7 @@ export const Template = {
             required: true
         },
         toJSON: function toJSON() {
+            // @ts-ignore
             const template: ITemplate = this.toObject();
             Template._omit.map(k => delete template[k]);
             for (const key in template)

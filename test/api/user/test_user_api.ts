@@ -1,20 +1,23 @@
-import { map, waterfall } from 'async';
+import * as path from 'path';
+import { basename } from 'path';
+
+import { asyncify, map, waterfall } from 'async';
 import { createLogger } from 'bunyan';
 import { expect } from 'chai';
-import { IModelRoute, model_route_to_map } from 'nodejs-utils';
-import { IOrmsOut, tearDownConnections } from 'orm-mw';
-import { basename } from 'path';
 import { Server } from 'restify';
-import * as supertest from 'supertest';
-import { Connection } from 'waterline';
 
-import { IUserBase } from '../../../api/user/models.d';
+import { exceptionToErrorResponse, model_route_to_map } from '@offscale/nodejs-utils';
+import { AccessTokenType, IModelRoute, IncomingMessageError } from '@offscale/nodejs-utils/interfaces';
+import { IOrmsOut } from '@offscale/orm-mw/interfaces';
+
+import { AccessToken } from '../../../api/auth/models';
+import { User } from '../../../api/user/models';
 import { _orms_out } from '../../../config';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
-import { IAuthSdk } from '../auth/auth_test_sdk.d';
-import { AccessToken } from './../../../api/auth/models';
-import { AuthTestSDK } from './../auth/auth_test_sdk';
+import { AuthTestSDK } from '../auth/auth_test_sdk';
+import { tearDownConnections, unregister_all } from '../../shared_tests';
 import { user_mocks } from './user_mocks';
+import { UserTestSDK } from './user_test_sdk';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -23,122 +26,128 @@ const models_and_routes: IModelRoute = {
 
 process.env['NO_SAMPLE_DATA'] = 'true';
 
-const mocks: IUserBase[] = user_mocks.successes.slice(10, 20);
+const mocks: User[] = user_mocks.successes.slice(12, 24);
+
 const tapp_name = `test::${basename(__dirname)}`;
+const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
+
 const logger = createLogger({ name: tapp_name });
 
 describe('User::routes', () => {
-    let sdk: IAuthSdk;
+    let sdk: UserTestSDK;
+    let auth_sdk: AuthTestSDK;
     let app: Server;
 
-    before(done =>
+    before('app & db', done => {
         waterfall([
-                cb => tearDownConnections(_orms_out.orms_out, e => cb(e)),
-                cb => AccessToken.reset() as any || cb(void 0),
-                cb => setupOrmApp(
-                    model_route_to_map(models_and_routes), { logger },
+                tearDownConnections,
+                cb => typeof AccessToken.reset() === 'undefined' && cb(void 0),
+                cb => setupOrmApp(model_route_to_map(models_and_routes),
+                    { logger, connection_name },
                     { skip_start_app: true, app_name: tapp_name, logger },
                     cb
                 ),
                 (_app: Server, orms_out: IOrmsOut, cb) => {
-                    AccessToken.reset();
                     app = _app;
                     _orms_out.orms_out = orms_out;
 
-                    sdk = new AuthTestSDK(_app);
+                    sdk = new UserTestSDK(_app);
+                    auth_sdk = new AuthTestSDK(_app);
 
                     return cb(void 0);
                 }
             ],
             done
+        );
+    });
+
+    after('tearDownConnections & closeApp', done =>
+        tearDownConnections(_orms_out.orms_out, e =>
+            e == null ? sdk.app.close(() => done(void 0)) : done(e)
         )
     );
 
-    after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
-
     describe('/api/user', () => {
-        beforeEach(done => sdk.unregister_all(mocks, () => done()));
-        afterEach(done => sdk.unregister_all(mocks, () => done()));
+        before(async () => await unregister_all(auth_sdk, mocks));
+        after(async () => await unregister_all(auth_sdk, mocks));
 
-        it('POST should create user', done =>
-            sdk.register(mocks[0], done)
+        it('POST should create user', async () =>
+            await sdk.register(mocks[0])
         );
 
-        it('GET should retrieve user', done =>
-            waterfall([
-                    cb => sdk.register(mocks[1], err => cb(err)),
-                    cb => sdk.login(mocks[1], (err, res) =>
-                        err ? cb(err) : cb(void 0, res.body['access_token'])
-                    ),
-                    (access_token, cb) =>
-                        sdk.get_user(access_token, mocks[1], cb)
-                ],
-                done
-            )
-        );
+        it('POST should fail to register user twice', async () => {
+            const user_mock = mocks[1];
+            try {
+                await auth_sdk.login(user_mock);
+            } catch (e) {
+                expect(exceptionToErrorResponse(e).code).to.eql('NotFoundError');
+                await sdk.register(user_mock);
+            }
 
-        it('PUT should edit user', done =>
-            waterfall([
-                    cb => sdk.register(mocks[2], (err, _) => cb(err)),
-                    cb => sdk.login(mocks[2], (err, res) =>
-                        err != null ? cb(err) : cb(void 0, res.body['access_token'])
-                    ),
-                    (access_token, cb) =>
-                        supertest(app)
-                            .put('/api/user')
-                            .set('X-Access-Token', access_token)
-                            .set('Connection', 'keep-alive')
-                            .send({ title: 'Mr' })
-                            .end(cb)
-                    ,
-                    (r, cb) => {
-                        if (r.statusCode / 100 >= 3) return cb(new Error(JSON.stringify(r.text, null, 4)));
-                        let err: Chai.AssertionError = null;
-                        try {
-                            expect(r.body).to.have.all.keys(['createdAt', 'email', 'roles', 'title', 'updatedAt']);
-                            expect(r.body.title).equals('Mr');
-                        } catch (e) {
-                            err = e as Chai.AssertionError;
-                        } finally {
-                            cb(err);
-                        }
-                    }
-                ],
-                done
-            )
-        );
+            let has_error = false;
+            const expected_err = 'E_UNIQUE';
+            try {
+                await sdk.register(user_mock);
+            } catch (err) {
+                has_error = true;
+                const error_obj = exceptionToErrorResponse(err);
+                expect(error_obj).to.have.property('error');
+                expect(error_obj.error).to.eql(expected_err);
+            }
+            if (!has_error) throw Error(`Expected ${expected_err} error`);
+        });
 
-        type AccessTokenType = string;
+        it('GET should retrieve user', async () => {
+            const user_mock = mocks[2];
+            const access_token = await auth_sdk.register_login(user_mock);
+            await sdk.read(access_token, user_mock);
+        });
+
+        it('PUT should update user', async () => {
+            const user_mock = mocks[3];
+            let resp = await sdk.register(user_mock);
+            const access_token = resp.header['x-access-token'];
+            resp = await sdk.update(access_token, void 0, { title: 'Sir' });
+            await sdk.read(access_token, resp.body);
+        });
+
         it('GET /users should get all users', done =>
-            map(mocks.slice(4, 10), sdk.register_login.bind(sdk), (err, res: AccessTokenType[]) =>
-                err ? done(err) : sdk.get_all(res[0], done)
+            map(mocks.slice(4, 9), asyncify(auth_sdk.register_login.bind(auth_sdk)),
+                (err: Error | IncomingMessageError | null | undefined,
+                 res: undefined | Array<AccessTokenType | undefined>) =>
+                    err != null ? done(err)
+                        : sdk.get_all((res as string[])[4])
+                            .then(() => done())
+                            .catch(done)
             )
         );
 
-        it('DELETE should unregister user', done =>
-            waterfall([
-                    cb => sdk.register(mocks[3], err => cb(err)),
-                    cb => sdk.login(mocks[3], (err, res) =>
-                        err ? cb(err) : cb(void 0, res.body['access_token'])
-                    ),
-                    (access_token, cb) =>
-                        sdk.unregister({ access_token }, err =>
-                            cb(err, access_token)
-                        )
-                    ,
-                    (access_token, cb) => AccessToken
-                        .get(_orms_out.orms_out.redis.connection)
-                        .findOne(access_token, e =>
-                            cb(e != null && e.message === 'Nothing associated with that access token' ? void 0 : e)
-                        ),
-                    cb => sdk.login(mocks[3], e => cb(
-                        e != null && typeof e['text'] !== 'undefined' && e['text'] !== JSON.stringify({
-                            code: 'NotFoundError', message: 'User not found'
-                        }) ? e : null)
-                    )
-                ],
-                done
-            )
-        );
+        it('DELETE should unregister user', async () => {
+            const user_mock = mocks[10];
+            try {
+                await sdk.register(user_mock);
+            } catch (e) {
+                if (exceptionToErrorResponse(e).error !== 'E_UNIQUE')
+                    throw e;
+            }
+            const res = await auth_sdk.login(user_mock);
+            const access_token: AccessTokenType = res.body['access_token'];
+            await sdk.unregister({ access_token });
+            try {
+                await AccessToken
+                    .get(_orms_out.orms_out.redis!.connection)
+                    .findOne(access_token);
+            } catch (e) {
+                if (exceptionToErrorResponse(e).error_message !== 'Nothing associated with that access token')
+                    throw e;
+            }
+
+            try {
+                await auth_sdk.login(user_mock);
+            } catch (e) {
+                if (exceptionToErrorResponse(e).error_message !== 'User not found')
+                    throw e;
+            }
+        });
     });
 });

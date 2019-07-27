@@ -1,9 +1,14 @@
 import * as restify from 'restify';
 import { Query, WLError } from 'waterline';
-import { fmtError, NotFoundError } from 'custom-restify-errors';
-import { has_body, jsonSchemaNamedArrayOf, mk_valid_body_mw, mk_valid_body_mw_ignore } from 'restify-validators';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import {
+    has_body,
+    jsonSchemaNamedArrayOf,
+    mk_valid_body_mw,
+    mk_valid_body_mw_ignore
+} from '@offscale/restify-validators';
 import { JsonSchema } from 'tv4';
-import { IOrmReq } from 'orm-mw';
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
 import { ITemplate, ITemplateBase } from './models.d';
@@ -15,8 +20,9 @@ const template_schema: JsonSchema = require('../../test/api/template/schema');
 
 export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(template_schema, ['createdAt']),
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const Template: Query = req.getOrm().waterline.collections['template_tbl'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const Template: Query = req.getOrm().waterline!.collections!['template_tbl'];
 
             if ((req.body as ITemplateBase).kind == null)
                 (req.body as ITemplateBase).kind = 'email';
@@ -33,8 +39,9 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
 
 export const createBatch = (app: restify.Server, namespace: string = ''): void => {
     app.post(`${namespace}s`, has_auth(), has_body, mk_valid_body_mw(jsonSchemaNamedArrayOf(template_schema)),
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const Template: Query = req.getOrm().waterline.collections['template_tbl'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const Template: Query = req.getOrm().waterline!.collections!['template_tbl'];
 
             // TODO: raw query insert batch for efficiency + consistency
             map(req.body,
@@ -68,7 +75,8 @@ export const createBatch = (app: restify.Server, namespace: string = ''): void =
 
 export const readBatch = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}s/latest`,
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
             readManyTemplates(req, (err, templates) => {
                 if (err != null) return next(fmtError(err));
                 res.json(templates);

@@ -2,10 +2,10 @@ import * as restify from 'restify';
 import * as async from 'async';
 
 import { Query, WLError } from 'waterline';
-import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
-import { fmtError, NotFoundError } from 'custom-restify-errors';
+import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { JsonSchema } from 'tv4';
-import { IOrmReq } from 'orm-mw';
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
 import { IRiskStats } from './models.d';
@@ -15,8 +15,9 @@ const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schem
 
 export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:createdAt`,
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const RiskStats: Query = req.getOrm().waterline.collections['risk_stats_tbl'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const RiskStats: Query = req.getOrm().waterline!.collections!['risk_stats_tbl'];
 
             const q = req.params.createdAt === 'latest' ?
                 RiskStats.find().sort('createdAt DESC')
@@ -36,8 +37,9 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 
 export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:createdAt`, has_auth(), has_body, mk_valid_body_mw_ignore(risk_stats_schema, ['createdAt']),
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const RiskStats: Query = req.getOrm().waterline.collections['risk_stats_tbl'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const RiskStats: Query = req.getOrm().waterline!.collections!['risk_stats_tbl'];
 
             req.body = Object.freeze({ risk_json: req.body.risk_json });
             const crit = Object.freeze({ createdAt: req.params.createdAt });
@@ -63,8 +65,9 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
 export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:createdAt`, has_auth(),
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const RiskStats: Query = req.getOrm().waterline.collections['risk_stats_tbl'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const RiskStats: Query = req.getOrm().waterline!.collections!['risk_stats_tbl'];
 
             RiskStats.destroy({ createdAt: req.params.createdAt }).exec((error: WLError) => {
                 if (error != null) return next(fmtError(error));

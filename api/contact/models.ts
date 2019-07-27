@@ -17,6 +17,7 @@ export const Contact = {
             required: true
         },
         toJSON: function toJSON() {
+            // @ts-ignore
             const contact: IContact = this.toObject();
             Contact._omit.map(k => delete contact[k]);
             for (const key in contact)

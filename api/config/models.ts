@@ -36,6 +36,7 @@ export const Config = {
             type: 'string'
         },
         toJSON: function toJSON() {
+            // @ts-ignore
             const config: IConfig = this.toObject();
             Config._omit.map(k => delete config[k]);
             for (const key in config)

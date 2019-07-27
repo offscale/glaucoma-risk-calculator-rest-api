@@ -1,10 +1,10 @@
 import * as restify from 'restify';
 import * as async from 'async';
 import { Query, WLError } from 'waterline';
-import { has_body } from 'restify-validators';
-import { fmtError, NotFoundError } from 'custom-restify-errors';
+import { has_body } from '@offscale/restify-validators';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { JsonSchema } from 'tv4';
-import { IOrmReq } from 'orm-mw';
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
 import { ISurvey } from './models.d';
@@ -17,8 +17,9 @@ const survey_schema: JsonSchema = require('./../../test/api/survey/schema');
 
 export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:id`,
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const Survey: Query = req.getOrm().waterline.collections['survey_tbl'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const Survey: Query = req.getOrm().waterline!.collections!['survey_tbl'];
             const q = req.params.id === 'latest' ?
                 Survey.find().sort('createdAt DESC').limit(1)
                 : Survey.findOne({ id: req.params.id });
@@ -36,8 +37,9 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 
 export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:id`, has_body,
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const Survey: Query = req.getOrm().waterline.collections['survey_tbl'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const Survey: Query = req.getOrm().waterline!.collections!['survey_tbl'];
 
             const crit = Object.freeze({ id: req.params.id });
 
@@ -75,8 +77,9 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
 export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:id`, has_auth(),
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const Survey: Query = req.getOrm().waterline.collections['survey_tbl'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const Survey: Query = req.getOrm().waterline!.collections!['survey_tbl'];
 
             Survey.destroy({ createdAt: req.params.id }).exec((error: WLError) => {
                 if (error != null) return next(fmtError(error));

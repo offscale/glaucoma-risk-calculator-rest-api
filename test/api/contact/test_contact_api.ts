@@ -1,21 +1,22 @@
 import * as async from 'async';
 import { createLogger } from 'bunyan';
-import { IModelRoute, model_route_to_map } from 'nodejs-utils';
-import { IOrmsOut, tearDownConnections } from 'orm-mw';
+import { model_route_to_map } from '@offscale/nodejs-utils';
+import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
+import { tearDownConnections } from '@offscale/orm-mw';
+import { IOrmsOut } from '@offscale/orm-mw/interfaces';
 import { basename } from 'path';
 import { Server } from 'restify';
 
 import { AccessToken } from '../../../api/auth/models';
 import { IContactBase } from '../../../api/contact/models.d';
-import { IUserBase } from '../../../api/user/models.d';
 import { _orms_out } from '../../../config';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
-import { create_and_auth_users } from '../../shared_tests';
+import { create_and_auth_users, unregister_all } from '../../shared_tests';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
-import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { user_mocks } from '../user/user_mocks';
 import { contact_mocks } from './contact_mocks';
 import { ContactTestSDK } from './contact_test_sdk';
+import { User } from '../../../api/user/models';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -24,14 +25,14 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(20, 30);
+const user_mocks_subset: User[] = user_mocks.successes.slice(20, 30);
 
 const tapp_name = `test::${basename(__dirname)}`;
 const logger = createLogger({ name: tapp_name });
 
 describe('Contact::routes', () => {
     let sdk: ContactTestSDK;
-    let auth_sdk: IAuthSdk;
+    let auth_sdk: AuthTestSDK;
 
     let mocks: {successes: IContactBase[], failures: Array<{}>};
 
@@ -60,39 +61,39 @@ describe('Contact::routes', () => {
     );
 
     // Deregister database adapter waterline_c
-    after('unregister all users', done => auth_sdk.unregister_all(user_mocks_subset, done));
+    before(async () => await unregister_all(auth_sdk, user_mocks_subset));
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/contact', () => {
         afterEach('deleteContact', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[0], done);
+            sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[0], done);
         });
 
         it('POST should create contact', done => {
-            sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], done);
+            sdk.create(user_mocks_subset[0].access_token!, mocks.successes[0], done);
         });
 
         it('GET should get all contacts', done => async.series([
-                cb => sdk.create(user_mocks_subset[0].access_token, mocks.successes[0], cb),
-                cb => sdk.getAll(user_mocks_subset[0].access_token, mocks.successes[0], cb)
+                cb => sdk.create(user_mocks_subset[0].access_token!, mocks.successes[0], cb),
+                cb => sdk.getAll(user_mocks_subset[0].access_token!, mocks.successes[0], cb)
             ], done)
         );
     });
 
     describe('/api/contact/:email', () => {
         before('createContact', done => {
-            sdk.create(user_mocks_subset[0].access_token, mocks.successes[1], _ => done());
+            sdk.create(user_mocks_subset[0].access_token!, mocks.successes[1], _ => done());
         });
         after('deleteContact', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[1], done);
+            sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[1], done);
         });
 
         it('GET should retrieve contact', done => {
-            sdk.retrieve(user_mocks_subset[0].access_token, mocks.successes[1], done);
+            sdk.retrieve(user_mocks_subset[0].access_token!, mocks.successes[1], done);
         });
 
         it('PUT should update contact', done => {
-            sdk.update(user_mocks_subset[0].access_token, mocks.successes[1],
+            sdk.update(user_mocks_subset[0].access_token!, mocks.successes[1],
                 {
                     owner: mocks.successes[1].owner,
                     email: mocks.successes[1].email,
@@ -101,7 +102,7 @@ describe('Contact::routes', () => {
         });
 
         it('DELETE should destroy contact', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, mocks.successes[1], done);
+            sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[1], done);
         });
     });
 });

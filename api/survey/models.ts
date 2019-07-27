@@ -30,6 +30,7 @@ export const Survey = {
             required: false
         },
         toJSON: function toJSON() {
+            // @ts-ignore
             const survey: ISurvey = this.toObject();
             Survey._omit.map(k => delete survey[k]);
             for (const key in survey)

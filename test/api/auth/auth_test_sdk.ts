@@ -1,15 +1,17 @@
-import { mapSeries, waterfall } from 'async';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import * as chaiJsonSchema from 'chai-json-schema';
-import { getError, HttpStrResp, IncomingMessageError, sanitiseSchema, superEndCb, TCallback } from 'nodejs-utils';
-import * as supertest from 'supertest';
-import { Response } from 'supertest';
+import { Server } from 'restify';
+import supertest, { Response } from 'supertest';
 
+import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
+
+import * as auth_routes from '../../../api/auth/routes';
 import { User } from '../../../api/user/models';
-import { IUser, IUserBase } from '../../../api/user/models.d';
 import { user_mocks } from '../user/user_mocks';
-import { IAuthSdk, THttpCallback } from './auth_test_sdk.d';
+import { UserTestSDK } from '../user/user_test_sdk';
+// tslint:disable-next-line:no-var-requires
+const chaiJsonSchema = require('chai-json-schema');
 // import { saltSeeker } from '../../../api/user/utils';
 // import { saltSeekerCb } from '../../../main';
 
@@ -17,181 +19,101 @@ import { IAuthSdk, THttpCallback } from './auth_test_sdk.d';
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
 const auth_schema = require('./schema.json');
 
+// @ts-ignore
 chai.use(chaiJsonSchema);
 
-export class AuthTestSDK implements IAuthSdk {
-    constructor(private app) {
+export class AuthTestSDK {
+    private user_sdk: UserTestSDK;
+
+    constructor(public app: Server) {
+        this.user_sdk = new UserTestSDK(app);
     }
 
-    public register(user: IUserBase, callback: TCallback<Error | IncomingMessageError, Response>) {
-        if (user == null) return callback(new TypeError('user argument to register must be defined'));
+    public login(user: User): Promise<Response> {
+        return new Promise<Response>((resolve, reject) => {
+            if (user == null) return reject(new TypeError('`user` argument to `login` must be defined'));
 
-        supertest(this.app)
-            .post('/api/user')
-            .set('Connection', 'keep-alive')
-            .send(user)
-            .expect('Content-Type', /json/)
-            .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
-                else if (res.error) return callback(getError(res.error));
-
-                try {
-                    expect(res.status).to.be.equal(201);
-                    expect(res.body).to.be.an('object');
-                    expect(res.body).to.be.jsonSchema(user_schema);
-                } catch (e) {
-                    err = e as Chai.AssertionError;
-                } finally {
-                    superEndCb(callback)(err, res);
-                }
-            });
+            expect(auth_routes.login).to.be.an.instanceOf(Function);
+            supertest(this.app)
+                .post('/api/auth')
+                .send(user)
+                .set('Accept', 'application/json')
+                .expect('Content-Type', /json/)
+                .expect(201)
+                .end((err, res: Response) => {
+                    if (err != null) return reject(supertestGetError(err, res));
+                    else if (res.error) return reject(getError(res.error));
+                    try {
+                        expect(res.body).to.be.an('object');
+                        expect(res.body).to.have.property('access_token');
+                        expect(res.body.access_token).to.have.lengthOf.at.least(1);
+                        expect(res.header['x-access-token']).to.eql(res.body.access_token);
+                        expect(res.body).to.be.jsonSchema(auth_schema);
+                    } catch (e) {
+                        return reject(e as Chai.AssertionError);
+                    }
+                    return resolve(res);
+                });
+        });
     }
 
-    public login(user: IUserBase, callback: TCallback<Error | IncomingMessageError, Response>) {
-        if (user == null) return callback(new TypeError('user argument to login must be defined'));
-
-        supertest(this.app)
-            .post('/api/auth')
-            .set('Connection', 'keep-alive')
-            .send(user)
-            .expect('Content-Type', /json/)
-            .expect(201)
-            .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
-                else if (res.error) return callback(getError(res.error));
-                try {
-                    expect(res.body).to.be.an('object');
-                    expect(res.body).to.have.property('access_token');
-                    expect(res.body).to.be.jsonSchema(auth_schema);
-                } catch (e) {
-                    err = e as Chai.AssertionError;
-                } finally {
-                    superEndCb(callback)(err, res);
-                }
-            });
-    }
-
-    public get_user(access_token: string,
-                    user: IUser | IUserBase, callback: TCallback<Error | IncomingMessageError, Response>) {
-        if (access_token == null) return callback(new TypeError('access_token argument to get_user must be defined'));
-
-        supertest(this.app)
-            .get('/api/user')
-            .set('X-Access-Token', access_token)
-            .set('Connection', 'keep-alive')
-            .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
-                else if (res.error) return callback(getError(res.error));
-                try {
-                    expect(res.body).to.be.an('object');
-                    Object.keys(user).map(
-                        attr => expect(user[attr] === res.body[attr])
-                    );
-                    expect(res.body).to.be.jsonSchema(user_schema);
-                } catch (e) {
-                    err = e as Chai.AssertionError;
-                } finally {
-                    superEndCb(callback)(err, res);
-                }
-            });
-    }
-
-    public get_all(access_token: string, callback: TCallback<Error | IncomingMessageError, Response>) {
-        if (access_token == null) return callback(new TypeError('access_token argument to get_all must be defined'));
-
-        supertest(this.app)
-            .get('/api/users')
-            .set('X-Access-Token', access_token)
-            .set('Connection', 'keep-alive')
-            .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
-                else if (res.error) return callback(getError(res.error));
-                try {
-                    expect(res.body).to.be.an('object');
-                    expect(res.body).to.have.property('users');
-                    expect(res.body.users).to.be.an('array');
-                    res.body.users.map(user => expect(user).to.be.jsonSchema(user_schema));
-                } catch (e) {
-                    err = e as Chai.AssertionError;
-                } finally {
-                    superEndCb(callback)(err, res);
-                }
-            });
-    }
-
-    public logout(access_token: string, callback: HttpStrResp) {
+    /*public logout(access_token: AccessTokenType, callback: HttpStrResp) {
         if (access_token == null) return callback(new TypeError('access_token argument to logout must be defined'));
         else if (typeof access_token !== 'string')
             return callback(new TypeError(`Expected \`access_token\` of string, got: ${typeof access_token}`));
 
+        expect(auth_routes.logout).to.be.an.instanceOf(Function);
         supertest(this.app)
             .delete('/api/auth')
-            .set('Connection', 'keep-alive')
+            .set('Accept', 'application/json')
             .set('X-Access-Token', access_token)
             .expect(204)
             .end(callback);
-    }
+    }*/
 
-    public unregister(ident: {access_token?: string, user_id?: string},
-                      callback: TCallback<Error | IncomingMessageError, Response>) {
-        if (ident == null) return callback(new TypeError('ident argument to unregister must be defined'));
-
-        if (ident.access_token != null)
-            supertest(this.app)
-                .delete('/api/user')
-                .set('Connection', 'keep-alive')
-                .set('X-Access-Token', ident.access_token)
-                .expect(204)
-                .end((err, res) => superEndCb(callback)(err, res));
-        else
-            supertest(this.app)
-                .delete('/api/user')
-                .set('Connection', 'keep-alive')
-                .send({ email: ident.user_id })
-                .expect(204)
-                .end((err, res) => superEndCb(callback)(err, res));
-    }
-
-    public unregister_all(users: Array<IUser | IUserBase>,
-                          callback: TCallback<Error | IncomingMessageError, Response>) {
-        mapSeries(users as any, (user: IUserBase, callb) =>
-            waterfall([
-                    call_back => this.login(user, (err, res) =>
-                        err == null ? call_back(void 0, res.header['x-access-token']) : call_back(err)
-                    ),
-                    (access_token, call_back) => this.unregister({ access_token }, (err, res) =>
-                        call_back(err, access_token)
-                    ),
-                ], callb
-            ), callback as any);
-    }
-
-    public register_login(user: IUserBase, num_or_done: THttpCallback<string> | number, done?: THttpCallback<string>) {
-        if (done == null) {
-            done = num_or_done as THttpCallback<string>;
-            num_or_done = 0;
-        }
-        user = user || user_mocks.successes[num_or_done as number];
-
-        this.register(user, (err) => {
-            if (err != null) return done(err);
-            this.login(user, (e, user_resp) => {
-                if (e != null) return done(e);
-                return done(void 0, user_resp.get('x-access-token'));
-            });
+    public unregister_all(users: User[]): Promise<Response[]> {
+        return new Promise<Response[]>((resolve, reject) => {
+            const errors: number[] = [];
+            const successes: Response[] = [];
+            for (const user of users)
+                this.login(user)
+                    .then(res =>
+                        this.user_sdk
+                            .unregister({ access_token: res!.header['x-access-token'] })
+                            .then(successes.push.bind(successes))
+                            .catch(errors.push.bind(errors))
+                    )
+                    .catch(errors.push.bind(errors));
+            if (errors.length) return reject(errors);
+            return resolve(successes);
         });
     }
 
-    public logout_unregister(user: IUserBase, num_or_done: number | TCallback<Error | IncomingMessageError, Response>,
-                             callback?: TCallback<Error | IncomingMessageError, Response>) {
-        if (callback == null) {
-            callback = num_or_done as TCallback<Error | IncomingMessageError, Response>;
-            num_or_done = 0;
-        }
-        user = user || user_mocks.successes[num_or_done as number];
-        if (user == null)
-            return callback(new TypeError('user undefined in `logout_unregister`'));
+    public register_login(user?: User, num?: number): Promise<AccessTokenType> {
+        return new Promise<AccessTokenType>((resolve, reject) => {
+            if (num == null) num = 0;
+            user = user || user_mocks.successes[num as number];
+            if (user == null) return reject(new TypeError('`user` argument to `register_login` must be defined'));
 
-        this.unregister_all([user], callback);
+            const token_handler = r => resolve(r.header['x-access-token']);
+
+            this.user_sdk.register(user!)
+                .then(token_handler)
+                .catch(() =>
+                    this.login(user!)
+                        .then(token_handler)
+                        .catch(reject)
+                );
+        });
+    }
+
+    public logout_unregister(user: User, num?: number) {
+        return new Promise((resolve, reject) => {
+            if (num == null) num = 0;
+            user = user || user_mocks.successes[num as number];
+            if (user == null) return reject(new TypeError('`user` argument to `logout_unregister` must be defined'));
+
+            return this.unregister_all([user]).then(resolve).catch(reject);
+        });
     }
 }

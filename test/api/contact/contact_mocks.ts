@@ -1,9 +1,9 @@
 import { IContactBase } from '../../../api/contact/models.d';
-import { IUserBase } from '../../../api/user/models.d';
 import { user_mocks } from '../user/user_mocks';
+import { User } from '../../../api/user/models';
 
-export const contact_mocks: (users: IUserBase[]) => {successes: IContactBase[], failures: Array<{}>} =
-    (users: IUserBase[]) => ({
+export const contact_mocks: (users: User[]) => {successes: IContactBase[], failures: Array<{}>} =
+    (users: User[]) => ({
         failures: [
             {},
             { email: 'foo@bar.com ' },
@@ -13,7 +13,7 @@ export const contact_mocks: (users: IUserBase[]) => {successes: IContactBase[], 
         successes: ((ob: IContactBase[] = []) => [
             `can ${Math.random()} count`, `can ${Math.random()} count`
         ].forEach(msg => ((date: Date) =>
-            users.forEach((user: IUserBase, idx: number) => ob.push({
+            users.forEach((user: User, idx: number) => ob.push({
                 email: user.email,
                 owner: users[idx === 0 ? 1 : 0].email
             } as IContactBase)))(new Date())

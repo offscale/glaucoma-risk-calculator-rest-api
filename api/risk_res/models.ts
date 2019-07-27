@@ -50,6 +50,7 @@ export const RiskRes = {
             required: false
         },
         toJSON: function toJSON() {
+            // @ts-ignore
             const risk_res: IRiskRes = this.toObject();
             RiskRes._omit.map(k => delete risk_res[k]);
             for (const key in risk_res)

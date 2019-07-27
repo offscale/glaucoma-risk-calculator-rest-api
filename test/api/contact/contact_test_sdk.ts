@@ -1,11 +1,13 @@
 import * as chai from 'chai';
 import { expect } from 'chai';
-import * as chaiJsonSchema from 'chai-json-schema';
-import { IncomingMessageError, sanitiseSchema, superEndCb, TCallback } from 'nodejs-utils';
+const chaiJsonSchema = require('chai-json-schema');
+import { sanitiseSchema, superEndCb } from '@offscale/nodejs-utils';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import { IContactBase } from '../../../api/contact/models.d';
 import { User } from '../../../api/user/models';
+import { IncomingMessageError } from '@offscale/custom-restify-errors';
+import { TCallback } from '@offscale/nodejs-utils/interfaces';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);

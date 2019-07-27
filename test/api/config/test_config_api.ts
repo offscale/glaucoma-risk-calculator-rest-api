@@ -1,20 +1,21 @@
-import { IModelRoute, model_route_to_map } from 'nodejs-utils';
+import { model_route_to_map } from '@offscale/nodejs-utils';
+import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
 import { Server } from 'restify';
 import { createLogger } from 'bunyan';
 import { basename } from 'path';
-import { IOrmsOut, tearDownConnections } from 'orm-mw';
+import { tearDownConnections } from '@offscale/orm-mw';
+import { IOrmsOut } from '@offscale/orm-mw/interfaces';
 import { waterfall } from 'async';
 
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { create_and_auth_users } from '../../shared_tests';
 import { ConfigTestSDK } from './config_test_sdk';
 import { user_mocks } from '../user/user_mocks';
-import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
-import { IUserBase } from '../../../api/user/models.d';
 import { config_mocks } from './config_mocks';
 import { AccessToken } from '../../../api/auth/models';
 import { _orms_out } from '../../../config';
+import { User } from '../../../api/user/models';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -23,14 +24,14 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(40, 50);
+const user_mocks_subset: User[] = user_mocks.successes.slice(40, 50);
 
 const tapp_name = `test::${basename(__dirname)}`;
 const logger = createLogger({ name: tapp_name });
 
 describe('Config::routes', () => {
     let sdk: ConfigTestSDK;
-    let auth_sdk: IAuthSdk;
+    let auth_sdk: AuthTestSDK;
     let app: Server;
 
     before(done =>
@@ -63,11 +64,11 @@ describe('Config::routes', () => {
 
     describe('/api/config', () => {
         it('POST should create Config', done => {
-            sdk.create(user_mocks_subset[0].access_token, config_mocks.successes[0], done);
+            sdk.create(user_mocks_subset[0].access_token!, config_mocks.successes[0], done);
         });
 
         it('GET should retrieve Config', done => {
-            sdk.get(user_mocks_subset[0].access_token, config_mocks.successes[0], done);
+            sdk.get(user_mocks_subset[0].access_token!, config_mocks.successes[0], done);
         });
     });
 });

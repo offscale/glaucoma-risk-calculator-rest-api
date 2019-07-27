@@ -1,9 +1,9 @@
 import * as restify from 'restify';
 import { Query, WLError } from 'waterline';
-import { fmtError, NotFoundError } from 'custom-restify-errors';
-import { has_body, mk_valid_body_mw_ignore } from 'restify-validators';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 import { JsonSchema } from 'tv4';
-import { IOrmReq } from 'orm-mw';
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
 import { IRiskRes } from './models.d';
@@ -13,8 +13,9 @@ const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
 
 export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_body, mk_valid_body_mw_ignore(risk_res_schema, ['createdAt', 'id']),
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl0'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const RiskRes: Query = req.getOrm().waterline!.collections!['risk_res_tbl0'];
 
             RiskRes.create(req.body).exec((error: WLError | Error, risk_res: IRiskRes) => {
                 if (error != null) return next(fmtError(error));
@@ -28,8 +29,9 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
 
 export const getAll = (app: restify.Server, namespace: string = ''): void => {
     app.get(namespace, has_auth('admin'),
-        (req: restify.Request & IOrmReq, res: restify.Response, next: restify.Next) => {
-            const RiskRes: Query = req.getOrm().waterline.collections['risk_res_tbl0'];
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+            const RiskRes: Query = req.getOrm().waterline!.collections!['risk_res_tbl0'];
 
             RiskRes.find().exec((error: WLError | Error, risk_res: IRiskRes[]) => {
                 if (error != null) return next(fmtError(error));

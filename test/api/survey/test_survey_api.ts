@@ -1,22 +1,23 @@
-import { IModelRoute, model_route_to_map } from 'nodejs-utils';
+import { model_route_to_map } from '@offscale/nodejs-utils';
+import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
 import { Server } from 'restify';
 import { Response } from 'supertest';
 import { createLogger } from 'bunyan';
 import { basename } from 'path';
-import { IOrmsOut, tearDownConnections } from 'orm-mw';
+import { tearDownConnections } from '@offscale/orm-mw';
+import { IOrmsOut } from '@offscale/orm-mw/interfaces';
 import { waterfall } from 'async';
 
-import { IUserBase } from '../../../api/user/models.d';
 import { ISurvey } from '../../../api/survey/models.d';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { AccessToken } from '../../../api/auth/models';
 import { _orms_out } from '../../../config';
 import { create_and_auth_users } from '../../shared_tests';
-import { IAuthSdk } from '../auth/auth_test_sdk.d';
 import { user_mocks } from '../user/user_mocks';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { SurveyTestSDK } from './survey_test_sdk';
 import { survey_mocks } from './survey_mocks';
+import { User } from '../../../api/user/models';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -25,14 +26,14 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-const user_mocks_subset: IUserBase[] = user_mocks.successes.slice(60, 70);
+const user_mocks_subset: User[] = user_mocks.successes.slice(60, 70);
 
 const tapp_name = `test::${basename(__dirname)}`;
 const logger = createLogger({ name: tapp_name });
 
 describe('Survey::routes', () => {
     let sdk: SurveyTestSDK;
-    let auth_sdk: IAuthSdk;
+    let auth_sdk: AuthTestSDK;
     let app: Server;
 
     before(done =>
@@ -65,36 +66,36 @@ describe('Survey::routes', () => {
 
     describe('/api/survey', () => {
         afterEach('deleteSurvey', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, survey_mocks.successes[0], done);
+            sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[0], done);
         });
 
         it('POST should create Survey', done => {
-            sdk.create(user_mocks_subset[0].access_token, survey_mocks.successes[0], done);
+            sdk.create(user_mocks_subset[0].access_token!, survey_mocks.successes[0], done);
         });
 
         it('GET should retrieve all Survey', done => {
-            sdk.getAll(user_mocks_subset[0].access_token, done);
+            sdk.getAll(user_mocks_subset[0].access_token!, done);
         });
     });
 
     describe('/api/survey/:createdAt', () => {
         before('createSurvey', done => {
-            sdk.create(user_mocks_subset[0].access_token, survey_mocks.successes[1],
-                (e, r: Response) => {
+            sdk.create(user_mocks_subset[0].access_token!, survey_mocks.successes[1],
+                (e, r?: Response) => {
                     if (e == null && r != null) survey_mocks.successes[1] = r.body as any;
                     return done();
                 });
         });
         after('deleteSurvey', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, survey_mocks.successes[1], done);
+            sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[1], done);
         });
 
         it('GET should retrieve Survey', done => {
-            sdk.get(user_mocks_subset[0].access_token, survey_mocks.successes[1] as ISurvey, done);
+            sdk.get(user_mocks_subset[0].access_token!, survey_mocks.successes[1] as ISurvey, done);
         });
 
         it('DELETE should destroy Survey', done => {
-            sdk.destroy(user_mocks_subset[0].access_token, survey_mocks.successes[1], done);
+            sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[1], done);
         });
     });
 });

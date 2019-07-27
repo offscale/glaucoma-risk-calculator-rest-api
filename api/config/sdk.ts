@@ -1,6 +1,6 @@
 import * as restify from 'restify';
-import { fmtError, NotFoundError } from 'custom-restify-errors';
-import { IOrmReq } from 'orm-mw';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { Query, WLError } from 'waterline';
 import * as async from 'async';
 
@@ -8,12 +8,12 @@ import { IConfig } from './models.d';
 
 export const getConfig = (req: restify.Request & IOrmReq,
                           cb: (error: Error | WLError, config?: IConfig) => void) => {
-    const Config: Query = req.getOrm().waterline.collections['config_tbl'];
+    const Config: Query = req.getOrm().waterline!.collections!['config_tbl'];
     Config
         .find()
         .limit(1)
         .exec((error: WLError, configs: IConfig[]) => {
-            if (error != null) return cb(fmtError(error));
+            if (error != null) return cb(fmtError(error)!);
             else if (configs == null) return cb(new NotFoundError('Config'));
             return cb(void 0, configs[0]);
         });
@@ -21,7 +21,7 @@ export const getConfig = (req: restify.Request & IOrmReq,
 
 export const upsertConfig = (req: restify.Request & IOrmReq,
                              callback: (error: Error | WLError, config?: IConfig) => void) => {
-    const Config: Query = req.getOrm().waterline.collections['config_tbl'];
+    const Config: Query = req.getOrm().waterline!.collections!['config_tbl'];
 
     // TODO: Transaction
     async.waterfall([
@@ -45,7 +45,7 @@ export const upsertConfig = (req: restify.Request & IOrmReq,
                         return cb(null, configs);
                     }
                 )
-    ], (error: any, results: IConfig[][2]) => {
+    ], (error: any, results?: IConfig[][2]) => {
         if (error != null) {
             if (error instanceof NotFoundError)
                 Config
@@ -54,9 +54,9 @@ export const upsertConfig = (req: restify.Request & IOrmReq,
                         if (err != null) return callback(err);
                         return callback(void 0, config);
                     });
-            else return callback(fmtError(error));
+            else return callback(fmtError(error)!);
         } else if (results == null || !results.length)
             return callback(new NotFoundError('Config[]'));
-        return callback(void 0, results[0]);
+        return callback(void 0, results![0]);
     });
 };

@@ -2,12 +2,13 @@ import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import { getError, IncomingMessageError, sanitiseSchema, superEndCb } from 'nodejs-utils';
-import * as chaiJsonSchema from 'chai-json-schema';
+import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+const chaiJsonSchema = require('chai-json-schema');
 
 import { IConfigBase } from '../../../api/config/models.d';
 import { User } from '../../../api/user/models';
 import { TCallback } from '../../shared_types';
+import { IncomingMessageError } from '@offscale/custom-restify-errors';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -33,7 +34,7 @@ export class ConfigTestSDK {
             .send(config)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(getError(res.error));
 
                 try {
@@ -63,7 +64,7 @@ export class ConfigTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.body).to.be.jsonSchema(config_schema);

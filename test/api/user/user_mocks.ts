@@ -1,19 +1,25 @@
 import * as faker from 'faker';
-import { IUserBase } from '../../../api/user/models.d';
 
-export const user_mocks: {successes: IUserBase[], failures: Array<{}>} = {
+import { User } from '../../../api/user/models';
+
+export const user_mocks: {successes: User[], failures: Array<{}>} = {
     failures: [
         {},
         { email: 'foo@bar.com ' },
         { password: 'foo ' },
         { email: 'foo@bar.com', password: 'foo', bad_prop: true }
     ],
-    successes: (() => {
-        const a: IUserBase[] = [];
-        for (let i = 0; i < 100; i++)
-            a.push({ email: faker.internet.email(), password: faker.internet.password() });
-        return a;
-    })()
+    successes: Array(100)
+        .fill(void 0)
+        .map((_, idx) => ({
+            title: faker.name.title(),
+            email: faker.internet.email(),
+            password: faker.internet.password(),
+            /* tslint:disable:no-bitwise */
+            roles: (idx & 1) === 0 ?
+                ['registered', 'login', 'admin']
+                : ['registered', 'login']
+        }))
 };
 
 if (require.main === module) {

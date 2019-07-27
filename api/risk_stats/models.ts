@@ -15,6 +15,7 @@ export const RiskStats = {
             required: true
         },
         toJSON: function toJSON() {
+            // @ts-ignore
             const risk_stats: IRiskStats = this.toObject();
             RiskStats._omit.map(k => delete risk_stats[k]);
             for (const key in risk_stats)

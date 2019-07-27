@@ -1,12 +1,14 @@
-import { Model, Record } from 'waterline';
-
-export interface IUser extends Model, Record, IUserBase {
-}
-
-export interface IUserBase {
+export declare const hash_password: (password: string, callback: any) => void;
+export declare class User {
+    static _omit: string[];
+    static rolesAsStr: (roles: string[]) => string;
     email: string;
-    roles?: string;
-    password?: string;
+    password: string;
     title?: string;
-    access_token?: string;  // Might get attached for testing or whatnot
+    createdAt?: Date;
+    updatedAt?: Date;
+    roles: string[];
+    access_token?: string;
+    hashPassword?(): Promise<void>;
+    setRoles?(): void;
 }

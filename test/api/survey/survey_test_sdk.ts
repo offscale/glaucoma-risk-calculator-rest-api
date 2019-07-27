@@ -2,12 +2,13 @@ import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import { getError, IncomingMessageError, sanitiseSchema, superEndCb } from 'nodejs-utils';
-import * as chaiJsonSchema from 'chai-json-schema';
+import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+const chaiJsonSchema = require('chai-json-schema');
 
 import { ISurvey, ISurveyBase } from '../../../api/survey/models.d';
 import { User } from '../../../api/user/models';
 import { TCallback } from '../../shared_types';
+import { IncomingMessageError } from '@offscale/nodejs-utils/interfaces';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -31,7 +32,7 @@ export class SurveyTestSDK {
             .send(survey)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(getError(res.error));
 
                 try {
@@ -59,7 +60,7 @@ export class SurveyTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
@@ -84,7 +85,7 @@ export class SurveyTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(getError(res.error));
                 try {
                     expect(res.body).to.be.an('object');
@@ -111,7 +112,7 @@ export class SurveyTestSDK {
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.status).to.be.equal(204);

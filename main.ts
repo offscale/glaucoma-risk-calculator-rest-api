@@ -1,35 +1,27 @@
-import * as path from 'path';
-import { createWriteStream, existsSync, mkdirSync } from 'fs';
-import { homedir } from 'os';
+import { series, waterfall } from 'async';
+import Logger, { createLogger } from 'bunyan';
+import { default as restify, Server } from 'restify';
 
-import { waterfall } from 'async';
-import { createLogger } from 'bunyan';
-import * as restify from 'restify';
-import { Server } from 'restify';
-import * as morgan from 'morgan';
-
-import { IRoutesMergerConfig, routesMerger, TApp } from 'routes-merger';
-import { get_models_routes, IModelRoute, populateModelRoutes, raise } from 'nodejs-utils';
-import { IOrmMwConfig, IOrmsOut, ormMw } from 'orm-mw';
+import { get_models_routes, populateModelRoutes, raise } from '@offscale/nodejs-utils';
+import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
+import { ormMw } from '@offscale/orm-mw';
+import { IOrmMwConfig, IOrmReq, IOrmsOut } from '@offscale/orm-mw/interfaces';
+import { routesMerger } from '@offscale/routes-merger';
+import { IRoutesMergerConfig, TApp } from '@offscale/routes-merger/interfaces';
 
 import { AuthTestSDK } from './test/api/auth/auth_test_sdk';
-import { RiskStatsTestSDK } from './test/api/risk_stats/risk_stats_test_sdk';
-import { risk_json } from './test/SampleData';
-import { IUserBase } from './api/user/models.d';
 import { AccessToken } from './api/auth/models';
+import { User } from './api/user/models';
+import { post as register_user, UserBodyReq, UserConfig } from './api/user/sdk';
 import * as config from './config';
-import { _orms_out, getOrmMwConfig } from './config';
-
+import { getOrmMwConfig, getPrivateIPAddress } from './config';
 
 /* tslint:disable:no-var-requires */
 export const package_ = Object.freeze(require('./package'));
-export const logger = createLogger({ name: 'main' });
+export const logger: Logger = createLogger({ name: 'main' });
 
 /* tslint:disable:no-unused-expression */
 process.env['NO_DEBUG'] || logger.info(Object.keys(process.env).sort().map(k => ({ [k]: process.env[k] })));
-
-const parent = process.env.WORKING_DIR || path.join(homedir(), 'glaucoma-risk-calculator-data');
-if (!existsSync(parent)) mkdirSync(parent);
 
 export const all_models_and_routes: Map<string, any> = populateModelRoutes(__dirname);
 export const all_models_and_routes_as_mr: IModelRoute = get_models_routes(all_models_and_routes);
@@ -37,82 +29,77 @@ export const all_models_and_routes_as_mr: IModelRoute = get_models_routes(all_mo
 export const setupOrmApp = (models_and_routes: Map<string, any>,
                             mergeOrmMw: Partial<IOrmMwConfig>,
                             mergeRoutesConfig: Partial<IRoutesMergerConfig>,
-                            callback: (err: Error, app?: TApp, orms_out?: IOrmsOut) => void) => waterfall([
-    cb => ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),
-    (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut, cb) =>
-        routesMerger(Object.assign({
-            logger,
-            with_app: (app: Server) => {
-                // create a write stream (in append mode)
-                const accessLogStream = createWriteStream(path.join(parent, 'access.log'), { flags: 'a' });
-                const bodyLogStream = createWriteStream(path.join(parent, 'body.log'), { flags: 'a' });
+                            callback: (err: Error, app?: TApp, orms_out?: IOrmsOut) => void) =>
+    waterfall([
+            cb => ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),
+            (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut, cb) =>
+                routesMerger(Object.assign({}, {
+                    routes: models_and_routes,
+                    server_type: 'restify',
+                    package_: { version: package_.version },
+                    app_name: package_.name,
+                    root: '/api',
+                    skip_app_version_routes: false,
+                    skip_start_app: false,
+                    skip_app_logging: false,
+                    listen_port: process.env.PORT || 3000,
+                    version_routes_kwargs: { private_ip: getPrivateIPAddress() },
+                    with_app,
+                    logger,
+                    onServerStart: (uri: string, app: Server, next) => {
+                        AccessToken.reset();
 
-                app.use(restify.plugins.queryParser());
-                app.use(restify.plugins.bodyParser());
+                        const authSdk = new AuthTestSDK(app);
 
-                app.use(((req, res, next) => {
-                    if (req.body && req.contentType() === 'application/json') {
-                        bodyLogStream.write('`');
-                        bodyLogStream.write(new Date().toISOString());
-                        /*bodyLogStream.write('`\t`');
-                        bodyLogStream.write(req.);*/
-                        bodyLogStream.write('`\t`');
-                        bodyLogStream.write(req.method);
-                        bodyLogStream.write('`\t`');
-                        bodyLogStream.write(req.getUrl().path);
-                        bodyLogStream.write('`\t`');
-                        bodyLogStream.write(JSON.stringify(req.body));
-                        bodyLogStream.write('`\n');
-                    }
-                    return next();
-                }));
-                app.use(morgan('combined', { stream: accessLogStream }));
+                        const envs = ['DEFAULT_ADMIN_EMAIL', 'DEFAULT_ADMIN_PASSWORD'];
+                        if (!envs.every(process.env.hasOwnProperty.bind(process.env)))
+                            return next(ReferenceError(`${envs.join(', ')} must all be defined in your environment`));
 
-                return with_app(app);
-            },
-            routes: models_and_routes,
-            server_type: 'restify',
-            package_: { version: package_.version },
-            app_name: package_.name,
-            root: '/api',
-            skip_app_version_routes: false,
-            skip_start_app: false,
-            skip_app_logging: false,
-            skip_use: true,
-            listen_port: process.env.PORT || 3000,
-            onServerStart: (uri: string, app: Server, next) => {
-                AccessToken.reset();
+                        const default_admin: User = {
+                            email: process.env.DEFAULT_ADMIN_EMAIL!,
+                            password: process.env.DEFAULT_ADMIN_PASSWORD!,
+                            roles: ['registered', 'login', 'admin']
+                        };
 
-                const authSdk = new AuthTestSDK(app);
-                const riskStatsSdk = new RiskStatsTestSDK(app);
-                const admin_user: IUserBase = {
-                    email: process.env.DEFAULT_ADMIN_EMAIL || 'foo',
-                    password: process.env.DEFAULT_ADMIN_PASSWORD || 'bar'
-                };
-
-                const log_prev = (msg: string, callb) => logger.info(msg) as any || callb(void 0);
-
-                waterfall([
-                        callb => authSdk.unregister_all([admin_user], (err: Error & {status: number}) =>
-                            callb(err != null && err.status !== 404 ? err : void 0,
-                                'removed default user; next: adding')),
-                        log_prev,
-                        callb => authSdk.register_login(admin_user, callb),
-                        (access_token, callb) => riskStatsSdk.create(access_token, { risk_json, createdAt: new Date() },
-                            err => callb(err, 'loaded risk-json')),
-                        log_prev,
-                        callb => logger.info(`${app.name} listening from ${app.url}`) as any || callb(void 0)
-                    ], (e: Error) => e == null ? next(void 0, app, orms_out) : raise(e)
-                );
-            },
-            callback: (err: Error, app: TApp) => cb(err, app, orms_out)
-        }, mergeRoutesConfig))
-], callback);
+                        series({
+                                unregister: callb => authSdk.unregister_all([default_admin])
+                                    .then(() => callb())
+                                    .catch((err: Error & {status: number}) =>
+                                        callb(err != null && err.status !== 404 ? err : void 0,
+                                            'removed default user; next: adding')),
+                                prepare_user: callb => register_user({
+                                    getOrm: () => config._orms_out.orms_out,
+                                    orms_out: config._orms_out.orms_out,
+                                    body: default_admin
+                                } as IOrmReq & {body?: User} as UserBodyReq, UserConfig.default())
+                                    .then(() => callb())
+                                    .catch(callb),
+                                register_user: callb => {
+                                    UserConfig.instance = {
+                                        public_registration:
+                                            process.env.PUBLIC_REGISTRATION == null ?
+                                                true : !!process.env.PUBLIC_REGISTRATION,
+                                        initial_accounts: [default_admin]
+                                    };
+                                    return callb(void 0);
+                                },
+                                serve: callb =>
+                                    typeof logger.info(`${app.name} listening from ${app.url}`) === 'undefined'
+                                    && callb(void 0)
+                            }, (e?: Error) => e == null ? next(void 0, app, orms_out) : raise(e)
+                        );
+                    },
+                    callback: (err: Error, app: TApp) => cb(err, app, orms_out)
+                }, mergeRoutesConfig))
+        ],
+        // @ts-ignore
+        (err, app, orms_out) => callback(err as Error, app as TApp, orms_out));
 
 if (require.main === module)
     setupOrmApp(all_models_and_routes, { logger }, { logger, skip_start_app: false },
-        (err: Error, app: TApp, orms_out: IOrmsOut) => {
+        (err: Error, app?: TApp, orms_out?: IOrmsOut) => {
             if (err != null) throw err;
+            else if (orms_out == null) throw new ReferenceError('orms_out');
             config._orms_out.orms_out = orms_out;
         }
     );

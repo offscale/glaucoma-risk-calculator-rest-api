@@ -2,8 +2,8 @@ import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
-import { getError, sanitiseSchema, superEndCb } from 'nodejs-utils';
-import * as chaiJsonSchema from 'chai-json-schema';
+import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+const chaiJsonSchema = require('chai-json-schema');
 import { ITemplateBase } from '../../../api/template/models.d';
 import { User } from '../../../api/user/models';
 import { IncomingMessageError, TCallback } from '../../shared_types';
@@ -30,7 +30,7 @@ export class TemplateTestSDK {
             .send(template)
             .expect('Content-Type', /json/)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(getError(res.error));
 
                 try {
@@ -57,7 +57,7 @@ export class TemplateTestSDK {
             .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.body).to.have.property('contents');
@@ -89,7 +89,7 @@ export class TemplateTestSDK {
             .set('X-Access-Token', access_token)
             .send(updated_template)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.body).to.be.an('object');
@@ -117,7 +117,7 @@ export class TemplateTestSDK {
             .set('Connection', 'keep-alive')
             .set('X-Access-Token', access_token)
             .end((err, res: Response) => {
-                if (err != null) return superEndCb(callback)(err, res);
+                if (err != null) throw supertestGetError(err, res);
                 else if (res.error) return callback(res.error);
                 try {
                     expect(res.status).to.be.equal(204);
