@@ -61,7 +61,7 @@ export class RiskStatsTestSDK {
 
             expect(risk_stats_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .get(`/api/risk_stats/${risk_stats.createdAt}`)
+                .get(`/api/risk_stats/${risk_stats.createdAt.toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .expect('Content-Type', /json/)
@@ -97,7 +97,7 @@ export class RiskStatsTestSDK {
 
             expect(risk_stats_route.update).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .put(`/api/risk_stats/${initial_risk_stats.createdAt}`)
+                .put(`/api/risk_stats/${initial_risk_stats.createdAt.toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .send(updated_risk_stats)
@@ -127,7 +127,7 @@ export class RiskStatsTestSDK {
 
             expect(risk_stats_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .del(`/api/risk_stats/${risk_stats.createdAt}`)
+                .del(`/api/risk_stats/${risk_stats.createdAt.toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .end((err, res: Response) => {

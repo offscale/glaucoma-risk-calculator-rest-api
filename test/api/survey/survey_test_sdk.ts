@@ -54,7 +54,7 @@ export class SurveyTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
             else if (survey == null) return reject(new TypeError('`survey` argument to `getAll` must be defined'));
             /*else if (isNaN(survey.createdAt as any))
-             return callback(new TypeError(`\`survey.createdAt\` must not be NaN in \`getAll\` ${survey.createdAt}`));*/
+             return callback(new TypeError(`\`survey.createdAt\` must not be NaN in \`getAll\` ${survey.createdAt.toISOString()}`));*/
 
             expect(survey_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -81,7 +81,7 @@ export class SurveyTestSDK {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
             /*else if (isNaN(survey.createdAt as any))
-             return callback(new TypeError(`\`survey.createdAt\` must not be NaN in \`getAll\` ${survey.createdAt}`));*/
+             return callback(new TypeError(`\`survey.createdAt\` must not be NaN in \`getAll\` ${survey.createdAt.toISOString()}`));*/
 
             expect(survey_routes.getAll).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -115,7 +115,7 @@ export class SurveyTestSDK {
 
             expect(survey_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .del(`/api/survey/${survey.createdAt}`)
+                .del(`/api/survey/${survey.createdAt.toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .end((err, res: Response) => {

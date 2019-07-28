@@ -56,7 +56,7 @@ export class TemplateTestSDK {
 
             expect(template_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .get(`/api/template/${template.createdAt}_${template.kind}`)
+                .get(`/api/template/${template.createdAt.toISOString()}_${template.kind}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .expect('Content-Type', /json/)
@@ -86,12 +86,12 @@ export class TemplateTestSDK {
                 return reject(new TypeError('`updated_template` argument to `update` must be defined'));
             else if (initial_template.createdAt !== updated_template.createdAt)
                 return reject(new ReferenceError(
-                    `${initial_template.createdAt} != ${updated_template.createdAt} (\`createdAt\`s between templates)`)
+                    `${initial_template.createdAt.toISOString()} != ${updated_template.createdAt.toISOString()} (\`createdAt\`s between templates)`)
                 );
 
             expect(template_route.update).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .put(`/api/template/${initial_template.createdAt}`)
+                .put(`/api/template/${initial_template.createdAt.toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .send(updated_template)
@@ -122,7 +122,7 @@ export class TemplateTestSDK {
 
             expect(template_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .del(`/api/template/${template.createdAt}`)
+                .del(`/api/template/${template.createdAt.toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .end((err, res: Response) => {

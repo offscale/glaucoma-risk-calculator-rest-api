@@ -54,7 +54,7 @@ export class RiskResTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
             else if (risk_res == null) return reject(new TypeError('`risk_res` argument to `getAll` must be defined'));
             /*else if (isNaN(risk_res.createdAt as any))
-             return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
+             return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt.toISOString()}`));*/
 
             expect(risk_res_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -81,7 +81,7 @@ export class RiskResTestSDK {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
             /*else if (isNaN(risk_res.createdAt as any))
-             return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
+             return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt.toISOString()}`));*/
 
             expect(risk_res_routes.getAll).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -115,7 +115,7 @@ export class RiskResTestSDK {
 
             expect(risk_res_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .del(`/api/risk_res/${risk_res.createdAt}`)
+                .del(`/api/risk_res/${risk_res.createdAt.toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .end((err, res: Response) => {

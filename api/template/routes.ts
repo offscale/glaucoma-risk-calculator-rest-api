@@ -14,12 +14,14 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_auth } from '../auth/middleware';
 import { readManyTemplates } from './sdk';
 import { Template } from './models';
+import { parse_out_kind_dt } from './middleware';
 
 /* tslint:disable:no-var-requires */
 const template_schema: JsonSchema = require('../../test/api/template/schema');
 
 export const create = (app: restify.Server, namespace: string = ''): void => {
-    app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(template_schema, ['createdAt']),
+    app.post(namespace, has_auth(), has_body, parse_out_kind_dt,
+        mk_valid_body_mw_ignore(template_schema, ['createdAt']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
 
@@ -42,7 +44,8 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
 };
 
 export const createBatch = (app: restify.Server, namespace: string = ''): void => {
-    app.post(`${namespace}s`, has_auth(), has_body, mk_valid_body_mw(jsonSchemaNamedArrayOf(template_schema)),
+    app.post(`${namespace}s`, has_auth(), has_body, parse_out_kind_dt,
+        mk_valid_body_mw(jsonSchemaNamedArrayOf(template_schema)),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Template_r = req.getOrm().typeorm!.connection.getRepository(Template);
