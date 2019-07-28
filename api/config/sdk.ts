@@ -1,60 +1,55 @@
 import * as restify from 'restify';
+import { waterfall } from 'async';
+
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
-import { Query, WLError } from 'waterline';
-import * as async from 'async';
 
-import { IConfig } from './models.d';
+import { Config } from './models';
 
 export const getConfig = (req: restify.Request & IOrmReq,
-                          cb: (error: Error | WLError, config?: IConfig) => void) => {
-    const Config: Query = req.getOrm().waterline!.collections!['config_tbl'];
-    Config
-        .find()
-        .limit(1)
-        .exec((error: WLError, configs: IConfig[]) => {
-            if (error != null) return cb(fmtError(error)!);
-            else if (configs == null) return cb(new NotFoundError('Config'));
-            return cb(void 0, configs[0]);
-        });
+                          cb: (error?: Error, config?: Config) => void) => {
+    const Config_r = req.getOrm().typeorm!.connection.getRepository(Config);
+    Config_r
+        .findOneOrFail()
+        .then(config => {
+            if (config == null) return cb(new NotFoundError('Config'));
+            return cb(void 0, config);
+        })
+        .catch(cb);
 };
 
 export const upsertConfig = (req: restify.Request & IOrmReq,
-                             callback: (error: Error | WLError, config?: IConfig) => void) => {
-    const Config: Query = req.getOrm().waterline!.collections!['config_tbl'];
+                             callback: (error?: Error, config?: Config) => void) => {
+    const Config_r = req.getOrm().typeorm!.connection.getRepository(Config);
 
     // TODO: Transaction
-    async.waterfall([
-        cb =>
-            Config
-                .find()
-                .limit(1)
-                .exec((err: WLError, config: IConfig[]) => {
-                    if (err != null) return cb(err);
-                    else if (config == null || !config.length)
-                        return cb(new NotFoundError('Config'));
-                    return cb(null, config[0]);
-                }),
+    waterfall([
+        cb => Config_r.findOneOrFail()
+            .then(config => {
+                if (config == null)
+                    return callback(new NotFoundError('Config'));
+                return cb(void 0, config[0]);
+            })
+            .catch(cb),
         (config, cb) =>
-            Config
-                .update(config, Object.assign({}, config, req.body),
-                    (e, configs: IConfig[]) => {
-                        if (e) return cb(e);
-                        else if (configs == null || !configs.length)
-                            return cb(new NotFoundError('Config[]'));
-                        return cb(null, configs);
+            Config_r
+                .update(config, Object.assign({}, config, req.body))
+                .then(config => {
+                        if (config == null)
+                            return cb(new NotFoundError('Config'));
+                        return cb(void 0, config);
                     }
                 )
-    ], (error: any, results?: IConfig[][2]) => {
+    ], (error: any, results?: Config[]) => {
         if (error != null) {
-            if (error instanceof NotFoundError)
-                Config
-                    .create(req.body)
-                    .exec((err: WLError | Error, config: IConfig) => {
-                        if (err != null) return callback(err);
-                        return callback(void 0, config);
-                    });
-            else return callback(fmtError(error)!);
+            if (error instanceof NotFoundError) {
+                const config = new Config();
+                Object.keys(req.body).forEach(k => config[k] = req.body[k]);
+                Config_r
+                    .save(config)
+                    .then(config => callback(void 0, config))
+                    .catch(callback);
+            } else return callback(fmtError(error)!);
         } else if (results == null || !results.length)
             return callback(new NotFoundError('Config[]'));
         return callback(void 0, results![0]);

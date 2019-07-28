@@ -1,25 +1,21 @@
-import { ITemplate } from './models.d';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-export const Template = {
-    identity: 'template_tbl',
-    connection: 'main_db',
-    _omit: [/*'uuid'*/],
-    attributes: {
-        contents: {
-            type: 'string',
-            required: true
-        },
-        kind: {
-            type: 'string',
-            required: true
-        },
-        toJSON: function toJSON() {
-            // @ts-ignore
-            const template: ITemplate = this.toObject();
-            Template._omit.map(k => delete template[k]);
-            for (const key in template)
-                if (template.hasOwnProperty(key) && template[key] == null) delete template[key];
-            return template;
-        }
-    }
-};
+@Entity('template_tbl')
+export class Template {
+    public static _omit: string[] = [];
+
+    @PrimaryGeneratedColumn()
+    public id!: string;
+
+    @CreateDateColumn()
+    public createdAt!: Date;
+
+    @UpdateDateColumn()
+    public updatedAt!: Date;
+
+    @Column('varchar', { nullable: false })
+    public contents!: string;
+
+    @Column('varchar', { nullable: false })
+    public kind!: string;
+}

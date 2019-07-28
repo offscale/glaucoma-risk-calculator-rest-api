@@ -1,41 +1,33 @@
-import { ISurvey } from './models.d';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-export const Survey = {
-    identity: 'survey_tbl',
-    connection: 'main_db',
-    _omit: [/*'uuid'*/],
-    attributes: {
-        perceived_risk: {
-            type: 'float',
-            required: false
-        },
-        recruiter: {
-            type: 'string',
-            required: true
-        },
-        eye_test_frequency: {
-            type: 'string',
-            required: true
-        },
-        glasses_use: {
-            type: 'string',
-            required: true
-        },
-        behaviour_change: {
-            type: 'string',
-            required: false
-        },
-        risk_res_id: {
-            type: 'integer',
-            required: false
-        },
-        toJSON: function toJSON() {
-            // @ts-ignore
-            const survey: ISurvey = this.toObject();
-            Survey._omit.map(k => delete survey[k]);
-            for (const key in survey)
-                if (survey.hasOwnProperty(key) && survey[key] == null) delete survey[key];
-            return survey;
-        },
-    }
-};
+@Entity('survey_tbl')
+export class Survey {
+    public static _omit: string[] = [];
+
+    @PrimaryGeneratedColumn()
+    public id!: string;
+
+    @CreateDateColumn()
+    public createdAt!: Date;
+
+    @UpdateDateColumn()
+    public updatedAt!: Date;
+
+    @Column('float', { nullable: true })
+    public perceived_risk?: number;
+
+    @Column('varchar', { nullable: false })
+    public recruiter!: 'family' | 'recommended' | 'curious';
+
+    @Column('varchar', { nullable: false })
+    public eye_test_frequency!: 'annual' | 'biennial' | 'quinquennial' | 'rarely' | 'never';
+
+    @Column('varchar', { nullable: false })
+    public glasses_use!: 'shortsighted' | 'longsighted' | 'astigmatism' | 'other' | 'none';
+
+    @Column('varchar', { nullable: true })
+    behaviour_change?: 'as_recommended' | 'less_likely' | 'no_change';
+
+    @Column('integer', { nullable: true })
+    public risk_res_id?: number;
+}

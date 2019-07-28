@@ -3,12 +3,11 @@ import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
-const chaiJsonSchema = require('chai-json-schema');
-
-import { ISurvey, ISurveyBase } from '../../../api/survey/models.d';
 import { User } from '../../../api/user/models';
-import { TCallback } from '../../shared_types';
-import { IncomingMessageError } from '@offscale/nodejs-utils/interfaces';
+import { IncomingMessageError, TCallback } from '@offscale/nodejs-utils/interfaces';
+import { Survey } from '../../../api/survey/models';
+
+const chaiJsonSchema = require('chai-json-schema');
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -20,7 +19,7 @@ export class SurveyTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, survey: ISurveyBase,
+    public create(access_token: string, survey: Survey,
                   callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `create` must be defined'));
         else if (survey == null) return callback(new TypeError('`survey` argument to `create` must be defined'));
@@ -47,7 +46,7 @@ export class SurveyTestSDK {
             });
     }
 
-    public get(access_token: string, survey: ISurvey, callback: TCallback<Error | IncomingMessageError, Response>) {
+    public get(access_token: string, survey: Survey, callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (survey == null) return callback(new TypeError('`survey` argument to `getAll` must be defined'));
         /*else if (isNaN(survey.createdAt as any))
@@ -100,7 +99,7 @@ export class SurveyTestSDK {
             });
     }
 
-    public destroy(access_token: string, survey: ISurveyBase,
+    public destroy(access_token: string, survey: Survey,
                    callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `destroy` must be defined'));

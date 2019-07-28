@@ -1,47 +1,40 @@
-import { IConfig } from './models.d';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-export const Config = {
-    identity: 'config_tbl',
-    connection: 'main_db',
-    _omit: [/*'uuid'*/],
-    attributes: {
-        client_id: {
-            type: 'string',
-            required: true
-        },
-        client_secret: {
-            type: 'string'
-            // TODO: Move this somewhere encrypted
-        },
-        tenant_id: {
-            type: 'string',
-            required: true
-        },
-        id_token: {
-            type: 'string'
-        },
-        access_token: {
-            type: 'string'
-        },
-        refresh_token: {
-            type: 'string'
-        },
-        state: {
-            type: 'string'
-        },
-        session_state: {
-            type: 'string'
-        },
-        from: {
-            type: 'string'
-        },
-        toJSON: function toJSON() {
-            // @ts-ignore
-            const config: IConfig = this.toObject();
-            Config._omit.map(k => delete config[k]);
-            for (const key in config)
-                if (config.hasOwnProperty(key) && config[key] == null) delete config[key];
-            return config;
-        }
-    }
-};
+@Entity('config_tbl')
+export class Config {
+    public static _omit: string[] = [];
+
+    @PrimaryGeneratedColumn()
+    public id!: string;
+
+    @CreateDateColumn()
+    public createdAt!: Date;
+
+    @UpdateDateColumn()
+    public updatedAt!: Date;
+
+    @Column('varchar', { nullable: true })
+    public client_id!: string;
+
+    // TODO: Move this somewhere encrypted
+    @Column('varchar', { nullable: true })
+    public client_secret?: string;
+
+    @Column('varchar', { nullable: false })
+    public tenant_id!: string;
+
+    @Column('varchar', { nullable: true })
+    public access_token?: string;
+
+    @Column('varchar', { nullable: true })
+    public refresh_token?: string;
+
+    @Column('varchar', { nullable: true })
+    public state?: string;
+
+    @Column('varchar', { nullable: true })
+    public session_state?: string;
+
+    @Column('varchar', { nullable: true })
+    public from?: string;
+}

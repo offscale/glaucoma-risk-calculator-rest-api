@@ -1,13 +1,13 @@
 import { waterfall } from 'async';
+import * as restify from 'restify';
+import { JsonSchema } from 'tv4';
+
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
-import * as restify from 'restify';
 import { has_body, mk_valid_body_mw, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
-import { JsonSchema } from 'tv4';
-import { Query, WLError } from 'waterline';
 
 import { has_auth } from './../auth/middleware';
-import { IContact, IContactBase } from './models.d';
+import { Contact } from './models';
 
 /* tslint:disable:no-var-requires */
 const contact_schema: JsonSchema = require('./../../test/api/contact/schema');
@@ -16,15 +16,14 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:email`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Contact: Query = req.getOrm().waterline!.collections!['contact_tbl'];
-
-            Contact.findOne({ owner: req['user_id'], email: req.params.email }
-            ).exec((error: WLError, contact: IContact) => {
-                if (error != null) return next(fmtError(error));
-                else if (contact == null) return next(new NotFoundError('Contact'));
-                res.json(contact);
-                return next();
-            });
+            req.getOrm().typeorm!.connection.getRepository(Contact)
+                .findOneOrFail({ owner: req['user_id'], email: req.params.email })
+                .then(contact => {
+                    if (contact == null) return next(new NotFoundError('Contact'));
+                    res.json(contact);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };
@@ -34,19 +33,23 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
         mk_valid_body_mw_ignore(contact_schema, ['Missing required property']), has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Contact: Query = req.getOrm().waterline!.collections!['contact_tbl'];
+            const Contact_r = req.getOrm().typeorm!.connection.getRepository(Contact);
 
             // TODO: Transaction
             waterfall([
-                cb => Contact.findOne({ owner: req['user_id'], email: req.params.email }
-                ).exec((err: WLError, contact: IContact) => {
-                    if (err != null) return cb(err);
-                    else if (contact == null) return cb(new NotFoundError('Contact'));
-                    return cb(err, contact);
-                }),
-                (contact: IContactBase, cb) =>
-                    Contact.update(contact, req.body, (e, contacts: IContact[]) => cb(e, contacts[0]))
-            ], (error, contact?: IContact) => {
+                cb => Contact_r
+                    .findOne({ owner: req['user_id'], email: req.params.email })
+                    .then(contact => {
+                        if (contact == null) return cb(new NotFoundError('Contact'));
+                        return cb(void 0, contact);
+                    })
+                    .catch(cb),
+                (contact: Contact, cb) =>
+                    Contact_r
+                        .update(contact, req.body)
+                        .then(contact => cb(void 0, contact))
+                        .catch(cb)
+            ], (error, contact?: Contact) => {
                 if (error != null) return next(fmtError(error));
                 res.json(200, contact);
                 return next();
@@ -59,13 +62,14 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:email`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Contact: Query = req.getOrm().waterline!.collections!['contact_tbl'];
 
-            Contact.destroy({ owner: req['user_id'], email: req.params.email }).exec((error: WLError) => {
-                if (error != null) return next(fmtError(error));
-                res.send(204);
-                return next();
-            });
+            req.getOrm().typeorm!.connection.getRepository(Contact)
+                .delete({ owner: req['user_id'], email: req.params.email })
+                .then(() => {
+                    res.send(204);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };

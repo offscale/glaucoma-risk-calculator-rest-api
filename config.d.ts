@@ -4,7 +4,7 @@ import { IOrmMwConfig, IOrmsOut } from '@offscale/orm-mw/interfaces';
 export declare const db_uri: string;
 export declare const typeorm_config: PostgresConnectionOptions;
 export declare const sequelize_config: {
-    dialect: "postgres" | "mysql" | "sqlite" | "mariadb" | "mssql";
+    dialect: import("sequelize/types").Dialect;
     define: {
         timestamps: boolean;
     };

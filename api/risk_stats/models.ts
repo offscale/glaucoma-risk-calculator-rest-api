@@ -1,31 +1,40 @@
-import { IRiskStats } from './models.d';
+import {
+    BeforeInsert,
+    BeforeUpdate,
+    Column,
+    CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn
+} from 'typeorm';
 
-function stringify(risk_stats: IRiskStats, cb) {
-    if (typeof risk_stats.risk_json !== 'string') risk_stats.risk_json = JSON.stringify(risk_stats.risk_json);
-    return cb();
+
+@Entity('risk_stats_tbl')
+export class RiskStats {
+    public static _omit: string[] = [];
+
+    @PrimaryGeneratedColumn()
+    public id!: string;
+
+    @CreateDateColumn()
+    public createdAt!: Date;
+
+    @UpdateDateColumn()
+    public updatedAt!: Date;
+
+    @Column('varchar', { nullable: false })
+    risk_json!: string;
+
+    @BeforeUpdate()
+    @BeforeInsert()
+    ensureString() {
+        if (typeof this.risk_json !== 'string')
+            this.risk_json = JSON.stringify(this.risk_json);
+    }
+
+    maybeJson(): {} | string {
+        if (['{', '['].indexOf(this.risk_json[0]) > -1)
+            return JSON.parse(this.risk_json);
+        return this.risk_json;
+    }
 }
-
-export const RiskStats = {
-    identity: 'risk_stats_tbl',
-    connection: 'main_db',
-    _omit: [/*'uuid'*/],
-    attributes: {
-        risk_json: {
-            type: 'string',
-            required: true
-        },
-        toJSON: function toJSON() {
-            // @ts-ignore
-            const risk_stats: IRiskStats = this.toObject();
-            RiskStats._omit.map(k => delete risk_stats[k]);
-            for (const key in risk_stats)
-                if (risk_stats.hasOwnProperty(key) && risk_stats[key] == null) delete risk_stats[key];
-            if (typeof risk_stats.risk_json === 'string' && ['{', '['].indexOf(risk_stats.risk_json[0]) > -1)
-                risk_stats.risk_json = JSON.parse(risk_stats.risk_json);
-            return risk_stats;
-        },
-    },
-    beforeValidate: stringify,
-    beforeUpdate: stringify,
-    beforeCreate: stringify
-};

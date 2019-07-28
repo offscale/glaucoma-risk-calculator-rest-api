@@ -1,20 +1,17 @@
-import { Model } from 'waterline';
-
-export interface IRiskRes extends Model, IRiskResBase {
-    id?: number;
+export declare class RiskRes {
+    static _omit: string[];
+    id: string;
+    createdAt: Date;
     updatedAt: Date;
-}
-
-export interface IRiskResBase {
     age: number;
     client_risk: number;
     gender: string;
     ethnicity: string;
     other_info?: string;
-    sibling?: boolean; // sibling has glaucoma?
-    parent?: boolean;  // parent has glaucoma?
+    email?: string;
+    sibling?: boolean;
+    parent?: boolean;
     study: string;
     myopia?: boolean;
     diabetes?: boolean;
-    createdAt?: string | Date;
 }

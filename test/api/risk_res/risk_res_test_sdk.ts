@@ -3,12 +3,11 @@ import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
-const chaiJsonSchema = require('chai-json-schema');
-
-import { IRiskRes, IRiskResBase } from '../../../api/risk_res/models.d';
 import { User } from '../../../api/user/models';
-import { TCallback } from '../../shared_types';
-import { IncomingMessageError } from '@offscale/nodejs-utils/interfaces';
+import { IncomingMessageError, TCallback } from '@offscale/nodejs-utils/interfaces';
+import { RiskRes } from '../../../api/risk_res/models';
+
+const chaiJsonSchema = require('chai-json-schema');
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -20,7 +19,7 @@ export class RiskResTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, risk_res: IRiskResBase,
+    public create(access_token: string, risk_res: RiskRes,
                   callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `create` must be defined'));
         else if (risk_res == null) return callback(new TypeError('`risk_res` argument to `create` must be defined'));
@@ -47,7 +46,7 @@ export class RiskResTestSDK {
             });
     }
 
-    public get(access_token: string, risk_res: IRiskRes, callback: TCallback<Error | IncomingMessageError, Response>) {
+    public get(access_token: string, risk_res: RiskRes, callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (risk_res == null) return callback(new TypeError('`risk_res` argument to `getAll` must be defined'));
         /*else if (isNaN(risk_res.createdAt as any))
@@ -100,7 +99,7 @@ export class RiskResTestSDK {
             });
     }
 
-    public destroy(access_token: string, risk_res: IRiskResBase,
+    public destroy(access_token: string, risk_res: RiskRes,
                    callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `destroy` must be defined'));

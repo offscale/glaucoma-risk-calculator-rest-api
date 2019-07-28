@@ -1,5 +1,5 @@
-import { IConfigBase } from '../../../api/config/models.d';
+import { Config } from '../../../api/config/models';
 export declare const config_mocks: {
-    successes: IConfigBase[];
+    successes: Config[];
     failures: Array<{}>;
 };

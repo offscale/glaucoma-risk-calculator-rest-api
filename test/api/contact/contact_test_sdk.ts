@@ -1,13 +1,14 @@
 import * as chai from 'chai';
 import { expect } from 'chai';
-const chaiJsonSchema = require('chai-json-schema');
 import { sanitiseSchema, superEndCb } from '@offscale/nodejs-utils';
 import * as supertest from 'supertest';
 import { Response } from 'supertest';
-import { IContactBase } from '../../../api/contact/models.d';
 import { User } from '../../../api/user/models';
 import { IncomingMessageError } from '@offscale/custom-restify-errors';
 import { TCallback } from '@offscale/nodejs-utils/interfaces';
+import { Contact } from '../../../api/contact/models';
+
+const chaiJsonSchema = require('chai-json-schema');
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -19,7 +20,7 @@ export class ContactTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, contact: IContactBase,
+    public create(access_token: string, contact: Contact,
                   callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `create` must be defined'));
         else if (contact == null) return callback(new TypeError('`contact` argument to `create` must be defined'));
@@ -46,7 +47,7 @@ export class ContactTestSDK {
             });
     }
 
-    public getAll(access_token: string, contact: IContactBase,
+    public getAll(access_token: string, contact: Contact,
                   callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (contact == null) return callback(new TypeError('`contact` argument to `getAll` must be defined'));
@@ -76,7 +77,7 @@ export class ContactTestSDK {
             });
     }
 
-    public retrieve(access_token: string, contact: IContactBase,
+    public retrieve(access_token: string, contact: Contact,
                     callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (contact == null) return callback(new TypeError('`contact` argument to `getAll` must be defined'));
@@ -101,8 +102,8 @@ export class ContactTestSDK {
             });
     }
 
-    public update(access_token: string, initial_contact: IContactBase,
-                  updated_contact: IContactBase, callback: TCallback<Error | IncomingMessageError, Response>) {
+    public update(access_token: string, initial_contact: Contact,
+                  updated_contact: Contact, callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `update` must be defined'));
         else if (initial_contact == null)
@@ -136,7 +137,7 @@ export class ContactTestSDK {
             });
     }
 
-    public destroy(access_token: string, contact: IContactBase,
+    public destroy(access_token: string, contact: Contact,
                    callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `destroy` must be defined'));

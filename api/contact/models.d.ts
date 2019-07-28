@@ -1,10 +1,8 @@
-import { Model, Record } from 'waterline';
-
-export interface IContact extends Model, Record, IContactBase {
-}
-
-export interface IContactBase {
-    name?: string;
+export declare class Contact {
+    static _omit: string[];
+    createdAt: Date;
+    updatedAt: Date;
     email: string;
+    name?: string;
     owner: string;
 }

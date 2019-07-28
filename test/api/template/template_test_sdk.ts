@@ -2,11 +2,15 @@ import * as supertest from 'supertest';
 import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
+
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
-const chaiJsonSchema = require('chai-json-schema');
-import { ITemplateBase } from '../../../api/template/models.d';
+import { IncomingMessageError } from '@offscale/custom-restify-errors';
+import { TCallback } from '@offscale/nodejs-utils/interfaces';
+
 import { User } from '../../../api/user/models';
-import { IncomingMessageError, TCallback } from '../../shared_types';
+import { Template } from '../../../api/template/models';
+
+const chaiJsonSchema = require('chai-json-schema');
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -18,7 +22,7 @@ export class TemplateTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, template: ITemplateBase,
+    public create(access_token: string, template: Template,
                   callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `create` must be defined'));
         else if (template == null) return callback(new TypeError('`template` argument to `create` must be defined'));
@@ -45,7 +49,7 @@ export class TemplateTestSDK {
             });
     }
 
-    public get(access_token: string, template: ITemplateBase,
+    public get(access_token: string, template: Template,
                callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null) return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
         else if (template == null) return callback(new TypeError('`template` argument to `getAll` must be defined'));
@@ -70,8 +74,8 @@ export class TemplateTestSDK {
             });
     }
 
-    public update(access_token: string, initial_template: ITemplateBase,
-                  updated_template: ITemplateBase, callback: TCallback<Error | IncomingMessageError, Response>) {
+    public update(access_token: string, initial_template: Template,
+                  updated_template: Template, callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `update` must be defined'));
         else if (initial_template == null)
@@ -105,7 +109,7 @@ export class TemplateTestSDK {
             });
     }
 
-    public destroy(access_token: string, template: ITemplateBase,
+    public destroy(access_token: string, template: Template,
                    callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `destroy` must be defined'));

@@ -1,13 +1,12 @@
 import * as restify from 'restify';
+import { JsonSchema } from 'tv4';
 
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
-import { JsonSchema } from 'tv4';
-import { Query, WLError } from 'waterline';
 
 import { has_auth } from '../auth/middleware';
-import { IRiskStats } from './models.d';
+import { RiskStats } from './models';
 
 /* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
@@ -16,14 +15,19 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(risk_stats_schema, ['createdAt']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const RiskStats: Query = req.getOrm().waterline!.collections!['risk_stats_tbl'];
+            const RiskStats_r = req.getOrm().typeorm!.connection.getRepository(RiskStats);
 
-            RiskStats.create(req.body).exec((error: WLError | Error, risk_stats: IRiskStats) => {
-                if (error != null) return next(fmtError(error));
-                else if (risk_stats == null) return next(new NotFoundError('RiskStats'));
-                res.json(201, risk_stats);
-                return next();
-            });
+            const risk_stats = new RiskStats();
+            Object.keys(req.body).forEach(k => risk_stats[k] = req.body[k]);
+
+            RiskStats_r
+                .save(risk_stats)
+                .then((risk_stats: RiskStats) => {
+                    if (risk_stats == null) return next(new NotFoundError('RiskStats'));
+                    res.json(201, risk_stats);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };

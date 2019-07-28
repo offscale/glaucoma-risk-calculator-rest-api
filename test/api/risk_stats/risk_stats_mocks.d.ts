@@ -1,5 +1,5 @@
-import { IRiskStatsBase } from '../../../api/risk_stats/models.d';
+import { RiskStats } from '../../../api/risk_stats/models';
 export declare const risk_stats_mocks: {
-    successes: IRiskStatsBase[];
+    successes: RiskStats[];
     failures: Array<{}>;
 };

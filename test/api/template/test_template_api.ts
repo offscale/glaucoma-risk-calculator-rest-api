@@ -14,10 +14,10 @@ import { user_mocks } from '../user/user_mocks';
 
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { template_mocks } from './template_mocks';
-import { ITemplate } from '../../../api/template/models.d';
 import { AccessToken } from '../../../api/auth/models';
 import { _orms_out } from '../../../config';
 import { User } from '../../../api/user/models';
+import { Template } from '../../../api/template/models';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -88,7 +88,7 @@ describe('Template::routes', () => {
 
         it('PUT should update Template', done => {
             sdk.update(user_mocks_subset[0].access_token!, template_mocks.successes[1],
-                { contents: 'foo', createdAt: template_mocks.successes[1].createdAt } as ITemplate, done);
+                { contents: 'foo', createdAt: template_mocks.successes[1].createdAt } as Template, done);
         });
 
         it('DELETE should destroy Template', done => {

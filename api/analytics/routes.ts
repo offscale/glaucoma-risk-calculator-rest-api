@@ -1,6 +1,5 @@
 import { parallel } from 'async';
 import * as restify from 'restify';
-import { Query, WLError } from 'waterline';
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 import { JsonSchema } from 'tv4';
@@ -8,9 +7,8 @@ import { resolveIntFromObject } from '@offscale/nodejs-utils'
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import * as simpleStatistics from 'simple-statistics';
 import { ttest } from 'ttest/hypothesis';
-
-import { IRiskRes } from '../risk_res/models.d';
-import { ISurvey } from '../survey/models.d';
+import { RiskRes } from '../risk_res/models';
+import { Survey } from '../survey/models';
 // const jStat = require('jstat');
 
 /* tslint:disable:no-var-requires */
@@ -20,14 +18,19 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_body, mk_valid_body_mw_ignore(risk_res_schema, ['createdAt', 'id']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const RiskRes: Query = req.getOrm().waterline!.collections!['risk_res_tbl0'];
 
-            RiskRes.create(req.body).exec((error: WLError | Error, risk_res: IRiskRes) => {
-                if (error != null) return next(fmtError(error));
-                else if (risk_res == null) return next(new NotFoundError('RiskRes'));
-                res.json(201, risk_res);
-                return next();
-            });
+            const risk_res = new RiskRes();
+            Object.keys(req.body).forEach(k => risk_res[k] = req.body[k]);
+
+            req.getOrm().typeorm!.connection
+                .getRepository(RiskRes)
+                .save(risk_res)
+                .then((entity) => {
+                    if (entity == null) return next(new NotFoundError('RiskRes'));
+                    res.json(201, entity);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };
@@ -122,8 +125,9 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
     app.get(namespace,//has_auth('admin'),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const RiskRes: Query = req.getOrm().waterline!.collections!['risk_res_tbl0'];
-            const Survey: Query = req.getOrm().waterline!.collections!['survey_tbl'];
+
+            const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
+            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
             const [condition, where_condition, valuesToEscape] = ((): [string, string, string[]] => {
                 if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
@@ -141,16 +145,15 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
 
             parallel({
                 row_wise_stats:
-                    callb => RiskRes
+                    callb => RiskRes_r
                         .find(condition ? {
                             where: {
                                 createdAt: { '>=': req.query.startDatetime },
                                 updatedAt: { '<=': req.query.endDatetime }
                             }
                         } : {})
-                        .exec((error: WLError | Error, risk_res: IRiskRes[]) => {
-                            if (error != null) return callb(error as Error);
-                            else if (risk_res == null || !risk_res.length) return next(new NotFoundError('RiskRes'));
+                        .then(risk_res => {
+                            if (risk_res == null || !risk_res.length) return next(new NotFoundError('RiskRes'));
 
                             /*
                             console.info('tukeyhsd:',
@@ -176,20 +179,23 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                                     { risk_res }
                                 )
                             );
-                        }),
+                        })
+                        .catch(callb),
                 ethnicity_agg:
-                    callb => RiskRes.query(
-                        `SELECT ethnicity, COUNT(*)
+                    callb => RiskRes_r
+                        .query(
+                            `SELECT ethnicity, COUNT(*)
                         FROM risk_res_tbl0
                         ${where_condition} 
                         GROUP BY ethnicity ;`,
-                        valuesToEscape, (e, r) => {
-                            if (e != null) return next(fmtError(e));
-                            else if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
+                            valuesToEscape)
+                        .then(r => {
+                            if (r == null) return next(new NotFoundError('RiskRes'));
                             return callb(void 0, r.rows.map(el => ({ name: el.ethnicity, value: parseInt(el.count) })));
-                        }),
+                        })
+                        .catch(callb),
                 step_2: callb =>
-                    RiskRes.query(`
+                    RiskRes_r.query(`
                     SELECT
                         COUNT(*),
                         COUNT(client_risk) filter (WHERE client_risk <= 25) AS least,
@@ -197,25 +203,26 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                         COUNT(client_risk) filter (WHERE client_risk > 50 AND client_risk <= 75) AS high,
                         COUNT(client_risk) filter (WHERE client_risk > 75) AS greatest
                     FROM risk_res_tbl0
-                    ${where_condition} ;`, valuesToEscape, (e, r) => {
-                        if (e != null) return next(fmtError(e));
-                        else if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
-                        return callb(void 0, r.rows.map(resolveIntFromObject)[0]);
-                    }),
-                survey_tbl: callb => Survey
+                    ${where_condition} ;`, valuesToEscape)
+                        .then(r => {
+                            if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
+                            return callb(void 0, r.rows.map(resolveIntFromObject)[0]);
+                        })
+                        .catch(callb),
+                survey_tbl: callb => Survey_r
                     .find(condition ? {
                         where: {
                             createdAt: { '>=': req.query.startDatetime },
                             updatedAt: { '<=': req.query.endDatetime }
                         }
                     } : {})
-                    .exec((error: WLError | Error, survey: ISurvey[]) => {
-                        if (error != null) return callb(error as Error);
-                        else if (survey == null || !survey.length) return next(new NotFoundError('Survey'));
+                    .then(survey => {
+                        if (survey == null || !survey.length) return next(new NotFoundError('Survey'));
 
                         return callb(void 0, survey);
-                    }),
-                joint: callb => Survey.query(`
+                    })
+                    .catch(callb),
+                joint: callb => Survey_r.query(`
                     SELECT r.age, r.client_risk, r.gender, r.ethnicity, r.other_info, r.email, r.sibling, r.parent,
                            r.study, r.myopia, r.diabetes, r.id AS risk_id, r."createdAt", r."updatedAt",
                            s.perceived_risk, s.recruiter, s.eye_test_frequency, s.glasses_use, s.behaviour_change,
@@ -223,18 +230,18 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                     FROM survey_tbl s
                     FULL JOIN risk_res_tbl0 r
                     ON s.risk_res_id = r.id
-                    ${where_condition.replace(/ "/g, ' s."')} ;`, valuesToEscape, (e, r) => {
-
-                    if (e != null) return next(fmtError(e));
-                    else if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
-                    const joint = r.rows.map(resolveIntFromObject);
-                    console.info('ttest:', ttest([1, 2, 2, 2, 4], {
-                        mu: 2,
-                        alpha: 0.05,
-                        alternative: 'not equal'
-                    }), ';');
-                    return callb(void 0, joint);
-                })
+                    ${where_condition.replace(/ "/g, ' s."')} ;`, valuesToEscape)
+                    .then(r => {
+                        if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
+                        const joint = r.rows.map(resolveIntFromObject);
+                        console.info('ttest:', ttest([1, 2, 2, 2, 4], {
+                            mu: 2,
+                            alpha: 0.05,
+                            alternative: 'not equal'
+                        }), ';');
+                        return callb(void 0, joint);
+                    })
+                    .catch(callb)
             }, (err, results) => {
                 if (err != null) return next(fmtError(err));
                 res.json(results);

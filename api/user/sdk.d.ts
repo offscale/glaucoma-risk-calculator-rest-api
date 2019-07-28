@@ -2,6 +2,7 @@ import { JsonSchema } from 'tv4';
 import { Request } from 'restify';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { User } from './models';
+
 export declare const schema: JsonSchema;
 export declare type UserBodyReq = Request & IOrmReq & {
     body?: User;
@@ -9,18 +10,23 @@ export declare type UserBodyReq = Request & IOrmReq & {
 export declare type UserBodyUserReq = UserBodyReq & {
     user_id: string;
 };
+
 export interface IUserConfig {
     public_registration: boolean;
     initial_accounts: User[];
 }
+
 export declare class UserConfig implements IUserConfig {
+    static instance: UserConfig;
+    private static _user_config;
     public_registration: boolean;
     initial_accounts: User[];
-    private static _user_config;
+
     constructor(public_registration: boolean, initial_accounts: User[]);
-    static instance: UserConfig;
+
     static default(): UserConfig;
 }
+
 export declare const post: (req: UserBodyReq, config: UserConfig) => Promise<User>;
 export declare const get: (req: UserBodyUserReq) => Promise<User>;
 export declare const getAll: (req: IOrmReq) => Promise<{

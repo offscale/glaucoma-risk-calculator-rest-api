@@ -1,15 +1,16 @@
+import { writeFile } from 'fs';
+
 import * as restify from 'restify';
 import * as async from 'async';
-import { Query, WLError } from 'waterline';
+import { JsonSchema } from 'tv4';
+
 import { has_body } from '@offscale/restify-validators';
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
-import { JsonSchema } from 'tv4';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
-import { ISurvey } from './models.d';
-import { writeFile } from 'fs';
 import { emails_txt } from '../email/route';
+import { Survey } from './models';
 
 
 /* tslint:disable:no-var-requires */
@@ -19,18 +20,22 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:id`,
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Survey: Query = req.getOrm().waterline!.collections!['survey_tbl'];
-            const q = req.params.id === 'latest' ?
-                Survey.find().sort('createdAt DESC').limit(1)
-                : Survey.findOne({ id: req.params.id });
-            q.exec((error: WLError, survey: ISurvey | ISurvey[]) => {
-                if (error != null) return next(fmtError(error));
-                else if (survey == null) return next(new NotFoundError('Survey'));
-                const stats: ISurvey = Array.isArray(survey) ? survey[0] : survey;
-                if (stats == null) return next(new NotFoundError('Survey'));
-                res.json(stats);
-                return next();
-            });
+            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
+
+            const q: Promise<Survey | undefined> = req.params.id === 'latest'
+                ? Survey_r
+                    .createQueryBuilder('survey')
+                    .addOrderBy('survey.createdAt', 'DESC')
+                    .getOne()
+                : Survey_r.findOneOrFail({ createdAt: req.params.createdAt });
+
+            q
+                .then((survey?: Survey) => {
+                    if (survey == null) return next(new NotFoundError('Survey'));
+                    res.json(survey);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };
@@ -39,7 +44,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:id`, has_body,
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Survey: Query = req.getOrm().waterline!.collections!['survey_tbl'];
+            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
             const crit = Object.freeze({ id: req.params.id });
 
@@ -56,15 +61,21 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             // TODO: Transaction
             async.series({
                 count: cb =>
-                    Survey.count(crit, (err: WLError | Error, count: number) => {
-                        if (err != null) return cb(err as any as Error);
-                        else if (!count) return cb(new NotFoundError('Survey'));
-                        return cb(null, count);
-                    }),
-                update: cb => Survey.update(crit, req.body).exec((e, survey: ISurvey[]) =>
-                    cb(e, survey[0])
-                ),
-                email: cb => email == null ? cb() :
+                    Survey_r
+                        .count(crit)
+                        .then((count: number) => {
+                            if (!count) return cb(new NotFoundError('Survey'));
+                            return cb(void 0, count);
+                        })
+                        .catch(cb),
+                update: cb =>
+                    Survey_r
+                        .update(crit, req.body)
+                        .then((survey: Survey[]) =>
+                            cb(void 0, survey[0])
+                        )
+                        .catch(cb),
+                email: cb => email == null ? cb(void 0) :
                     writeFile(emails_txt, `${JSON.stringify({ email })}\n`, { flag: 'a' }, cb),
             }, (error, results: {count: number, update: string, email: undefined}) => {
                 if (error != null) return next(fmtError(error));
@@ -79,13 +90,15 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:id`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Survey: Query = req.getOrm().waterline!.collections!['survey_tbl'];
+            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
-            Survey.destroy({ createdAt: req.params.id }).exec((error: WLError) => {
-                if (error != null) return next(fmtError(error));
-                res.send(204);
-                return next();
-            });
+            Survey_r
+                .delete({ createdAt: req.params.id })
+                .then(() => {
+                    res.send(204);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };

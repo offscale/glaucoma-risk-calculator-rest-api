@@ -8,7 +8,6 @@ import { basename } from 'path';
 import { Server } from 'restify';
 
 import { AccessToken } from '../../../api/auth/models';
-import { IContactBase } from '../../../api/contact/models.d';
 import { _orms_out } from '../../../config';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { create_and_auth_users, unregister_all } from '../../shared_tests';
@@ -17,6 +16,7 @@ import { user_mocks } from '../user/user_mocks';
 import { contact_mocks } from './contact_mocks';
 import { ContactTestSDK } from './contact_test_sdk';
 import { User } from '../../../api/user/models';
+import { Contact } from '../../../api/contact/models';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -34,7 +34,7 @@ describe('Contact::routes', () => {
     let sdk: ContactTestSDK;
     let auth_sdk: AuthTestSDK;
 
-    let mocks: {successes: IContactBase[], failures: Array<{}>};
+    let mocks: {successes: Contact[], failures: Array<{}>};
 
     before(done =>
         async.waterfall([
@@ -98,7 +98,7 @@ describe('Contact::routes', () => {
                     owner: mocks.successes[1].owner,
                     email: mocks.successes[1].email,
                     name: `NAME: ${mocks.successes[1].email}`
-                } as IContactBase, done);
+                } as Contact, done);
         });
 
         it('DELETE should destroy contact', done => {

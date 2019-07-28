@@ -1,14 +1,13 @@
 import * as restify from 'restify';
 import * as async from 'async';
-import { Query, WLError } from 'waterline';
 import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { JsonSchema } from 'tv4';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
-import { ITemplate } from './models.d';
 import { isISODateString } from './utils';
+import { Template } from './models';
 
 /* tslint:disable:no-var-requires */
 const template_schema: JsonSchema = require('../../test/api/template/schema');
@@ -17,27 +16,34 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(`${namespace}/:createdAt`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Template: Query = req.getOrm().waterline!.collections!['template_tbl'];
+            const Template_r = req.getOrm().typeorm!.connection.getRepository(Template);
 
-            const criteria = (() => {
-                if (req.params.createdAt.indexOf('_') < 0) return;
+            const criteria = ((): {kind?: string, createdAt?: string} => {
+                if (req.params.createdAt.indexOf('_') < 0) return {};
                 const [createdAt, kind] = req.params.createdAt.split('_');
                 return Object.assign({ kind },
                     createdAt !== 'latest' && isISODateString(createdAt) ? { createdAt } : {}
                 );
             })();
-            const q = req.params.createdAt.startsWith('latest') ?
-                Template.find(criteria).sort('createdAt DESC').limit(1) :
-                Template.findOne(criteria);
 
-            q.exec((error: WLError, template: ITemplate | ITemplate[]) => {
-                if (error != null) return next(fmtError(error));
-                else if (template == null) return next(new NotFoundError('Template'));
-                const _template: ITemplate = Array.isArray(template) ? template[0] : template;
-                if (_template == null) return next(new NotFoundError('Template'));
-                res.json(_template);
-                return next();
-            });
+
+            const q: Promise<Template | undefined> = req.params.id === 'latest'
+                ? Template_r
+                    .createQueryBuilder('template')
+                    .addOrderBy('template.createdAt', 'DESC')
+                    .where(criteria)
+                    .getOne()
+                : Template_r.findOneOrFail({ createdAt: req.params.createdAt });
+
+            q
+                .then((template?: Template | Template[]) => {
+                    if (template == null) return next(new NotFoundError('Template'));
+                    else if (Array.isArray(template))
+                        template = template[0];
+                    res.json(template);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };
@@ -46,21 +52,24 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:createdAt`, has_auth(), has_body, mk_valid_body_mw_ignore(template_schema, ['createdAt']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Template: Query = req.getOrm().waterline!.collections!['template_tbl'];
+            const Template_r = req.getOrm().typeorm!.connection.getRepository(Template);
 
             req.body = Object.freeze({ contents: req.body.contents });
             const crit = Object.freeze({ createdAt: req.params.createdAt });
             // TODO: Transaction
             async.series({
                 count: cb =>
-                    Template.count(crit, (err: WLError, count: number) => {
-                        if (err != null) return cb(err as any as Error);
-                        else if (count == null) return cb(new NotFoundError('Template'));
-                        return cb(null, count);
-                    }),
-                update: cb => Template.update(crit, req.body, (e, templates: ITemplate[]) =>
-                    cb(e as any as Error, templates[0])
-                )
+                    Template_r
+                        .count(crit)
+                        .then((count: number) => {
+                            if (count == null) return cb(new NotFoundError('Template'));
+                            return cb(void 0, count);
+                        })
+                        .catch(cb),
+                update: cb => Template_r
+                    .update(crit, req.body)
+                    .then((templates: Template[]) => cb(void 0, templates[0]))
+                    .catch(cb)
             }, (error, results: {count: number, update: string}) => {
                 if (error != null) return next(fmtError(error));
                 res.json(200, results.update);
@@ -74,13 +83,13 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
     app.del(`${namespace}/:createdAt`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Template: Query = req.getOrm().waterline!.collections!['template_tbl'];
-
-            Template.destroy({ createdAt: req.params.createdAt }).exec((error: WLError) => {
-                if (error != null) return next(fmtError(error));
-                res.send(204);
-                return next();
-            });
+            req.getOrm().typeorm!.connection.getRepository(Template)
+                .delete({ createdAt: req.params.createdAt })
+                .then(() => {
+                    res.send(204);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };

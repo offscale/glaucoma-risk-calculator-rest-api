@@ -1,5 +1,5 @@
-import { ISurveyBase } from '../../../api/survey/models.d';
+import { Survey } from '../../../api/survey/models';
 export declare const survey_mocks: {
-    successes: ISurveyBase[];
+    successes: Survey[];
     failures: Array<{}>;
 };

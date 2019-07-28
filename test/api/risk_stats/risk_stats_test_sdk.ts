@@ -3,14 +3,13 @@ import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+import { User } from '../../../api/user/models';
+import { IncomingMessageError } from '@offscale/custom-restify-errors';
+import { TCallback } from '@offscale/nodejs-utils/interfaces';
+import { RiskStats } from '../../../api/risk_stats/models';
 
 // tslint:disable-next-line:no-var-requires
 const chaiJsonSchema = require('chai-json-schema');
-
-import { IRiskStatsBase } from '../../../api/risk_stats/models.d';
-import { User } from '../../../api/user/models';
-import { TCallback } from '../../shared_types';
-import { IncomingMessageError } from '@offscale/custom-restify-errors';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -22,7 +21,7 @@ export class RiskStatsTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, risk_stats: IRiskStatsBase,
+    public create(access_token: string, risk_stats: RiskStats,
                   callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `create` must be defined'));
@@ -51,7 +50,7 @@ export class RiskStatsTestSDK {
             });
     }
 
-    public get(access_token: string, risk_stats: IRiskStatsBase,
+    public get(access_token: string, risk_stats: RiskStats,
                callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `getAll` must be defined'));
@@ -78,8 +77,10 @@ export class RiskStatsTestSDK {
             });
     }
 
-    public update(access_token: string, initial_risk_stats: IRiskStatsBase,
-                  updated_risk_stats: IRiskStatsBase, callback: TCallback<Error | IncomingMessageError, Response>) {
+    public update(access_token: string,
+                  initial_risk_stats: RiskStats,
+                  updated_risk_stats: Partial<RiskStats>,
+                  callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `update` must be defined'));
         else if (initial_risk_stats == null)
@@ -113,7 +114,7 @@ export class RiskStatsTestSDK {
             });
     }
 
-    public destroy(access_token: string, risk_stats: IRiskStatsBase,
+    public destroy(access_token: string, risk_stats: RiskStats,
                    callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `destroy` must be defined'));

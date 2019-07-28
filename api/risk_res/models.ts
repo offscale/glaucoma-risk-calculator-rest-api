@@ -1,61 +1,48 @@
-import { IRiskRes } from './models.d';
+import { Column, CreateDateColumn, Entity, UpdateDateColumn, PrimaryGeneratedColumn } from 'typeorm';
 
-export const RiskRes = {
-    identity: 'risk_res_tbl0',
-    connection: 'main_db',
-    _omit: [/*'uuid'*/],
-    attributes: {
-        age: {
-            type: 'integer',
-            required: true
-        },
-        client_risk: {
-            type: 'float',
-            required: true
-        },
-        gender: {
-            type: 'string',
-            required: true
-        },
-        ethnicity: {
-            type: 'string',
-            required: true
-        },
-        other_info: {
-            type: 'string',
-            required: false
-        },
-        email: {
-            type: 'string',
-            required: false
-        },
-        sibling: {
-            type: 'boolean',
-            required: false
-        },
-        parent: {
-            type: 'boolean',
-            required: false
-        },
-        study: {
-            type: 'string',
-            required: true
-        },
-        myopia: {
-            type: 'boolean',
-            required: false
-        },
-        diabetes: {
-            type: 'boolean',
-            required: false
-        },
-        toJSON: function toJSON() {
-            // @ts-ignore
-            const risk_res: IRiskRes = this.toObject();
-            RiskRes._omit.map(k => delete risk_res[k]);
-            for (const key in risk_res)
-                if (risk_res.hasOwnProperty(key) && risk_res[key] == null) delete risk_res[key];
-            return risk_res;
-        },
-    }
-};
+@Entity('risk_res_tbl')
+export class RiskRes {
+    public static _omit: string[] = [];
+
+    @PrimaryGeneratedColumn()
+    public id!: string;
+
+    @CreateDateColumn()
+    public createdAt!: Date;
+
+    @UpdateDateColumn()
+    public updatedAt!: Date;
+
+    @Column('integer', { nullable: false })
+    public age!: number;
+
+    @Column('float', { nullable: false })
+    public client_risk!: number;
+
+    @Column('varchar', { nullable: false })
+    public gender!: string;
+
+    @Column('varchar', { nullable: false })
+    public ethnicity!: string;
+
+    @Column('varchar', { nullable: true })
+    public other_info?: string;
+
+    @Column('varchar', { nullable: true })
+    public email?: string;
+
+    @Column('boolean', { nullable: true })
+    public sibling?: boolean; // sibling has glaucoma?
+
+    @Column('boolean', { nullable: true })
+    public parent?: boolean; // parent has glaucoma?
+
+    @Column('varchar', { nullable: false })
+    public study!: string;
+
+    @Column('boolean', { nullable: true })
+    public myopia?: boolean;
+
+    @Column('boolean', { nullable: true })
+    public diabetes?: boolean;
+}

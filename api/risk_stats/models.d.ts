@@ -1,11 +1,9 @@
-import { Model } from 'waterline';
-
-export interface IRiskStats extends Model, IRiskStatsBase {
-    id?: number;
+export declare class RiskStats {
+    static _omit: string[];
+    id: string;
+    createdAt: Date;
     updatedAt: Date;
-}
-
-export interface IRiskStatsBase {
-    risk_json?: string | {} | JSON;
-    createdAt: Date | string;
+    risk_json: string;
+    ensureString(): void;
+    maybeJson(): {} | string;
 }

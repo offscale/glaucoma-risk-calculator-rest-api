@@ -8,7 +8,6 @@ import { tearDownConnections } from '@offscale/orm-mw';
 import { IOrmsOut } from '@offscale/orm-mw/interfaces';
 import { waterfall } from 'async';
 
-import { ISurvey } from '../../../api/survey/models.d';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { AccessToken } from '../../../api/auth/models';
 import { _orms_out } from '../../../config';
@@ -18,6 +17,7 @@ import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { SurveyTestSDK } from './survey_test_sdk';
 import { survey_mocks } from './survey_mocks';
 import { User } from '../../../api/user/models';
+import { Survey } from '../../../api/survey/models';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -91,7 +91,7 @@ describe('Survey::routes', () => {
         });
 
         it('GET should retrieve Survey', done => {
-            sdk.get(user_mocks_subset[0].access_token!, survey_mocks.successes[1] as ISurvey, done);
+            sdk.get(user_mocks_subset[0].access_token!, survey_mocks.successes[1] as Survey, done);
         });
 
         it('DELETE should destroy Survey', done => {

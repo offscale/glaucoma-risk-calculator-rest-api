@@ -14,10 +14,10 @@ import { RiskResTestSDK } from './risk_res_test_sdk';
 import { user_mocks } from '../user/user_mocks';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { risk_res_mocks } from './risk_res_mocks';
-import { IRiskRes } from '../../../api/risk_res/models.d';
 import { AccessToken } from '../../../api/auth/models';
 import { _orms_out } from '../../../config';
 import { User } from '../../../api/user/models';
+import { RiskRes } from '../../../api/risk_res/models';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -91,7 +91,7 @@ describe('RiskRes::routes', () => {
         });
 
         it('GET should retrieve RiskRes', done => {
-            sdk.get(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1] as IRiskRes, done);
+            sdk.get(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1] as RiskRes, done);
         });
 
         it('DELETE should destroy RiskRes', done => {

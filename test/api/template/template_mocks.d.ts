@@ -1,5 +1,5 @@
-import { ITemplateBase } from '../../../api/template/models.d';
+import { Template } from '../../../api/template/models';
 export declare const template_mocks: {
-    successes: ITemplateBase[];
+    successes: Template[];
     failures: Array<{}>;
 };

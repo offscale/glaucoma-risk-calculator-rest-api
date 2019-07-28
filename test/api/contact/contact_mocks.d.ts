@@ -1,6 +1,6 @@
-import { IContactBase } from '../../../api/contact/models.d';
 import { User } from '../../../api/user/models';
+import { Contact } from '../../../api/contact/models';
 export declare const contact_mocks: (users: User[]) => {
-    successes: IContactBase[];
+    successes: Contact[];
     failures: Array<{}>;
 };

@@ -3,10 +3,9 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import * as restify from 'restify';
 import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
 import { JsonSchema } from 'tv4';
-import { Query, WLError } from 'waterline';
 
 import { has_auth } from '../auth/middleware';
-import { IContact } from './models.d';
+import { Contact } from './models';
 
 /* tslint:disable:no-var-requires */
 const contact_schema: JsonSchema = require('./../../test/api/contact/schema');
@@ -21,14 +20,19 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_auth(), has_body, add_owner_mw, mk_valid_body_mw(contact_schema),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Contact: Query = req.getOrm().waterline!.collections!['contact_tbl'];
+            const Contact_r = req.getOrm().typeorm!.connection.getRepository(Contact);
 
-            Contact.create(req.body).exec((error: WLError | Error, contact: IContact) => {
-                if (error != null) return next(fmtError(error));
-                else if (contact == null) return next(new NotFoundError('Contact'));
-                res.json(201, contact);
-                return next();
-            });
+            const contact = new Contact();
+            Object.keys(req.body).forEach(k => contact[k] = req.body[k]);
+
+            Contact_r
+                .save(contact)
+                .then((contact: Contact) => {
+                    if (contact == null) return next(new NotFoundError('Contact'));
+                    res.json(201, contact);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };
@@ -37,14 +41,14 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
     app.get(namespace, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
-            const Contact: Query = req.getOrm().waterline!.collections!['contact_tbl'];
-
-            Contact.find({ owner: req['user_id'] }).exec((error: WLError, contacts: IContact[]) => {
-                if (error != null) return next(fmtError(error));
-                else if (contacts == null) return next(new NotFoundError('Contact'));
-                res.json({ contacts, owner: req['user_id'] });
-                return next();
-            });
+            req.getOrm().typeorm!.connection.getRepository(Contact)
+                .find({ owner: req['user_id'] })
+                .then((contacts: Contact[]) => {
+                    if (contacts == null) return next(new NotFoundError('Contact'));
+                    res.json({ contacts, owner: req['user_id'] });
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };

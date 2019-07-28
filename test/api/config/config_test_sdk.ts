@@ -3,12 +3,12 @@ import { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
-const chaiJsonSchema = require('chai-json-schema');
-
-import { IConfigBase } from '../../../api/config/models.d';
 import { User } from '../../../api/user/models';
-import { TCallback } from '../../shared_types';
 import { IncomingMessageError } from '@offscale/custom-restify-errors';
+import { TCallback } from '@offscale/nodejs-utils/interfaces';
+import { Config } from '../../../api/config/models';
+
+const chaiJsonSchema = require('chai-json-schema');
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -20,7 +20,7 @@ export class ConfigTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, config: IConfigBase,
+    public create(access_token: string, config: Config,
                   callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `create` must be defined'));
@@ -50,7 +50,7 @@ export class ConfigTestSDK {
             });
     }
 
-    public get(access_token: string, config: IConfigBase,
+    public get(access_token: string, config: Config,
                callback: TCallback<Error | IncomingMessageError, Response>) {
         if (access_token == null)
             return callback(new TypeError('`access_token` argument to `getAll` must be defined'));

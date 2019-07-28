@@ -1,28 +1,21 @@
-import { IContact } from './models.d';
+import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
-export const Contact = {
-    identity: 'contact_tbl',
-    connection: 'main_db',
-    _omit: [/*'uuid'*/],
-    attributes: {
-        name: {
-            type: 'string'
-        },
-        email: {
-            type: 'string',
-            primaryKey: true
-        },
-        owner: {
-            type: 'string',
-            required: true
-        },
-        toJSON: function toJSON() {
-            // @ts-ignore
-            const contact: IContact = this.toObject();
-            Contact._omit.map(k => delete contact[k]);
-            for (const key in contact)
-                if (contact.hasOwnProperty(key) && contact[key] == null) delete contact[key];
-            return contact;
-        }
-    }
-};
+@Entity('contact_tbl')
+export class Contact {
+    public static _omit: string[] = [];
+
+    @CreateDateColumn()
+    public createdAt!: Date;
+
+    @UpdateDateColumn()
+    public updatedAt!: Date;
+
+    @PrimaryColumn({ type: 'varchar', name: 'email', nullable: false, primary: true, unique: true })
+    public email!: string;
+
+    @Column('varchar', { nullable: true })
+    public name?: string;
+
+    @Column('varchar', { nullable: false })
+    public owner!: string;
+}

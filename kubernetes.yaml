@@ -1,78 +1,78 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: glaucoma-risk-calculator-rest-api
+    name: glaucoma-risk-calculator-rest-api
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: glaucoma-risk-calculator-rest-api
-  template:
-    metadata:
-      labels:
-        app: glaucoma-risk-calculator-rest-api
-    spec:
-      containers:
-      - name: glaucoma-risk-calculator-rest-api
-        image: glaucoma/glaucoma-risk-calculator-rest-api
-        resources:
-          requests:
-            cpu: 512m
-            memory: 512Mi
-          limits:
-            cpu: 768m
-            memory: 1024Mi
-        ports:
-        - containerPort: 80
-          name: glaucoma-risk-calculator-rest-api
+    replicas: 1
+    selector:
+        matchLabels:
+            app: glaucoma-risk-calculator-rest-api
+    template:
+        metadata:
+            labels:
+                app: glaucoma-risk-calculator-rest-api
+        spec:
+            containers:
+                -   name: glaucoma-risk-calculator-rest-api
+                    image: glaucoma/glaucoma-risk-calculator-rest-api
+                    resources:
+                        requests:
+                            cpu: 512m
+                            memory: 512Mi
+                        limits:
+                            cpu: 768m
+                            memory: 1024Mi
+                    ports:
+                        -   containerPort: 80
+                            name: glaucoma-risk-calculator-rest-api
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: glaucoma-risk-calculator-rest-api
+    name: glaucoma-risk-calculator-rest-api
 spec:
-  ports:
-  - port: 6379
-  selector:
-    app: glaucoma-risk-calculator-rest-api
+    ports:
+        -   port: 6379
+    selector:
+        app: glaucoma-risk-calculator-rest-api
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: azure-vote-front
+    name: azure-vote-front
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: azure-vote-front
-  template:
-    metadata:
-      labels:
-        app: azure-vote-front
-    spec:
-      containers:
-      - name: azure-vote-front
-        image: microsoft/azure-vote-front:v1
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 250m
-            memory: 256Mi
-        ports:
-        - containerPort: 80
-        env:
-        - name: RDBMS_URI
-          value: "TODO - FIND OUT WHAT THIS SHOULD BE"
+    replicas: 1
+    selector:
+        matchLabels:
+            app: azure-vote-front
+    template:
+        metadata:
+            labels:
+                app: azure-vote-front
+        spec:
+            containers:
+                -   name: azure-vote-front
+                    image: microsoft/azure-vote-front:v1
+                    resources:
+                        requests:
+                            cpu: 100m
+                            memory: 128Mi
+                        limits:
+                            cpu: 250m
+                            memory: 256Mi
+                    ports:
+                        -   containerPort: 80
+                    env:
+                        -   name: RDBMS_URI
+                            value: "TODO - FIND OUT WHAT THIS SHOULD BE"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: azure-vote-front
+    name: azure-vote-front
 spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-  selector:
-    app: azure-vote-front
+    type: LoadBalancer
+    ports:
+        -   port: 80
+    selector:
+        app: azure-vote-front

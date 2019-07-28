@@ -1,19 +1,14 @@
-import { Model, Record } from 'waterline';
-
-export interface IConfig extends IConfigBase, Model, Record {
-    id?: number;
+export declare class Config {
+    static _omit: string[];
+    id: string;
+    createdAt: Date;
     updatedAt: Date;
-}
-
-export interface IConfigBase {
-    state?: string;
-    id_token?: string;
-    access_token?: string;
-    refresh_token?: string;
-    from?: string;
-    session_state?: string;
     client_id: string;
-    // TODO: Move this somewhere encrypted
     client_secret?: string;
     tenant_id: string;
+    access_token?: string;
+    refresh_token?: string;
+    state?: string;
+    session_state?: string;
+    from?: string;
 }

@@ -1,8 +1,8 @@
-import { IContactBase } from '../../../api/contact/models.d';
 import { user_mocks } from '../user/user_mocks';
 import { User } from '../../../api/user/models';
+import { Contact } from '../../../api/contact/models';
 
-export const contact_mocks: (users: User[]) => {successes: IContactBase[], failures: Array<{}>} =
+export const contact_mocks: (users: User[]) => {successes: Contact[], failures: Array<{}>} =
     (users: User[]) => ({
         failures: [
             {},
@@ -10,14 +10,14 @@ export const contact_mocks: (users: User[]) => {successes: IContactBase[], failu
             { password: 'foo ' },
             { email: 'foo@bar.com', password: 'foo', bad_prop: true }
         ],
-        successes: ((ob: IContactBase[] = []) => [
+        successes: ((ob: Contact[] = []) => [
             `can ${Math.random()} count`, `can ${Math.random()} count`
         ].forEach(msg => ((date: Date) =>
             users.forEach((user: User, idx: number) => ob.push({
                 email: user.email,
                 owner: users[idx === 0 ? 1 : 0].email
-            } as IContactBase)))(new Date())
-        ) as any || ob)() as IContactBase[]
+            } as Contact)))(new Date())
+        ) as any || ob)() as Contact[]
     });
 
 if (require.main === module) {
