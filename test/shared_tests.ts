@@ -1,4 +1,4 @@
-import { forEachOfLimit } from 'async';
+import { forEachOfLimit, map } from 'async';
 import { Response } from 'supertest';
 import { Server } from 'restify';
 
@@ -37,6 +37,21 @@ export async function unregister_all(auth_sdk: AuthTestSDK, mocks: User[]) {
         //
     }
 }
+
+export const register_all = (auth_sdk: AuthTestSDK, mocks: User[]): Promise<User[]> =>
+    new Promise((resolve, reject) =>
+        map(Object.keys(mocks).map(i => +i),
+            (idx: number, cb) => // Modify inplace
+                auth_sdk
+                    .register_login(mocks[idx])
+                    .then(access_token => {
+                        mocks[idx].access_token = access_token;
+                        return cb(void 0, mocks[idx] as User);
+                    })
+                    .catch(reject),
+            (err, results) => err == null ? resolve(results as any) : reject(err)
+        )
+    );
 
 export const tearDownConnections = (orms_out_or_done: Done | IOrmsOut, done?: Done) =>
     done == null ? tearDownConns(_orms_out.orms_out, e => (orms_out_or_done as Done)(e))

@@ -6,6 +6,8 @@ import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-ut
 
 import { User } from '../../../api/user/models';
 import { Survey } from '../../../api/survey/models';
+import * as survey_route from '../../../api/survey/route';
+import * as survey_routes from '../../../api/survey/routes';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -24,6 +26,7 @@ export class SurveyTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `create` must be defined'));
             else if (survey == null) return reject(new TypeError('`survey` argument to `create` must be defined'));
 
+            expect(survey_routes.create).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .post('/api/survey')
                 .set('Connection', 'keep-alive')
@@ -53,6 +56,7 @@ export class SurveyTestSDK {
             /*else if (isNaN(survey.createdAt as any))
              return callback(new TypeError(`\`survey.createdAt\` must not be NaN in \`getAll\` ${survey.createdAt}`));*/
 
+            expect(survey_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get(`/api/survey/${survey.id}`)
                 .set('Connection', 'keep-alive')
@@ -79,6 +83,7 @@ export class SurveyTestSDK {
             /*else if (isNaN(survey.createdAt as any))
              return callback(new TypeError(`\`survey.createdAt\` must not be NaN in \`getAll\` ${survey.createdAt}`));*/
 
+            expect(survey_routes.getAll).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get('/api/survey')
                 .set('Connection', 'keep-alive')
@@ -108,6 +113,7 @@ export class SurveyTestSDK {
             else if (survey == null)
                 return reject(new TypeError('`survey` argument to `destroy` must be defined'));
 
+            expect(survey_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .del(`/api/survey/${survey.createdAt}`)
                 .set('Connection', 'keep-alive')

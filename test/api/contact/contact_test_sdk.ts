@@ -6,6 +6,8 @@ import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-ut
 
 import { User } from '../../../api/user/models';
 import { Contact } from '../../../api/contact/models';
+import * as contact_routes from '../../../api/contact/routes';
+import * as contact_route from '../../../api/contact/route';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -23,6 +25,7 @@ export class ContactTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `create` must be defined'));
             else if (contact == null) return reject(new TypeError('`contact` argument to `create` must be defined'));
 
+            expect(contact_routes.create).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .post('/api/contact')
                 .set('Connection', 'keep-alive')
@@ -50,6 +53,7 @@ export class ContactTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
             else if (contact == null) return reject(new TypeError('`contact` argument to `getAll` must be defined'));
 
+            expect(contact_routes.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get('/api/contact')
                 .set('Connection', 'keep-alive')
@@ -81,6 +85,7 @@ export class ContactTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
             else if (contact == null) return reject(new TypeError('`contact` argument to `getAll` must be defined'));
 
+            expect(contact_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get(`/api/contact/${contact.email}`)
                 .set('Connection', 'keep-alive')
@@ -114,6 +119,7 @@ export class ContactTestSDK {
                     new ReferenceError(`${initial_contact.owner} != ${updated_contact.owner} (\`owner\`s between contacts)`)
                 );
 
+            expect(contact_route.update).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .put(`/api/contact/${initial_contact.email}`)
                 .set('Connection', 'keep-alive')
@@ -143,6 +149,7 @@ export class ContactTestSDK {
             else if (contact == null)
                 return reject(new TypeError('`contact` argument to `destroy` must be defined'));
 
+            expect(contact_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .del(`/api/contact/${contact.email}`)
                 .set('Connection', 'keep-alive')

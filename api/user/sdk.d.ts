@@ -10,23 +10,19 @@ export declare type UserBodyReq = Request & IOrmReq & {
 export declare type UserBodyUserReq = UserBodyReq & {
     user_id: string;
 };
-
 export interface IUserConfig {
     public_registration: boolean;
     initial_accounts: User[];
 }
-
 export declare class UserConfig implements IUserConfig {
-    static instance: UserConfig;
-    private static _user_config;
     public_registration: boolean;
     initial_accounts: User[];
-
+    static instance: UserConfig;
     constructor(public_registration: boolean, initial_accounts: User[]);
 
+    private static _user_config;
     static default(): UserConfig;
 }
-
 export declare const post: (req: UserBodyReq, config: UserConfig) => Promise<User>;
 export declare const get: (req: UserBodyUserReq) => Promise<User>;
 export declare const getAll: (req: IOrmReq) => Promise<{

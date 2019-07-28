@@ -6,7 +6,7 @@ import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_body, mk_valid_body_mw, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 
-import { has_auth } from './../auth/middleware';
+import { has_auth } from '../auth/middleware';
 import { Contact } from './models';
 
 /* tslint:disable:no-var-requires */

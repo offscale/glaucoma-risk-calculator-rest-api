@@ -2,6 +2,7 @@ import * as argon2 from 'argon2';
 import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 import { argon2_options } from './utils';
+import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 
 export const hash_password = (password: string, callback): void => {
     password.startsWith('$argon2') ? callback(void 0, password)
@@ -33,7 +34,7 @@ export class User {
     public roles!: string[];
 
     // Might get attached for tests or in middleware; NOT present in db
-    public access_token?: string;
+    public access_token?: AccessTokenType;
 
     public static rolesAsStr = (roles: string[]): string => roles && roles.length ?
         roles.filter(role => role && role.length).join('::') : '';

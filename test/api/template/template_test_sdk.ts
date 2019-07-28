@@ -6,6 +6,8 @@ import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-ut
 
 import { User } from '../../../api/user/models';
 import { Template } from '../../../api/template/models';
+import * as template_route from '../../../api/template/route';
+import * as template_routes from '../../../api/template/routes';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -24,6 +26,7 @@ export class TemplateTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `create` must be defined'));
             else if (template == null) return reject(new TypeError('`template` argument to `create` must be defined'));
 
+            expect(template_routes.create).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .post('/api/template')
                 .set('Connection', 'keep-alive')
@@ -51,6 +54,7 @@ export class TemplateTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
             else if (template == null) return reject(new TypeError('`template` argument to `getAll` must be defined'));
 
+            expect(template_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get(`/api/template/${template.createdAt}_${template.kind}`)
                 .set('Connection', 'keep-alive')
@@ -85,6 +89,7 @@ export class TemplateTestSDK {
                     `${initial_template.createdAt} != ${updated_template.createdAt} (\`createdAt\`s between templates)`)
                 );
 
+            expect(template_route.update).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .put(`/api/template/${initial_template.createdAt}`)
                 .set('Connection', 'keep-alive')
@@ -115,6 +120,7 @@ export class TemplateTestSDK {
             else if (template == null)
                 return reject(new TypeError('`template` argument to `destroy` must be defined'));
 
+            expect(template_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .del(`/api/template/${template.createdAt}`)
                 .set('Connection', 'keep-alive')

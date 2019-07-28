@@ -1,52 +1,66 @@
-FROM node:10.15.3-alpine
+FROM node:lts-alpine as builder
 
-ENV RDBMS_URI ''
-ENV REDIS_HOST 'localhost'
-ENV REDIS_PORT 6379
-
-WORKDIR /rest-api
-
-#RUN addgroup -g 1500 -S nodejs \
-#    && adduser -u 1500 -S nodejs -G nodejs \
-#    && chown -R nodejs:nodejs /usr/local/lib/node_modules /usr/local/bin /rest-api
-#USER nodejs
+ENV NPM_CONFIG_PREFIX '/home/node/.npm-global'
+ENV PATH "${NPM_CONFIG_PREFIX}/bin:${PATH}"
 
 ADD https://raw.githubusercontent.com/wilsonsilva/wait-for/8b86892/wait-for /bin/wait_for_it.sh
 
-#    chmod +x /bin/wait_for_it.sh && \
-
-ADD . .
-
+# Install OS dependencies
 RUN apk --no-cache --virtual build-dependencies add \
     git \
     python \
     build-base \
     openssl \
     netcat-openbsd \
-    && npm i -g npm \
-    && mkdir -p /root/.node-gyp/10.15.3 /usr/local/lib/node_modules/bunyan/node_modules/dtrace-provider \
+    && printf '%s' "${NODE_VERSION}" > /env.node
+
+USER node
+
+RUN mkdir /home/node/rest-api
+
+WORKDIR /home/node/rest-api
+
+# Transfer from the current directory (outside Docker) to inside Docker
+ADD --chown=node:node . .
+
+# Install Node.js application dependencies, both local and global
+RUN npm i -g npm \
     && npm i -g \
-    typings \
-    typescript@'3.3.3333' \
-    tslint \
     bunyan \
     mocha \
-    && npm i -g --unsafe-perms --allow-root node-gyp \
+    node-gyp \
+    tslint \
+    typings \
+    typescript \
     && typings install \
-    && npm install --unsafe-perms --allow-root \
-    && tsc \
-    && apk del build-dependencies
+    && rm -rf node_modules \
+    && npm install \
+    && tsc
 
-ENTRYPOINT ["/usr/local/bin/node", "main.js"]
+FROM alpine:latest as app
 
-# CMD npm run-script build_start
+ENV RDBMS_URI ''
+ENV REDIS_HOST 'localhost'
+ENV REDIS_PORT 6379
+ENV NPM_CONFIG_PREFIX '/home/node/.npm-global'
+ENV PATH "${NPM_CONFIG_PREFIX}/bin:${PATH}"
 
-#FROM scratch
-#
-#WORKDIR /rest-api
-#
-#COPY --from=0 /rest-api /rest-api
-#
-#ADD https://nodejs.org/dist/v10.15.3/node-v10.15.3-linux-x64.tar.xz /
-#
-#RUN ["/node-v10.15.3-linux-x64/bin/node", "main.js"]
+COPY --from=builder /env.node /env.node
+
+RUN addgroup -S node -g 998 \
+    && adduser -S -G node -u 998 node \
+    && apk --no-cache add nodejs="`cat /env.node`-r0"
+
+USER node
+
+RUN mkdir /home/node/rest-api
+
+WORKDIR /home/node/rest-api
+
+# Install global Node.js dependencies
+COPY --from=builder --chown=node:node /home/node/.npm-global /home/node/.npm-global
+
+# Copy over the app
+COPY --from=builder --chown=node:node /home/node/rest-api .
+
+ENTRYPOINT ["/usr/bin/node", "main.js"]

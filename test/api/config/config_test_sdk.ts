@@ -1,9 +1,12 @@
 import supertest, { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
+
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+
 import { User } from '../../../api/user/models';
 import { Config } from '../../../api/config/models';
+import * as config_routes from '../../../api/config/routes';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -19,11 +22,12 @@ export class ConfigTestSDK {
 
     public create(access_token: string, config: Config): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (access_token == null)
+            if (access_token == null || !access_token.length)
                 return reject(new TypeError('`access_token` argument to `create` must be defined'));
             else if (config == null)
                 return reject(new TypeError('`config` argument to `create` must be defined'));
 
+            expect(config_routes.create).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .post('/api/config')
                 .set('Connection', 'keep-alive')
@@ -54,6 +58,7 @@ export class ConfigTestSDK {
             else if (config == null)
                 return reject(new TypeError('`config` argument to `getAll` must be defined'));
 
+            expect(config_routes.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get('/api/config')
                 .set('Connection', 'keep-alive')

@@ -1,9 +1,13 @@
 import supertest, { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
+
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+
 import { User } from '../../../api/user/models';
 import { RiskRes } from '../../../api/risk_res/models';
+import * as risk_res_route from '../../../api/risk_res/route';
+import * as risk_res_routes from '../../../api/risk_res/routes';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -22,6 +26,7 @@ export class RiskResTestSDK {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `create` must be defined'));
             else if (risk_res == null) return reject(new TypeError('`risk_res` argument to `create` must be defined'));
 
+            expect(risk_res_routes.create).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .post('/api/risk_res')
                 .set('Connection', 'keep-alive')
@@ -51,6 +56,7 @@ export class RiskResTestSDK {
             /*else if (isNaN(risk_res.createdAt as any))
              return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
 
+            expect(risk_res_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get(`/api/risk_res/${risk_res.id}`)
                 .set('Connection', 'keep-alive')
@@ -77,6 +83,7 @@ export class RiskResTestSDK {
             /*else if (isNaN(risk_res.createdAt as any))
              return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt}`));*/
 
+            expect(risk_res_routes.getAll).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get('/api/risk_res')
                 .set('Connection', 'keep-alive')
@@ -106,6 +113,7 @@ export class RiskResTestSDK {
             else if (risk_res == null)
                 return reject(new TypeError('`risk_res` argument to `destroy` must be defined'));
 
+            expect(risk_res_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .del(`/api/risk_res/${risk_res.createdAt}`)
                 .set('Connection', 'keep-alive')

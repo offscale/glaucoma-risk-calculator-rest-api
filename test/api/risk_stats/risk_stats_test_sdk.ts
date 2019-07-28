@@ -1,9 +1,13 @@
 import supertest, { Response } from 'supertest';
 import * as chai from 'chai';
 import { expect } from 'chai';
+
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+
 import { User } from '../../../api/user/models';
 import { RiskStats } from '../../../api/risk_stats/models';
+import * as risk_stats_route from '../../../api/risk_stats/route';
+import * as risk_stats_routes from '../../../api/risk_stats/routes';
 
 // tslint:disable-next-line:no-var-requires
 const chaiJsonSchema = require('chai-json-schema');
@@ -25,6 +29,7 @@ export class RiskStatsTestSDK {
             else if (risk_stats == null)
                 return reject(new TypeError('`risk_stats` argument to `create` must be defined'));
 
+            expect(risk_stats_routes.create).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .post('/api/risk_stats')
                 .set('Connection', 'keep-alive')
@@ -54,6 +59,7 @@ export class RiskStatsTestSDK {
             else if (risk_stats == null)
                 return reject(new TypeError('`risk_stats` argument to `getAll` must be defined'));
 
+            expect(risk_stats_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get(`/api/risk_stats/${risk_stats.createdAt}`)
                 .set('Connection', 'keep-alive')
@@ -89,6 +95,7 @@ export class RiskStatsTestSDK {
                  (\`createdAt\`s between risk_stats')`)
                 );
 
+            expect(risk_stats_route.update).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .put(`/api/risk_stats/${initial_risk_stats.createdAt}`)
                 .set('Connection', 'keep-alive')
@@ -118,6 +125,7 @@ export class RiskStatsTestSDK {
             else if (risk_stats == null)
                 return reject(new TypeError('`risk_stats` argument to `destroy` must be defined'));
 
+            expect(risk_stats_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .del(`/api/risk_stats/${risk_stats.createdAt}`)
                 .set('Connection', 'keep-alive')
