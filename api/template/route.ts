@@ -1,8 +1,8 @@
 import * as restify from 'restify';
-import * as async from 'async';
+import { JsonSchema } from 'tv4';
+
 import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
-import { JsonSchema } from 'tv4';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
@@ -56,25 +56,18 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
             req.body = Object.freeze({ contents: req.body.contents });
             const crit = Object.freeze({ createdAt: req.params.createdAt });
-            // TODO: Transaction
-            async.series({
-                count: cb =>
-                    Template_r
-                        .count(crit)
-                        .then((count: number) => {
-                            if (count == null) return cb(new NotFoundError('Template'));
-                            return cb(void 0, count);
-                        })
-                        .catch(cb),
-                update: cb => Template_r
-                    .update(crit, req.body)
-                    .then((templates: Template[]) => cb(void 0, templates[0]))
-                    .catch(cb)
-            }, (error, results: {count: number, update: string}) => {
-                if (error != null) return next(fmtError(error));
-                res.json(200, results.update);
-                return next();
-            });
+
+            Template_r
+                .createQueryBuilder()
+                .update(Template)
+                .set(req.body)
+                .where('createdAt = :createdAt', crit)
+                .execute()
+                .then(result => {
+                    res.json(result);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };

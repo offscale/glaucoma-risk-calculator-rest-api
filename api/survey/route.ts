@@ -1,7 +1,6 @@
 import { writeFile } from 'fs';
 
 import * as restify from 'restify';
-import * as async from 'async';
 import { JsonSchema } from 'tv4';
 
 import { has_body } from '@offscale/restify-validators';
@@ -58,30 +57,22 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 }
             })();
 
-            // TODO: Transaction
-            async.series({
-                count: cb =>
-                    Survey_r
-                        .count(crit)
-                        .then((count: number) => {
-                            if (!count) return cb(new NotFoundError('Survey'));
-                            return cb(void 0, count);
-                        })
-                        .catch(cb),
-                update: cb =>
-                    Survey_r
-                        .update(crit, req.body)
-                        .then((survey: Survey[]) =>
-                            cb(void 0, survey[0])
-                        )
-                        .catch(cb),
-                email: cb => email == null ? cb(void 0) :
-                    writeFile(emails_txt, `${JSON.stringify({ email })}\n`, { flag: 'a' }, cb),
-            }, (error, results: {count: number, update: string, email: undefined}) => {
-                if (error != null) return next(fmtError(error));
-                res.json(200, results.update);
-                return next();
-            });
+            Survey_r
+                .createQueryBuilder()
+                .update(Survey)
+                .set(req.body)
+                .where('id = :id', crit)
+                .execute()
+                .then(result =>
+                    writeFile(emails_txt, `${JSON.stringify({ email })}\n`, { flag: 'a' },
+                        e => {
+                            if (e == null) return next(fmtError(e));
+                            res.json(result);
+                            return next();
+                        }
+                    )
+                )
+                .catch(error => next(fmtError(error)));
         }
     );
 };

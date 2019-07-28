@@ -1,12 +1,13 @@
 import * as restify from 'restify';
-import * as async from 'async';
+import { JsonSchema } from 'tv4';
+
 import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
-import { JsonSchema } from 'tv4';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
 import { RiskStats } from './models';
+import { Template } from '../template/models';
 
 /* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
@@ -43,25 +44,18 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
             req.body = Object.freeze({ risk_json: req.body.risk_json });
             const crit = Object.freeze({ createdAt: req.params.createdAt });
-            // TODO: Transaction
-            async.series({
-                count: cb =>
-                    RiskStats_r
-                        .count(crit)
-                        .then((count: number) => {
-                            if (!count) return cb(new NotFoundError('RiskStats'));
-                            return cb(null, count);
-                        })
-                        .catch(cb),
-                update: cb => RiskStats_r
-                    .update(crit, req.body)
-                    .then((risk_stats: RiskStats[]) => cb(void 0, risk_stats[0]))
-                    .catch(cb)
-            }, (error, results: {count: number, update: string}) => {
-                if (error != null) return next(fmtError(error));
-                res.json(200, results.update);
-                return next();
-            });
+
+            RiskStats_r
+                .createQueryBuilder()
+                .update(Template)
+                .set(req.body)
+                .where('createdAt = :createdAt', crit)
+                .execute()
+                .then(result => {
+                    res.json(result);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };

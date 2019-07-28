@@ -1,7 +1,6 @@
 import { model_route_to_map } from '@offscale/nodejs-utils';
 import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
 import { Server } from 'restify';
-import { Response } from 'supertest';
 import { createLogger } from 'bunyan';
 import { basename } from 'path';
 import { tearDownConnections } from '@offscale/orm-mw';
@@ -65,37 +64,35 @@ describe('Survey::routes', () => {
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/survey', () => {
-        afterEach('deleteSurvey', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[0], done);
-        });
+        afterEach('deleteSurvey', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[0])
+        );
 
-        it('POST should create Survey', done => {
-            sdk.create(user_mocks_subset[0].access_token!, survey_mocks.successes[0], done);
-        });
+        it('POST should create Survey', async () =>
+            await sdk.create(user_mocks_subset[0].access_token!, survey_mocks.successes[0])
+        );
 
-        it('GET should retrieve all Survey', done => {
-            sdk.getAll(user_mocks_subset[0].access_token!, done);
-        });
+        it('GET should retrieve all Survey', async () =>
+            await sdk.getAll(user_mocks_subset[0].access_token!)
+        );
     });
 
     describe('/api/survey/:createdAt', () => {
-        before('createSurvey', done => {
-            sdk.create(user_mocks_subset[0].access_token!, survey_mocks.successes[1],
-                (e, r?: Response) => {
-                    if (e == null && r != null) survey_mocks.successes[1] = r.body as any;
-                    return done();
-                });
-        });
-        after('deleteSurvey', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[1], done);
+        before('createSurvey', async () => {
+            const r = await sdk.create(user_mocks_subset[0].access_token!, survey_mocks.successes[1]);
+            if (r != null) survey_mocks.successes[1] = r.body as any;
         });
 
-        it('GET should retrieve Survey', done => {
-            sdk.get(user_mocks_subset[0].access_token!, survey_mocks.successes[1] as Survey, done);
-        });
+        after('deleteSurvey', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[1])
+        );
 
-        it('DELETE should destroy Survey', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[1], done);
-        });
+        it('GET should retrieve Survey', async () =>
+            await sdk.get(user_mocks_subset[0].access_token!, survey_mocks.successes[1] as Survey)
+        );
+
+        it('DELETE should destroy Survey', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[1])
+        );
     });
 });

@@ -1,5 +1,4 @@
 import * as restify from 'restify';
-import * as async from 'async';
 import { JsonSchema } from 'tv4';
 
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
@@ -8,6 +7,7 @@ import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 
 import { has_auth } from '../auth/middleware';
 import { RiskRes } from './models';
+import { Survey } from '../survey/models';
 
 /* tslint:disable:no-var-requires */
 const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
@@ -43,25 +43,18 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
 
             const crit = Object.freeze({ id: req.params.id });
-            // TODO: Transaction
-            async.series({
-                count: cb =>
-                    RiskRes_r
-                        .count(crit.id)
-                        .then((count: number) => {
-                            if (!count) return cb(new NotFoundError('RiskRes'));
-                            return cb(void 0, count);
-                        })
-                        .catch(cb),
-                update: cb => RiskRes_r
-                    .update(crit, req.body)
-                    .then(risk_res => cb(void 0, risk_res))
-                    .catch(cb)
-            }, (error, results: {count: number, update: string}) => {
-                if (error != null) return next(fmtError(error));
-                res.json(200, results.update);
-                return next();
-            });
+
+            RiskRes_r
+                .createQueryBuilder()
+                .update(Survey)
+                .set(req.body)
+                .where('id = :id', crit)
+                .execute()
+                .then(result => {
+                    res.json(result);
+                    return next();
+                })
+                .catch(error => next(fmtError(error)));
         }
     );
 };

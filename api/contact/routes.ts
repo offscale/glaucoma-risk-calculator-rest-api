@@ -1,8 +1,9 @@
+import * as restify from 'restify';
+import { JsonSchema } from 'tv4';
+
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
-import * as restify from 'restify';
 import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
-import { JsonSchema } from 'tv4';
 
 import { has_auth } from '../auth/middleware';
 import { Contact } from './models';

@@ -1,4 +1,7 @@
 import * as restify from 'restify';
+import { map } from 'async';
+import { JsonSchema } from 'tv4';
+
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import {
     has_body,
@@ -6,11 +9,9 @@ import {
     mk_valid_body_mw,
     mk_valid_body_mw_ignore
 } from '@offscale/restify-validators';
-import { JsonSchema } from 'tv4';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
-import { map } from 'async';
 import { readManyTemplates } from './sdk';
 import { Template } from './models';
 

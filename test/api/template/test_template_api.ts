@@ -65,34 +65,38 @@ describe('Template::routes', () => {
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/template', () => {
-        afterEach('deleteTemplate', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, template_mocks.successes[0], done);
-        });
+        afterEach('deleteTemplate', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, template_mocks.successes[0])
+        );
 
-        it('POST should create Template', done => {
-            sdk.create(user_mocks_subset[0].access_token!, template_mocks.successes[0], done);
-        });
+        it('POST should create Template', async () =>
+            await sdk.create(user_mocks_subset[0].access_token!, template_mocks.successes[0])
+        );
     });
 
     describe('/api/template/:createdAt', () => {
-        before('createTemplate', done => {
-            sdk.create(user_mocks_subset[0].access_token!, template_mocks.successes[1], _ => done());
+        before('createTemplate', async () => {
+            try {
+                await sdk.create(user_mocks_subset[0].access_token!, template_mocks.successes[1]);
+            } catch {
+                //
+            }
         });
-        after('deleteTemplate', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, template_mocks.successes[1], done);
-        });
+        after('deleteTemplate', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, template_mocks.successes[1])
+        );
 
-        it('GET should retrieve Template', done => {
-            sdk.get(user_mocks_subset[0].access_token!, template_mocks.successes[1], done);
-        });
+        it('GET should retrieve Template', async () =>
+            await sdk.get(user_mocks_subset[0].access_token!, template_mocks.successes[1])
+        );
 
-        it('PUT should update Template', done => {
-            sdk.update(user_mocks_subset[0].access_token!, template_mocks.successes[1],
-                { contents: 'foo', createdAt: template_mocks.successes[1].createdAt } as Template, done);
-        });
+        it('PUT should update Template', async () =>
+            await sdk.update(user_mocks_subset[0].access_token!, template_mocks.successes[1],
+                { contents: 'foo', createdAt: template_mocks.successes[1].createdAt } as Template)
+        );
 
-        it('DELETE should destroy Template', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, template_mocks.successes[1], done);
-        });
+        it('DELETE should destroy Template', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, template_mocks.successes[1])
+        );
     });
 });

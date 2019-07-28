@@ -1,7 +1,6 @@
 import { model_route_to_map } from '@offscale/nodejs-utils';
 import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
 import { Server } from 'restify';
-import { Response } from 'supertest';
 import { createLogger } from 'bunyan';
 import { basename } from 'path';
 import { tearDownConnections } from '@offscale/orm-mw';
@@ -65,37 +64,35 @@ describe('RiskRes::routes', () => {
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/risk_res', () => {
-        afterEach('deleteRiskRes', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, risk_res_mocks.successes[0], done);
-        });
+        afterEach('deleteRiskRes', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, risk_res_mocks.successes[0])
+        );
 
-        it('POST should create RiskRes', done => {
-            sdk.create(user_mocks_subset[0].access_token!, risk_res_mocks.successes[0], done);
-        });
+        it('POST should create RiskRes', async () =>
+            await sdk.create(user_mocks_subset[0].access_token!, risk_res_mocks.successes[0])
+        );
 
-        it('GET should retrieve all RiskRes', done => {
-            sdk.getAll(user_mocks_subset[0].access_token!, done);
-        });
+        it('GET should retrieve all RiskRes', async () =>
+            await sdk.getAll(user_mocks_subset[0].access_token!)
+        );
     });
 
     describe('/api/risk_res/:createdAt', () => {
-        before('createRiskRes', done => {
-            sdk.create(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1],
-                (e, r?: Response) => {
-                    if (e == null && r != null) risk_res_mocks.successes[1] = r.body as any;
-                    return done();
-                });
-        });
-        after('deleteRiskRes', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1], done);
+        before('createRiskRes', async () => {
+            const r = await sdk.create(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1]);
+            if (r != null) risk_res_mocks.successes[1] = r.body as any;
         });
 
-        it('GET should retrieve RiskRes', done => {
-            sdk.get(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1] as RiskRes, done);
-        });
+        after('deleteRiskRes', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1])
+        );
 
-        it('DELETE should destroy RiskRes', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1], done);
-        });
+        it('GET should retrieve RiskRes', async () =>
+            await sdk.get(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1] as RiskRes)
+        );
+
+        it('DELETE should destroy RiskRes', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, risk_res_mocks.successes[1])
+        );
     });
 });

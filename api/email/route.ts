@@ -3,9 +3,11 @@ import * as path from 'path';
 import { homedir } from 'os';
 
 import * as restify from 'restify';
+
 import { fmtError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_body } from '@offscale/restify-validators';
+
 
 const parent = process.env.WORKING_DIR || path.join(homedir(), 'glaucoma-risk-calculator-data');
 if (!existsSync(parent)) mkdirSync(parent);

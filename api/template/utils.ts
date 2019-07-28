@@ -7,4 +7,4 @@ const count_c = (s: string, c: string): number => {
 
 
 export const isISODateString = (s: string): boolean =>
-    s && s.length === 24 && count_c(s, ':') === 2 && count_c(s, '-') === 2 && count_c(s, '.') === 1 as any;
+    s != null && s.length === 24 && count_c(s, ':') === 2 && count_c(s, '-') === 2 && count_c(s, '.') === 1;

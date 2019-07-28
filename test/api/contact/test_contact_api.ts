@@ -65,44 +65,43 @@ describe('Contact::routes', () => {
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/contact', () => {
-        afterEach('deleteContact', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[0], done);
-        });
-
-        it('POST should create contact', done => {
-            sdk.create(user_mocks_subset[0].access_token!, mocks.successes[0], done);
-        });
-
-        it('GET should get all contacts', done => async.series([
-                cb => sdk.create(user_mocks_subset[0].access_token!, mocks.successes[0], cb),
-                cb => sdk.getAll(user_mocks_subset[0].access_token!, mocks.successes[0], cb)
-            ], done)
+        afterEach('deleteContact', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[0])
         );
+
+        it('POST should create contact', async () =>
+            await sdk.create(user_mocks_subset[0].access_token!, mocks.successes[0])
+        );
+
+        it('GET should get all contacts', async () => {
+            await sdk.create(user_mocks_subset[0].access_token!, mocks.successes[0]);
+            await sdk.getAll(user_mocks_subset[0].access_token!, mocks.successes[0]);
+        });
     });
 
     describe('/api/contact/:email', () => {
-        before('createContact', done => {
-            sdk.create(user_mocks_subset[0].access_token!, mocks.successes[1], _ => done());
-        });
-        after('deleteContact', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[1], done);
-        });
+        before('createContact', async () =>
+            await sdk.create(user_mocks_subset[0].access_token!, mocks.successes[1])
+        );
+        after('deleteContact', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[1])
+        );
 
-        it('GET should retrieve contact', done => {
-            sdk.retrieve(user_mocks_subset[0].access_token!, mocks.successes[1], done);
-        });
+        it('GET should retrieve contact', async () =>
+            await sdk.retrieve(user_mocks_subset[0].access_token!, mocks.successes[1])
+        );
 
-        it('PUT should update contact', done => {
-            sdk.update(user_mocks_subset[0].access_token!, mocks.successes[1],
+        it('PUT should update contact', async () =>
+            await sdk.update(user_mocks_subset[0].access_token!, mocks.successes[1],
                 {
                     owner: mocks.successes[1].owner,
                     email: mocks.successes[1].email,
                     name: `NAME: ${mocks.successes[1].email}`
-                } as Contact, done);
-        });
+                } as Contact)
+        );
 
-        it('DELETE should destroy contact', done => {
-            sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[1], done);
-        });
+        it('DELETE should destroy contact', async () =>
+            await sdk.destroy(user_mocks_subset[0].access_token!, mocks.successes[1])
+        );
     });
 });

@@ -63,12 +63,12 @@ describe('Config::routes', () => {
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
 
     describe('/api/config', () => {
-        it('POST should create Config', done => {
-            sdk.create(user_mocks_subset[0].access_token!, config_mocks.successes[0], done);
-        });
+        it('POST should create Config', async () =>
+            await sdk.create(user_mocks_subset[0].access_token!, config_mocks.successes[0])
+        );
 
-        it('GET should retrieve Config', done => {
-            sdk.get(user_mocks_subset[0].access_token!, config_mocks.successes[0], done);
-        });
+        it('GET should retrieve Config', async () =>
+            await sdk.get(user_mocks_subset[0].access_token!, config_mocks.successes[0])
+        );
     });
 });

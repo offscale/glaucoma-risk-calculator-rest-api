@@ -1,12 +1,14 @@
 import { parallel } from 'async';
 import * as restify from 'restify';
-import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
-import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 import { JsonSchema } from 'tv4';
-import { resolveIntFromObject } from '@offscale/nodejs-utils'
-import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import * as simpleStatistics from 'simple-statistics';
 import { ttest } from 'ttest/hypothesis';
+
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
+import { resolveIntFromObject } from '@offscale/nodejs-utils'
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
+
 import { RiskRes } from '../risk_res/models';
 import { Survey } from '../survey/models';
 // const jStat = require('jstat');

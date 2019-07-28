@@ -64,36 +64,43 @@ describe('RiskStats::routes', () => {
 
     describe('routes', () => {
         describe('/api/risk_stats', () => {
-            afterEach('deleteRiskStats', done => {
-                sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[0], done);
-            });
+            afterEach('deleteRiskStats', async () =>
+                await sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[0])
+            );
 
-            it('POST should create RiskStats', done => {
-                sdk.create(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[0], done);
-            });
+            it('POST should create RiskStats', async () =>
+                await sdk.create(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[0])
+            );
         });
 
         describe('/api/risk_stats/:createdAt', () => {
-            before('createRiskStats', done => {
-                sdk.create(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1], _ => done());
-            });
-            after('deleteRiskStats', done => {
-                sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1], done);
-            });
-
-            it('GET should retrieve RiskStats', done => {
-                sdk.get(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1], done);
+            before('createRiskStats', async () => {
+                try {
+                    await sdk.create(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1]);
+                } catch {
+                    //
+                }
             });
 
-            it('PUT should update RiskStats', done => {
-                sdk.update(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1],
-                    { risk_json: 'json_risk', createdAt: risk_stats_mocks.successes[1].createdAt },
-                    done);
-            });
+            after('deleteRiskStats', async () =>
+                await sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1])
+            );
 
-            it('DELETE should destroy RiskStats', done => {
-                sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1], done);
-            });
+            it('GET should retrieve RiskStats', async () =>
+                await sdk.get(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1])
+            );
+
+            it('PUT should update RiskStats', async () =>
+                await sdk.update(
+                    user_mocks_subset[0].access_token!,
+                    risk_stats_mocks.successes[1],
+                    { risk_json: 'json_risk', createdAt: risk_stats_mocks.successes[1].createdAt }
+                )
+            );
+
+            it('DELETE should destroy RiskStats', async () =>
+                await sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1])
+            );
         });
     });
 });
