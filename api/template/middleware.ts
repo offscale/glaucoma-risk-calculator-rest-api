@@ -27,10 +27,10 @@ export const parse_out_kind_dt = (request: restify.Request, res: restify.Respons
 
     const idx = req.body.createdAt.indexOf('_');
     if (idx > -1)
-        [req.body.createdAt, req.body.kind] = [req.body.createdAt.slice(0, idx), req.body.createdAt.slice(idx+1)];
+        [req.body.createdAt, req.body.kind] = [req.body.createdAt.slice(0, idx), req.body.createdAt.slice(idx + 1)];
 
     req.body.createdAt = req.params.createdAt = new Date(req.body.createdAt).toISOString();
-    req.body.kind = req.params.kind = req.body.kind;
+    req.params.kind = req.body.kind;
 
     return next();
 };

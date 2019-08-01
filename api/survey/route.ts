@@ -16,12 +16,12 @@ import { Survey } from './models';
 const survey_schema: JsonSchema = require('./../../test/api/survey/schema');
 
 export const read = (app: restify.Server, namespace: string = ''): void => {
-    app.get(`${namespace}/:id`,
+    app.get(`${namespace}/:createdAt`,
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
-            const q: Promise<Survey | undefined> = req.params.id === 'latest'
+            const q: Promise<Survey | undefined> = req.params.createdAt === 'latest'
                 ? Survey_r
                     .createQueryBuilder('survey')
                     .addOrderBy('survey.createdAt', 'DESC')
@@ -78,13 +78,13 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 };
 
 export const del = (app: restify.Server, namespace: string = ''): void => {
-    app.del(`${namespace}/:id`, has_auth(),
+    app.del(`${namespace}/:createdAt`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
             Survey_r
-                .delete({ createdAt: req.params.id })
+                .delete({ createdAt: req.params.createdAt })
                 .then(() => {
                     res.send(204);
                     return next();

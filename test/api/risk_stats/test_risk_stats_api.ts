@@ -1,5 +1,5 @@
 import { model_route_to_map } from '@offscale/nodejs-utils';
-import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
+import { AccessTokenType, IModelRoute } from '@offscale/nodejs-utils/interfaces';
 import { Server } from 'restify';
 import { createLogger } from 'bunyan';
 import { basename } from 'path';
@@ -8,7 +8,7 @@ import { IOrmsOut } from '@offscale/orm-mw/interfaces';
 import { waterfall } from 'async';
 
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
-import { create_and_auth_users } from '../../shared_tests';
+import { closeApp, create_and_auth_users, unregister_all } from '../../shared_tests';
 import { RiskStatsTestSDK } from './risk_stats_test_sdk';
 import { user_mocks } from '../user/user_mocks';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
@@ -24,7 +24,7 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-const user_mocks_subset: User[] = user_mocks.successes.slice(50, 60);
+const user_mocks_subset: User[] = user_mocks.successes.slice(120, 132);
 
 const tapp_name = `test::${basename(__dirname)}`;
 const logger = createLogger({ name: tapp_name });
@@ -33,6 +33,7 @@ describe('RiskStats::routes', () => {
     let sdk: RiskStatsTestSDK;
     let auth_sdk: AuthTestSDK;
     let app: Server;
+    let access_token: AccessTokenType;
 
     before(done =>
         waterfall([
@@ -54,53 +55,80 @@ describe('RiskStats::routes', () => {
 
                     return cb(void 0);
                 },
-                cb => create_and_auth_users(user_mocks_subset, auth_sdk, cb)
+                cb => create_and_auth_users(user_mocks_subset, auth_sdk, cb),
+                cb => {
+                    access_token = user_mocks_subset[0].access_token!;
+                    return cb(void 0);
+                }
             ],
             done
         )
     );
 
+    after('unregister_all', async () => unregister_all(auth_sdk, user_mocks_subset));
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
+    after('closeApp', done => closeApp(sdk.app)(done));
 
     describe('routes', () => {
         describe('/api/risk_stats', () => {
-            afterEach('deleteRiskStats', async () =>
-                await sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[0])
-            );
+            const risk_stats = risk_stats_mocks.successes[0];
 
-            it('POST should create RiskStats', async () =>
-                await sdk.create(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[0])
-            );
-        });
-
-        describe('/api/risk_stats/:createdAt', () => {
-            before('createRiskStats', async () => {
+            before('deleteRiskStats', async () => {
                 try {
-                    await sdk.create(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1]);
-                } catch {
+                    await sdk.destroy(access_token, risk_stats)
+                } catch (e) {
                     //
                 }
             });
 
             after('deleteRiskStats', async () =>
-                await sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1])
+                await sdk.destroy(access_token, risk_stats)
             );
+
+            it('POST should create RiskStats', async () =>
+                await sdk.create(access_token, risk_stats)
+            );
+        });
+
+        describe('/api/risk_stats/:createdAt', () => {
+            let risk_statistics = risk_stats_mocks.successes.slice(1, 4);
+
+            before('createRiskStats', async () => {
+                console.error('risk_stats/test_risk_stats_api.ts::POST::b4::risk_stats:', risk_statistics[0], ';');
+                risk_statistics[0] = Object.assign({},
+                    risk_statistics[0],
+                    (await sdk.create(access_token, risk_statistics[0])).body
+                );
+                console.error('risk_stats/test_risk_stats_api.ts::POST::l8::risk_stats:', risk_statistics[0], ';');
+            });
+
+            after('deleteRiskStats', async () => {
+                for (const risk_stats of risk_statistics)
+                    await sdk.destroy(access_token, risk_stats)
+            });
 
             it('GET should retrieve RiskStats', async () =>
-                await sdk.get(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1])
+                await sdk.get(access_token, risk_statistics[0])
             );
 
-            it('PUT should update RiskStats', async () =>
+            it('PUT should update RiskStats', async () => {
+                console.error('risk_stats/test_risk_stats_api.ts::PUT::b4::risk_statistics[1]:', risk_statistics[1], ';');
+                risk_statistics[1] = Object.assign({},
+                    risk_statistics[1],
+                    (await sdk.create(access_token, risk_statistics[1])).body
+                );
+                console.error('risk_stats/test_risk_stats_api.ts::PUT::l8::risk_statistics[1]:', risk_statistics[1], ';');
                 await sdk.update(
-                    user_mocks_subset[0].access_token!,
-                    risk_stats_mocks.successes[1],
-                    { risk_json: 'json_risk', createdAt: risk_stats_mocks.successes[1].createdAt }
+                    access_token,
+                    risk_statistics[1],
+                    Object.assign({}, risk_statistics[1], { risk_json: 'json_risk' })
                 )
-            );
+            });
 
-            it('DELETE should destroy RiskStats', async () =>
-                await sdk.destroy(user_mocks_subset[0].access_token!, risk_stats_mocks.successes[1])
-            );
+            it('DELETE should destroy RiskStats', async () => {
+                risk_statistics[2] = (await sdk.create(access_token, risk_statistics[2])).body;
+                await sdk.destroy(access_token, risk_statistics[2]);
+            });
         });
     });
 });

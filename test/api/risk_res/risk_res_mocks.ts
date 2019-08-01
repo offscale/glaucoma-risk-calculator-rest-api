@@ -1,30 +1,26 @@
 import { RiskRes } from '../../../api/risk_res/models';
+import * as faker from 'faker';
 
 
 export const risk_res_mocks: {successes: RiskRes[], failures: Array<{}>} = {
     failures: [
         {}, { risk_json: '' }, { risk_json: null }, { risk_json: undefined }, { risk_json: 0 }
     ],
-    successes: [
-        {
-            age: 55, ethnicity: 'barbados', study: 'barbados', gender: 'male', client_risk: Math.random(),
-            createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1)
-        },
-        {
-            age: 55, ethnicity: 'barbados', study: 'barbados', gender: 'female', client_risk: Math.random(),
-            createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1)
-        },
-        {
-            age: 55, ethnicity: 'barbados', study: 'barbados', gender: 'female', client_risk: Math.random(),
-            // family_history_of_glaucoma: ['sibling'],
-            createdAt: new Date(Math.floor(Math.random() * 1000000000000) + 1)
-        }
-    ].map((val, idx) =>
-        Object.assign(val, {
-            id: `${idx}`,
-            updatedAt: new Date()
+    successes: Array(10)
+        .fill(void 0)
+        .map((_, idx) => {
+            const risk_res = new RiskRes();
+
+            risk_res.id = idx.toString();
+            risk_res.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
+            risk_res.age = Math.floor(faker.random.number({ min: 0, max: 100 }));
+            risk_res.ethnicity = 'barbados';
+            risk_res.study = 'barbados';
+            risk_res.gender = 'male';
+            risk_res.client_risk = Math.random();
+
+            return risk_res;
         })
-    )
 };
 
 if (require.main === module) {

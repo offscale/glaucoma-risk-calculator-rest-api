@@ -3,11 +3,13 @@ import { expect } from 'chai';
 import supertest, { Response } from 'supertest';
 
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 
 import { User } from '../../../api/user/models';
 import { Contact } from '../../../api/contact/models';
 import * as contact_routes from '../../../api/contact/routes';
 import * as contact_route from '../../../api/contact/route';
+import { removeNullProperties } from '../../../utils';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -20,7 +22,7 @@ chai.use(chaiJsonSchema);
 export class ContactTestSDK {
     constructor(public app) {}
 
-    public create(access_token: string, contact: Contact): Promise<Response> {
+    public create(access_token: AccessTokenType, contact: Contact): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `create` must be defined'));
             else if (contact == null) return reject(new TypeError('`contact` argument to `create` must be defined'));
@@ -39,7 +41,7 @@ export class ContactTestSDK {
                     try {
                         expect(res.status).to.be.equal(201);
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.be.jsonSchema(contact_schema);
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(contact_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }
@@ -48,10 +50,12 @@ export class ContactTestSDK {
         });
     }
 
-    public getAll(access_token: string, contact: Contact): Promise<Response> {
+    public getAll(access_token: AccessTokenType, contact: Contact): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
-            else if (contact == null) return reject(new TypeError('`contact` argument to `getAll` must be defined'));
+            if (access_token == null)
+                return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
+            else if (contact == null)
+                return reject(new TypeError('`contact` argument to `getAll` must be defined'));
 
             expect(contact_routes.read).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -69,7 +73,7 @@ export class ContactTestSDK {
                         expect(res.body.contacts).to.be.instanceOf(Array);
                         res.body.contacts.map(_contact => {
                             expect(_contact).to.be.an('object');
-                            expect(_contact).to.be.jsonSchema(contact_schema);
+                            expect(removeNullProperties(_contact)).to.be.jsonSchema(contact_schema);
                         });
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
@@ -80,7 +84,7 @@ export class ContactTestSDK {
         });
     }
 
-    public retrieve(access_token: string, contact: Contact): Promise<Response> {
+    public retrieve(access_token: AccessTokenType, contact: Contact): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
             else if (contact == null) return reject(new TypeError('`contact` argument to `getAll` must be defined'));
@@ -97,7 +101,7 @@ export class ContactTestSDK {
                     else if (res.error) return reject(getError(res.error));
                     try {
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.be.jsonSchema(contact_schema);
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(contact_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }
@@ -106,7 +110,7 @@ export class ContactTestSDK {
         });
     }
 
-    public update(access_token: string, initial_contact: Contact, updated_contact: Contact): Promise<Response> {
+    public update(access_token: AccessTokenType, initial_contact: Contact, updated_contact: Contact): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `update` must be defined'));
@@ -130,10 +134,12 @@ export class ContactTestSDK {
                     else if (res.error) return reject(getError(res.error));
                     try {
                         expect(res.body).to.be.an('object');
-                        Object.keys(updated_contact).map(
-                            attr => expect(updated_contact[attr]).to.be.equal(res.body[attr])
-                        );
-                        expect(res.body).to.be.jsonSchema(contact_schema);
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(contact_schema);
+                        expect(removeNullProperties(updated_contact)).to.be.jsonSchema(contact_schema);
+                        Object
+                            .keys(updated_contact)
+                            .filter(attr => updated_contact[attr] == null)
+                            .map(attr => expect(updated_contact[attr]).to.be.equal(res.body[attr]));
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }
@@ -142,7 +148,7 @@ export class ContactTestSDK {
         });
     }
 
-    public destroy(access_token: string, contact: Contact): Promise<Response> {
+    public destroy(access_token: AccessTokenType, contact: Contact): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `destroy` must be defined'));

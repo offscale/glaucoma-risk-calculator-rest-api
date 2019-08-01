@@ -3,11 +3,13 @@ import * as chai from 'chai';
 import { expect } from 'chai';
 
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 
 import { User } from '../../../api/user/models';
 import { RiskStats } from '../../../api/risk_stats/models';
 import * as risk_stats_route from '../../../api/risk_stats/route';
 import * as risk_stats_routes from '../../../api/risk_stats/routes';
+import { removeNullProperties } from '../../../utils';
 
 // tslint:disable-next-line:no-var-requires
 const chaiJsonSchema = require('chai-json-schema');
@@ -22,7 +24,7 @@ export class RiskStatsTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, risk_stats: RiskStats): Promise<Response> {
+    public create(access_token: AccessTokenType, risk_stats: RiskStats): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `create` must be defined'));
@@ -43,7 +45,7 @@ export class RiskStatsTestSDK {
                     try {
                         expect(res.status).to.be.equal(201);
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.be.jsonSchema(risk_stats_schema);
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(risk_stats_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }
@@ -52,7 +54,7 @@ export class RiskStatsTestSDK {
         });
     }
 
-    public get(access_token: string, risk_stats: RiskStats): Promise<Response> {
+    public get(access_token: AccessTokenType, risk_stats: RiskStats): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
@@ -61,7 +63,7 @@ export class RiskStatsTestSDK {
 
             expect(risk_stats_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .get(`/api/risk_stats/${risk_stats.createdAt.toISOString()}`)
+                .get(`/api/risk_stats/${new Date(risk_stats.createdAt).toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .expect('Content-Type', /json/)
@@ -80,7 +82,7 @@ export class RiskStatsTestSDK {
         });
     }
 
-    public update(access_token: string,
+    public update(access_token: AccessTokenType,
                   initial_risk_stats: RiskStats,
                   updated_risk_stats: Partial<RiskStats>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
@@ -97,7 +99,7 @@ export class RiskStatsTestSDK {
 
             expect(risk_stats_route.update).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .put(`/api/risk_stats/${initial_risk_stats.createdAt.toISOString()}`)
+                .put(`/api/risk_stats/${new Date(initial_risk_stats.createdAt).toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .send(updated_risk_stats)
@@ -106,10 +108,17 @@ export class RiskStatsTestSDK {
                     else if (res.error) return reject(getError(res.error));
                     try {
                         expect(res.body).to.be.an('object');
-                        Object.keys(updated_risk_stats).map(
-                            attr => expect(updated_risk_stats[attr]).to.be.equal(res.body[attr])
-                        );
-                        expect(res.body).to.be.jsonSchema(risk_stats_schema);
+                        for (const k of ['createdAt', 'updatedAt']) {
+                            if (res.body.hasOwnProperty(k))
+                                res.body[k] = new Date(res.body[k]).toISOString();
+                            if (updated_risk_stats.hasOwnProperty(k))
+                                updated_risk_stats[k] = new Date(updated_risk_stats[k]).toISOString();
+                        }
+                        Object
+                            .keys(updated_risk_stats)
+                            .filter(attr => updated_risk_stats[attr] != null && res.body[attr] != null)
+                            .map(attr => expect(updated_risk_stats[attr]).to.be.equal(res.body[attr]));
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(risk_stats_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }
@@ -118,7 +127,7 @@ export class RiskStatsTestSDK {
         });
     }
 
-    public destroy(access_token: string, risk_stats: RiskStats): Promise<Response> {
+    public destroy(access_token: AccessTokenType, risk_stats: RiskStats): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `destroy` must be defined'));
@@ -127,7 +136,7 @@ export class RiskStatsTestSDK {
 
             expect(risk_stats_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .del(`/api/risk_stats/${risk_stats.createdAt.toISOString()}`)
+                .del(`/api/risk_stats/${new Date(risk_stats.createdAt).toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .end((err, res: Response) => {

@@ -44,7 +44,7 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                     if (risk_res == null || !risk_res.length) return next(new NotFoundError('RiskRes'));
 
                     RiskRes_r
-                        .query(`SELECT ethnicity, COUNT(*) FROM risk_res_tbl0 GROUP BY ethnicity;`, [])
+                        .query(`SELECT ethnicity, COUNT(*) FROM risk_res_tbl GROUP BY ethnicity;`, [])
                         .then(r => {
                             res.json({ risk_res, ethnicity_agg: r.rows });
                             return next();

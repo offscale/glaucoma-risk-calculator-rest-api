@@ -7,10 +7,10 @@ export class Template {
     @PrimaryGeneratedColumn()
     public id!: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'createdAt' })
     public createdAt!: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updatedAt' })
     public updatedAt!: Date;
 
     @Column('varchar', { nullable: false })

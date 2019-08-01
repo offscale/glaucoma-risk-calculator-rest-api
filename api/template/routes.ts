@@ -78,7 +78,7 @@ export const createBatch = (app: restify.Server, namespace: string = ''): void =
 
                         return next(fmtError(error));
                     } else if (templates == null) return next(new NotFoundError('Template'));
-                    res.json(201, { templates });
+                    res.json(201, { templates: (templates) });
                     return next();
                 });
         }
@@ -91,7 +91,7 @@ export const readBatch = (app: restify.Server, namespace: string = ''): void => 
             const req = request as unknown as IOrmReq & restify.Request;
             readManyTemplates(req, (err, templates) => {
                 if (err != null) return next(fmtError(err));
-                res.json(templates);
+                res.json(templates!);
                 return next();
             });
         }

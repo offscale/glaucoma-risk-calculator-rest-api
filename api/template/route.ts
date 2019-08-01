@@ -31,22 +31,20 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 
             console.error(__dirname, 'read::', req.params);
 
-            const q: Promise<Template | undefined> = req.params.id === 'latest'
+            const q: Promise<Template | undefined> = req.params.createdAt === 'latest'
                 ? Template_r
                     .createQueryBuilder('template')
                     .addOrderBy('template.createdAt', 'DESC')
-                    .where({
-                        createdAt: req.params.createdAt,
-                        kind: req.params.kind
-                    })
+                    .where(req.params.kind == null ? {} : { kind: req.params.kind })
                     .getOne()
-                : Template_r.findOneOrFail({ createdAt: req.params.createdAt });
+                : Template_r.findOneOrFail({
+                    createdAt: req.params.createdAt.slice(0, -1),
+                    kind: req.params.kind
+                });
 
             q
-                .then((template?: Template | Template[]) => {
+                .then((template?: Template) => {
                     if (template == null) return next(new NotFoundError('Template'));
-                    else if (Array.isArray(template))
-                        template = template[0];
                     res.json(template);
                     return next();
                 })
@@ -59,30 +57,41 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
     app.put(`${namespace}/:createdAt`, has_auth(), has_body,
         mk_valid_body_mw_ignore(template_schema, ['createdAt']),
         parse_out_kind_dt,
-        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+        async (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Template_r = req.getOrm().typeorm!.connection.getRepository(Template);
 
-            req.body = Object.freeze({ contents: req.body.contents });
-            const crit = Object.freeze({ createdAt: req.params.createdAt });
+            // req.body = Object.freeze({ contents: req.body.contents });
+            try {
+                const crit = Object.freeze({
+                    createdAt: req.params.createdAt/*.slice(0, -1)*/,
+                    kind: req.params.kind
+                });
 
-            Template_r
-                .createQueryBuilder()
-                .select()
-                .where('createdAt = :createdAt', crit)
-                .execute()
-                .then((template: Template) => {
-                    Object.keys(req.body).forEach(k => template[k] = req.body[k]);
+                let template = await Template_r.findOneOrFail(crit);
 
-                    Template_r
-                        .save(template)
-                        .then(result => {
-                            res.json(result);
-                            return next();
-                        })
-                        .catch(error => next(fmtError(error)));
-                })
-                .catch(error => next(fmtError(error)));
+                const t = await Template_r
+                    .createQueryBuilder()
+                    .update(template)
+                    .set(req.body)
+                    .where(crit)
+                    .execute();
+
+                console.error('template/route.rs::update::t.raw:', t.raw, ';');
+
+                template = await Template_r.findOneOrFail(crit);
+
+                Object.keys(req.body).forEach(k => template[k] = req.body[k]);
+
+                console.error('template/route.rs::update::template::template:', template, ';');
+                const result = await Template_r.save(template);
+                console.error('template/route.rs::update::template::result:', result, ';');
+
+                res.json(result);
+                return next();
+            } catch (error) {
+                return next(fmtError(error));
+            }
         }
     );
 };
@@ -92,7 +101,11 @@ export const del = (app: restify.Server, namespace: string = ''): void => {
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
             req.getOrm().typeorm!.connection.getRepository(Template)
-                .delete({ createdAt: req.params.createdAt })
+                .createQueryBuilder()
+                .delete()
+                .from(Template)
+                .where('createdAt = :createdAt', { createdAt: req.params.createdAt })
+                .execute()
                 .then(() => {
                     res.send(204);
                     return next();

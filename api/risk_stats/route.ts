@@ -7,7 +7,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
 import { RiskStats } from './models';
-import { Template } from '../template/models';
+import { emptyTypeOrmResponse } from '../../utils';
 
 /* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
@@ -18,7 +18,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const RiskStats_r = req.getOrm().typeorm!.connection.getRepository(RiskStats);
 
-            const q: Promise<RiskStats | undefined> = req.params.id === 'latest'
+            const q: Promise<RiskStats | undefined> = req.params.createdAt === 'latest'
                 ? RiskStats_r
                     .createQueryBuilder('risk_stats')
                     .addOrderBy('risk_stats.createdAt', 'DESC')
@@ -43,16 +43,16 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             const RiskStats_r = req.getOrm().typeorm!.connection.getRepository(RiskStats);
 
             req.body = Object.freeze({ risk_json: req.body.risk_json });
-            const crit = Object.freeze({ createdAt: req.params.createdAt });
+            const crit = { createdAt: req.params.createdAt };
 
             RiskStats_r
                 .createQueryBuilder()
-                .update(Template)
+                .update()
                 .set(req.body)
-                .where('createdAt = :createdAt', crit)
+                .where('createdAt = :createdAt', Object.freeze(crit))
                 .execute()
                 .then(result => {
-                    res.json(result);
+                    res.json(emptyTypeOrmResponse(result) ? Object.assign({}, req.body, crit) : result);
                     return next();
                 })
                 .catch(error => next(fmtError(error)));

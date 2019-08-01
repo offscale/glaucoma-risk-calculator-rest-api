@@ -3,11 +3,13 @@ import * as chai from 'chai';
 import { expect } from 'chai';
 
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 
 import { User } from '../../../api/user/models';
 import { Template } from '../../../api/template/models';
 import * as template_route from '../../../api/template/route';
 import * as template_routes from '../../../api/template/routes';
+import { removeNullProperties } from '../../../utils';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -21,10 +23,12 @@ export class TemplateTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, template: Template): Promise<Response> {
+    public create(access_token: AccessTokenType, template: Template): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (access_token == null) return reject(new TypeError('`access_token` argument to `create` must be defined'));
-            else if (template == null) return reject(new TypeError('`template` argument to `create` must be defined'));
+            if (access_token == null)
+                return reject(new TypeError('`access_token` argument to `create` must be defined'));
+            else if (template == null)
+                return reject(new TypeError('`template` argument to `create` must be defined'));
 
             expect(template_routes.create).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -40,7 +44,7 @@ export class TemplateTestSDK {
                     try {
                         expect(res.status).to.be.equal(201);
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.be.jsonSchema(template_schema);
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(template_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }
@@ -49,14 +53,18 @@ export class TemplateTestSDK {
         });
     }
 
-    public get(access_token: string, template: Template): Promise<Response> {
+    public get(access_token: AccessTokenType, template: Template): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
-            else if (template == null) return reject(new TypeError('`template` argument to `getAll` must be defined'));
+            if (access_token == null)
+                return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
+            else if (template == null)
+                return reject(new TypeError('`template` argument to `getAll` must be defined'));
 
             expect(template_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .get(`/api/template/${template.createdAt.toISOString()}_${template.kind}`)
+                .get(
+                    `/api/template/${new Date(template.createdAt).toISOString()}_${template.kind}`
+                )
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .expect('Content-Type', /json/)
@@ -76,7 +84,9 @@ export class TemplateTestSDK {
         });
     }
 
-    public update(access_token: string, initial_template: Template, updated_template: Template): Promise<Response> {
+    public update(access_token: AccessTokenType,
+                  initial_template: Template,
+                  updated_template: Template): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `update` must be defined'));
@@ -86,12 +96,14 @@ export class TemplateTestSDK {
                 return reject(new TypeError('`updated_template` argument to `update` must be defined'));
             else if (initial_template.createdAt !== updated_template.createdAt)
                 return reject(new ReferenceError(
-                    `${initial_template.createdAt.toISOString()} != ${updated_template.createdAt.toISOString()} (\`createdAt\`s between templates)`)
+                    `${initial_template.createdAt.toISOString()} 
+                    != ${updated_template.createdAt.toISOString()}
+                     (\`createdAt\`s between templates)`)
                 );
 
             expect(template_route.update).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .put(`/api/template/${initial_template.createdAt.toISOString()}`)
+                .put(`/api/template/${new Date(initial_template.createdAt).toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .send(updated_template)
@@ -104,7 +116,7 @@ export class TemplateTestSDK {
                         Object.keys(updated_template).map(
                             attr => expect(updated_template[attr]).to.be.equal(res.body[attr])
                         );
-                        expect(res.body).to.be.jsonSchema(template_schema);
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(template_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }
@@ -113,7 +125,7 @@ export class TemplateTestSDK {
         });
     }
 
-    public destroy(access_token: string, template: Template): Promise<Response> {
+    public destroy(access_token: AccessTokenType, template: Template): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `destroy` must be defined'));
@@ -122,7 +134,7 @@ export class TemplateTestSDK {
 
             expect(template_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .del(`/api/template/${template.createdAt.toISOString()}`)
+                .del(`/api/template/${new Date(template.createdAt).toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .end((err, res: Response) => {

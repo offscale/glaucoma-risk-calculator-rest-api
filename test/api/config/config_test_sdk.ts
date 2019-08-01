@@ -3,10 +3,12 @@ import * as chai from 'chai';
 import { expect } from 'chai';
 
 import { getError, sanitiseSchema, supertestGetError } from '@offscale/nodejs-utils';
+import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 
 import { User } from '../../../api/user/models';
 import { Config } from '../../../api/config/models';
 import * as config_routes from '../../../api/config/routes';
+import { removeNullProperties } from '../../../utils';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -20,7 +22,7 @@ export class ConfigTestSDK {
     constructor(public app) {
     }
 
-    public create(access_token: string, config: Config): Promise<Response> {
+    public create(access_token: AccessTokenType, config: Config): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null || !access_token.length)
                 return reject(new TypeError('`access_token` argument to `create` must be defined'));
@@ -42,7 +44,7 @@ export class ConfigTestSDK {
                         expect(res.status).to.be.above(199);
                         expect(res.status).to.be.below(202);
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.be.jsonSchema(config_schema);
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(config_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }
@@ -51,7 +53,7 @@ export class ConfigTestSDK {
         });
     }
 
-    public get(access_token: string, config: Config): Promise<Response> {
+    public get(access_token: AccessTokenType, config: Config): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
@@ -69,7 +71,7 @@ export class ConfigTestSDK {
                     if (err != null) return reject(supertestGetError(err, res));
                     else if (res.error) return reject(res.error);
                     try {
-                        expect(res.body).to.be.jsonSchema(config_schema);
+                        expect(removeNullProperties(res.body)).to.be.jsonSchema(config_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
                     }

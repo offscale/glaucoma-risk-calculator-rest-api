@@ -7,6 +7,8 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
 import { Survey } from './models';
+import { emptyTypeOrmResponse } from '../../utils';
+import { InsertResult } from 'typeorm';
 
 /* tslint:disable:no-var-requires */
 const survey_schema: JsonSchema = require('./../../test/api/survey/schema');
@@ -21,10 +23,11 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             Object.keys(req.body).forEach(k => survey[k] = req.body[k]);
 
             Survey_r
-                .save(survey)
-                .then((survey: Survey) => {
-                    if (survey == null) return next(new NotFoundError('Survey'));
-                    res.json(201, survey);
+                .insert(survey)
+                .then((insert_result: InsertResult) => {
+                    if (insert_result == null || emptyTypeOrmResponse(insert_result))
+                        return next(new NotFoundError('Survey'));
+                    res.json(201, Object.assign(req.body, insert_result.generatedMaps[0]));
                     return next();
                 })
                 .catch(error => next(fmtError(error)));
@@ -42,13 +45,8 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                 .find()
                 .then((survey: Survey[]) => {
                     if (survey == null || !survey.length) return next(new NotFoundError('Survey'));
-
-                    Survey_r.query(`SELECT ethnicity, COUNT(*) FROM survey_tbl GROUP BY ethnicity;`, [])
-                        .then(r => {
-                            res.json({ survey, ethnicity_agg: r.rows });
-                            return next();
-                        })
-                        .catch(e => next(fmtError(e)));
+                    res.json({ survey });
+                    return next();
                 })
                 .catch(error => next(fmtError(error)));
         }

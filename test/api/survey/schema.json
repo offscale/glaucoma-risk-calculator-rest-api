@@ -2,7 +2,7 @@
   "type": "object",
   "properties": {
     "perceived_risk": {
-      "type": "float"
+      "type": "number"
     },
     "recruiter": {
       "type": "string"

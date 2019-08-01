@@ -52,6 +52,7 @@ describe('Auth::routes', () => {
         )
     );
 
+    after('deregister_all', async () => await unregister_all(sdk, mocks));
     after('tearDownConnections', tearDownConnections);
     after('closeApp', done => closeApp(sdk!.app)(done));
 

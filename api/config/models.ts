@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 
 @Entity('config_tbl')
 export class Config {
@@ -24,7 +25,7 @@ export class Config {
     public tenant_id!: string;
 
     @Column('varchar', { nullable: true })
-    public access_token?: string;
+    public access_token?: AccessTokenType;
 
     @Column('varchar', { nullable: true })
     public refresh_token?: string;

@@ -3,8 +3,8 @@ import { waterfall } from 'async';
 
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
-
 import { Config } from './models';
+
 
 export const getConfig = (req: restify.Request & IOrmReq): Promise<Config> =>
     new Promise<Config>((resolve, reject) =>
@@ -12,7 +12,7 @@ export const getConfig = (req: restify.Request & IOrmReq): Promise<Config> =>
             .findOneOrFail()
             .then(config => {
                 if (config == null) return reject(new NotFoundError('Config'));
-                return resolve(config);
+                return resolve((config) as Config);
             })
             .catch(reject)
     );

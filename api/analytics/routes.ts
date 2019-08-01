@@ -193,7 +193,9 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                             valuesToEscape)
                         .then(r => {
                             if (r == null) return next(new NotFoundError('RiskRes'));
-                            return callb(void 0, r.rows.map(el => ({ name: el.ethnicity, value: parseInt(el.count) })));
+                            return callb(
+                                void 0, r.rows.map(el => ({ name: el.ethnicity, value: parseInt(el.count) }))
+                            );
                         })
                         .catch(callb),
                 step_2: callb =>

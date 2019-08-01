@@ -6,14 +6,13 @@ import { waterfall } from 'async';
 import { tearDownConnections } from '@offscale/orm-mw';
 import { IOrmsOut } from '@offscale/orm-mw/interfaces';
 import { model_route_to_map } from '@offscale/nodejs-utils';
-import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
+import { AccessTokenType, IModelRoute } from '@offscale/nodejs-utils/interfaces';
 
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { AccessToken } from '../../../api/auth/models';
 import { _orms_out } from '../../../config';
 import { User } from '../../../api/user/models';
-import { Survey } from '../../../api/survey/models';
-import { create_and_auth_users } from '../../shared_tests';
+import { closeApp, create_and_auth_users, unregister_all } from '../../shared_tests';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { user_mocks } from '../user/user_mocks';
 import { SurveyTestSDK } from './survey_test_sdk';
@@ -26,7 +25,7 @@ const models_and_routes: IModelRoute = {
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
-const user_mocks_subset: User[] = user_mocks.successes.slice(60, 70);
+const user_mocks_subset: User[] = user_mocks.successes.slice(132, 144);
 
 const tapp_name = `test::${basename(__dirname)}`;
 const logger = createLogger({ name: tapp_name });
@@ -35,6 +34,7 @@ describe('Survey::routes', () => {
     let sdk: SurveyTestSDK;
     let auth_sdk: AuthTestSDK;
     let app: Server;
+    let access_token: AccessTokenType;
 
     before(done =>
         waterfall([
@@ -56,44 +56,57 @@ describe('Survey::routes', () => {
 
                     return cb(void 0);
                 },
-                cb => create_and_auth_users(user_mocks_subset, auth_sdk, cb)
+                cb => create_and_auth_users(user_mocks_subset, auth_sdk, cb),
+                cb => {
+                    access_token = user_mocks_subset[0].access_token!;
+                    return cb(void 0);
+                }
             ],
             done
         )
     );
 
+    after('unregister_all', async () => unregister_all(auth_sdk, user_mocks_subset));
     after('tearDownConnections', done => tearDownConnections(_orms_out.orms_out, done));
+    after('closeApp', done => closeApp(sdk.app)(done));
 
     describe('/api/survey', () => {
-        afterEach('deleteSurvey', async () =>
-            await sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[0])
-        );
+        const surveys = survey_mocks.successes.slice(0, 2);
+
+        after('deleteAllSurveys', async () => {
+            for (const survey of surveys)
+                await sdk.destroy(access_token, survey)
+        });
 
         it('POST should create Survey', async () =>
-            await sdk.create(user_mocks_subset[0].access_token!, survey_mocks.successes[0])
+            await sdk.create(access_token, surveys[0])
         );
 
-        it('GET should retrieve all Survey', async () =>
-            await sdk.getAll(user_mocks_subset[0].access_token!)
-        );
+        it('GET should retrieve all Survey', async () => {
+            await sdk.create(access_token, surveys[1]);
+            await sdk.getAll(access_token)
+        });
     });
 
     describe('/api/survey/:createdAt', () => {
-        before('createSurvey', async () => {
-            const r = await sdk.create(user_mocks_subset[0].access_token!, survey_mocks.successes[1]);
-            if (r != null) survey_mocks.successes[1] = r.body as any;
+        const surveys = survey_mocks.successes.slice(2, 4);
+
+        before('createSurvey', async () =>
+            surveys[0] = (await sdk.create(access_token, surveys[0])).body
+        );
+
+        after('deleteSurveys', async () => {
+            for (const survey of surveys)
+                await sdk.destroy(access_token, survey);
         });
 
-        after('deleteSurvey', async () =>
-            await sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[1])
-        );
-
         it('GET should retrieve Survey', async () =>
-            await sdk.get(user_mocks_subset[0].access_token!, survey_mocks.successes[1] as Survey)
+            await sdk.get(access_token, surveys[0])
         );
 
-        it('DELETE should destroy Survey', async () =>
-            await sdk.destroy(user_mocks_subset[0].access_token!, survey_mocks.successes[1])
-        );
+        it('DELETE should destroy Survey', async () => {
+            surveys[1] = (await sdk.create(access_token, surveys[1])).body;
+            await sdk.destroy(access_token, surveys[1]);
+        });
     });
 });
