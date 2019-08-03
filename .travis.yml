@@ -31,7 +31,8 @@ before_script:
     - psql -c 'create database travis_ci_test;' -U postgres
 
 script:
-    - "sed -i -e 's/_length: number;/_length!: number;/' -e 's/_cache_quartiles: {[q: number]: number;};/_cache_quartiles!: {[q: number]: number;};/' node_modules/summary/summary.ts"
+    - "sed -i -e 's/_length: number;/_length!: number;/g' node_modules/summary/summary.ts"
+    - "perl -pe 's|\Q_cache_quartiles: {[q: number]: number;};\E|_cache_quartiles!: {[q: number]: number;};|g' -i node_modules/summary/summary.ts"
     - tsc
     - npm test
 
