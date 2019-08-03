@@ -8,6 +8,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_auth } from '../auth/middleware';
 import { RiskStats } from './models';
 import { emptyTypeOrmResponse } from '../../utils';
+import { isISODateString } from '../template/utils';
 
 /* tslint:disable:no-var-requires */
 const risk_stats_schema: JsonSchema = require('./../../test/api/risk_stats/schema');
@@ -18,17 +19,26 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const RiskStats_r = req.getOrm().typeorm!.connection.getRepository(RiskStats);
 
-            const q: Promise<RiskStats | undefined> = req.params.createdAt === 'latest'
+            const find_latest = req.params.createdAt === 'latest';
+            const q: Promise<RiskStats | any[]> = find_latest
                 ? RiskStats_r
                     .createQueryBuilder('risk_stats')
                     .addOrderBy('risk_stats.createdAt', 'DESC')
                     .getOne()
-                : RiskStats_r.findOneOrFail({ createdAt: req.params.createdAt });
+                : (isISODateString(req.params.createdAt) ?
+                    RiskStats_r.query(`
+                    SELECT *
+                    FROM risk_stats_tbl
+                    WHERE date_trunc('millisecond', "createdAt") = date_trunc('millisecond', $1::timestamptz);`,
+                        [req.params.createdAt])
+                    : RiskStats_r.findOneOrFail(req.params.createdAt));
 
             q
-                .then((risk_stats?: RiskStats) => {
-                    if (risk_stats == null) return next(new NotFoundError('RiskStats'));
-                    res.json(risk_stats);
+                .then((raw_or_risk_stats) => {
+                    const is_raw = (raw_or_risk_stats == null || raw_or_risk_stats.hasOwnProperty('length'));
+                    if (raw_or_risk_stats == null || is_raw && !(raw_or_risk_stats as any[]).length)
+                        return next(new NotFoundError('RiskStats'));
+                    res.json(raw_or_risk_stats);
                     return next();
                 })
                 .catch(error => next(fmtError(error)));
@@ -49,7 +59,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 .createQueryBuilder()
                 .update()
                 .set(req.body)
-                .where('createdAt = :createdAt', Object.freeze(crit))
+                .where(Object.freeze(crit))
                 .execute()
                 .then(result => {
                     res.json(emptyTypeOrmResponse(result) ? Object.assign({}, req.body, crit) : result);

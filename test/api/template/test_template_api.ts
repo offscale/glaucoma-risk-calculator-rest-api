@@ -93,7 +93,7 @@ describe('Template::routes', () => {
         );
 
         it('GET should retrieve Template', async () =>
-            await sdk.get(access_token, template)
+            template = (await sdk.get(access_token, template)).body
         );
 
         it('PUT should update Template', async () =>

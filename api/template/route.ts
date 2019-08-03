@@ -8,6 +8,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_auth } from '../auth/middleware';
 import { Template } from './models';
 import { parse_out_kind_dt } from './middleware';
+import { removePropsFromObj } from '../../utils';
 
 /* tslint:disable:no-var-requires */
 const template_schema: JsonSchema = require('../../test/api/template/schema');
@@ -18,29 +19,16 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Template_r = req.getOrm().typeorm!.connection.getRepository(Template);
 
-            /*
-            const criteria = ((): {kind?: string, createdAt?: string} => {
-                if (req.params.createdAt.indexOf('_') < 0) return {};
-                const [createdAt, kind] = req.params.createdAt.split('_');
-                return Object.assign({ kind },
-                    createdAt !== 'latest' && isISODateString(createdAt) ? { createdAt } : {}
-                );
-            })();
-            */
-
-
-            console.error(__dirname, 'read::', req.params);
-
             const q: Promise<Template | undefined> = req.params.createdAt === 'latest'
                 ? Template_r
                     .createQueryBuilder('template')
                     .addOrderBy('template.createdAt', 'DESC')
                     .where(req.params.kind == null ? {} : { kind: req.params.kind })
                     .getOne()
-                : Template_r.findOneOrFail({
-                    createdAt: req.params.createdAt.slice(0, -1),
-                    kind: req.params.kind
-                });
+                : Template_r.findOneOrFail(Object.freeze(Object.assign(
+                    { kind: req.params.kind },
+                    req.params.id == null ? { createdAt: req.params.createdAt } : { id: req.params.id }
+                )));
 
             q
                 .then((template?: Template) => {
@@ -63,10 +51,11 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
             // req.body = Object.freeze({ contents: req.body.contents });
             try {
-                const crit = Object.freeze({
-                    createdAt: req.params.createdAt/*.slice(0, -1)*/,
-                    kind: req.params.kind
-                });
+                const crit = Object.freeze(Object.assign(
+                    { kind: req.params.kind },
+                    req.body.id == null ? { createdAt: req.params.createdAt } : { id: req.body.id }
+                ));
+                req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt']);
 
                 let template = await Template_r.findOneOrFail(crit);
 
@@ -77,15 +66,11 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                     .where(crit)
                     .execute();
 
-                console.error('template/route.rs::update::t.raw:', t.raw, ';');
-
                 template = await Template_r.findOneOrFail(crit);
 
                 Object.keys(req.body).forEach(k => template[k] = req.body[k]);
 
-                console.error('template/route.rs::update::template::template:', template, ';');
                 const result = await Template_r.save(template);
-                console.error('template/route.rs::update::template::result:', result, ';');
 
                 res.json(result);
                 return next();

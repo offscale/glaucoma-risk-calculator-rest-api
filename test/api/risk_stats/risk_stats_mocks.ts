@@ -10,7 +10,7 @@ export const risk_stats_mocks: {successes: RiskStats[], failures: Array<{}>} = {
         .map((_, idx) => {
             const risk_stats = new RiskStats();
 
-            risk_stats.id = idx.toString();
+            risk_stats.id = idx;
             risk_stats.risk_json = JSON.stringify({ words: faker.random.words() });
             risk_stats.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
 

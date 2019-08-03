@@ -1,6 +1,6 @@
 export declare class Survey {
     static _omit: string[];
-    id: string;
+    id: number;
     createdAt: Date;
     updatedAt: Date;
     perceived_risk?: number;

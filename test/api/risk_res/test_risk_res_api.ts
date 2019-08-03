@@ -105,9 +105,6 @@ describe('RiskRes::routes', () => {
         it('DELETE should destroy RiskRes', async () => {
             const _risk_res = risk_res_mocks.successes[3];
             const response = await sdk.create(access_token, _risk_res);
-            console.error('risk_res/test_risk_res_api.ts::DELETE should destroy RiskRes::response.body:',
-                response.body, ';\n',
-                `risk_res/test_risk_res_api.ts::DELETE should destroy RiskRes::_risk_res`, _risk_res, ';');
             await sdk.destroy(access_token, response.body);
         });
     });

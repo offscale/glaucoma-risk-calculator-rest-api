@@ -12,7 +12,7 @@ export const survey_mocks: {successes: Survey[], failures: Array<{}>} = {
         .map((_, idx) => {
             const survey = new Survey();
 
-            survey.id = idx.toString();
+            survey.id = idx;
             survey.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
             survey.perceived_risk = parseFloat('88.3');
             survey.recruiter = 'curious';

@@ -24,10 +24,10 @@ export class User {
     @Column('varchar', { nullable: true })
     public title?: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'createdAt', precision: 3 })
     public createdAt?: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
     public updatedAt?: Date;
 
     @Column('simple-array', { nullable: false })

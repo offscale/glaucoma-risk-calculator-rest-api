@@ -1,7 +1,7 @@
 import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 export declare class Config {
     static _omit: string[];
-    id: string;
+    id: number;
     createdAt: Date;
     updatedAt: Date;
     client_id: string;

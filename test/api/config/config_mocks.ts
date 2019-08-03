@@ -11,7 +11,7 @@ export const config_mocks: {successes: Config[], failures: Array<{}>} = {
         .map((_, idx) => {
             const config = new Config();
 
-            config.id = idx.toString();
+            config.id = idx;
             config.client_id = Math.random().toString(15);
             config.tenant_id = Math.random().toString(15);
             config.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);

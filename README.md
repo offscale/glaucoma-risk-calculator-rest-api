@@ -1,13 +1,18 @@
 glaucoma-risk-calculator REST API
 =================================
 
+[![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://travis-ci.org/glaucoma/glaucoma-risk-calculator-rest-api.svg?branch=master)](https://travis-ci.org/glaucoma/glaucoma-risk-calculator-rest-api)
+[![Coverage Status](https://coveralls.io/repos/github/glaucoma/glaucoma-risk-calculator-rest-api/badge.svg)](https://coveralls.io/github/glaucoma/glaucoma-risk-calculator-rest-api)
+![David dependency status for latest release](https://david-dm.org/glaucoma/glaucoma-risk-calculator-rest-api.svg)
+
 REST API backend written on Node.JS in TypeScript with restify and waterline
 
 
 ## Install prerequisites
 
-  0. node & npm (tested with node v10.15.3 and npm v6.9.0)
-  1. Run: `npm install -g typescript typings bunyan`
+  0. node & npm (tested with node v10.16.0 & npm v6.10.1)
+  1. Run: `npm install -g typings typescript bunyan`
   2. `cd` to directory you've cloned this repo into
   3. Run: `typings install`
   4. Run: `npm install`
@@ -17,7 +22,6 @@ REST API backend written on Node.JS in TypeScript with restify and waterline
   - Redis (optionally set `REDIS_HOST` and `REDIS_PORT` environment variables)
   - Postgres (set `RDBMS_URI` environment variable)
   - Set: `DEFAULT_ADMIN_EMAIL` and `DEFAULT_ADMIN_PASSWORD` env vars
-
 
 ## Docker
 
@@ -41,9 +45,12 @@ If you don't want to use Docker Compose, then assuming you have Redis and Postgr
                -e DEFAULT_ADMIN_PASSWORD=bar \
                -p 3000:3000 \
                --name "${PWD##*/}" \
-               "${PWD##*/}"
+               "${PWD##*/}_api"  # Name of the Docker image, the `_api` is suffixed by Docker Compose
 
-Where `RDBMS_URI` and `REDIS_HOST` environment variables are set correctly for your system.
+Where `RDBMS_URI` and `REDIS_HOST` environment variables are set correctly for your system, in the form:
+
+    export RDBMS_URI='postgres://username:password@hostname:port/database_name'
+    export REDIS_HOST='host'
 
 ## Compile+run app
 
@@ -75,6 +82,8 @@ $ az aks get-credentials --resource-group calc-rg0 --name calc-kube0
 $ kubectl get nodes
 $ az aks show --resource-group calc-rg0 --name calc-kube0 --query 'nodeResourceGroup'
 ```
+
+*Rest of tutorial: TODO*
 
 ## License
 

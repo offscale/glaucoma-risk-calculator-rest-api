@@ -105,8 +105,7 @@ export const funcs: DeepReadonlyArray<[string, string]> = Object.freeze([
 ]);
 
 const get_func = (func: DeepReadonlyArray<string>, input: {}): ((a: {}) => number) => {
-    console.info('func:', func, ';');
-    console.info('input:', input, ';');
+    console.info('func:', func, ';\ninput:', input, ';');
     return (b: {}): number => 5;
 };
 /*

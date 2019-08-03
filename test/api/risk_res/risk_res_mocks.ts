@@ -11,7 +11,7 @@ export const risk_res_mocks: {successes: RiskRes[], failures: Array<{}>} = {
         .map((_, idx) => {
             const risk_res = new RiskRes();
 
-            risk_res.id = idx.toString();
+            risk_res.id = idx;
             risk_res.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
             risk_res.age = Math.floor(faker.random.number({ min: 0, max: 100 }));
             risk_res.ethnicity = 'barbados';

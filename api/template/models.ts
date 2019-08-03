@@ -5,12 +5,12 @@ export class Template {
     public static _omit: string[] = [];
 
     @PrimaryGeneratedColumn()
-    public id!: string;
+    public id!: number;
 
-    @CreateDateColumn({ name: 'createdAt' })
+    @CreateDateColumn({ name: 'createdAt', precision: 3 })
     public createdAt!: Date;
 
-    @UpdateDateColumn({ name: 'updatedAt' })
+    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
     public updatedAt!: Date;
 
     @Column('varchar', { nullable: false })

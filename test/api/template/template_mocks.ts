@@ -12,7 +12,7 @@ export const template_mocks: {successes: Template[], failures: Array<{}>} = {
         .map((_, idx) => {
             const template = new Template();
 
-            template.id = idx.toString();
+            template.id = idx;
             template.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
             template.contents = faker.lorem.lines(1);
             template.kind = 'email';

@@ -63,7 +63,8 @@ export class RiskStatsTestSDK {
 
             expect(risk_stats_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
-                .get(`/api/risk_stats/${new Date(risk_stats.createdAt).toISOString()}`)
+                .get(`/api/risk_stats/${risk_stats.id ? risk_stats.id
+                    : new Date(risk_stats.createdAt).toISOString()}`)
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
                 .expect('Content-Type', /json/)

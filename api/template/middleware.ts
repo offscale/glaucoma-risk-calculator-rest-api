@@ -1,6 +1,7 @@
 import * as restify from 'restify';
 
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
+import { isISODateString } from './utils';
 
 export const body_date_to_s = (request: restify.Request, res: restify.Response, next: restify.Next) => {
     const req = request as unknown as IOrmReq & restify.Request;
@@ -26,10 +27,15 @@ export const parse_out_kind_dt = (request: restify.Request, res: restify.Respons
         return next();
 
     const idx = req.body.createdAt.indexOf('_');
+    let maybeCreatedAt: string = req.body.createdAt;
     if (idx > -1)
-        [req.body.createdAt, req.body.kind] = [req.body.createdAt.slice(0, idx), req.body.createdAt.slice(idx + 1)];
+        [maybeCreatedAt, req.body.kind] = [req.body.createdAt.slice(0, idx), req.body.createdAt.slice(idx + 1)];
 
-    req.body.createdAt = req.params.createdAt = new Date(req.body.createdAt).toISOString();
+    if (isISODateString(maybeCreatedAt))
+        req.body.createdAt = req.params.createdAt = new Date(req.body.createdAt).toISOString();
+    else
+        req.body.id = req.params.id = maybeCreatedAt;
+
     req.params.kind = req.body.kind;
 
     return next();

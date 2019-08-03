@@ -94,12 +94,10 @@ describe('RiskStats::routes', () => {
             let risk_statistics = risk_stats_mocks.successes.slice(1, 4);
 
             before('createRiskStats', async () => {
-                console.error('risk_stats/test_risk_stats_api.ts::POST::b4::risk_stats:', risk_statistics[0], ';');
                 risk_statistics[0] = Object.assign({},
                     risk_statistics[0],
                     (await sdk.create(access_token, risk_statistics[0])).body
                 );
-                console.error('risk_stats/test_risk_stats_api.ts::POST::l8::risk_stats:', risk_statistics[0], ';');
             });
 
             after('deleteRiskStats', async () => {
@@ -112,12 +110,10 @@ describe('RiskStats::routes', () => {
             );
 
             it('PUT should update RiskStats', async () => {
-                console.error('risk_stats/test_risk_stats_api.ts::PUT::b4::risk_statistics[1]:', risk_statistics[1], ';');
                 risk_statistics[1] = Object.assign({},
                     risk_statistics[1],
                     (await sdk.create(access_token, risk_statistics[1])).body
                 );
-                console.error('risk_stats/test_risk_stats_api.ts::PUT::l8::risk_statistics[1]:', risk_statistics[1], ';');
                 await sdk.update(
                     access_token,
                     risk_statistics[1],

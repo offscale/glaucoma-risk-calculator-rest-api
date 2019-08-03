@@ -4,10 +4,10 @@ import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } fro
 export class Contact {
     public static _omit: string[] = [];
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'createdAt', precision: 3 })
     public createdAt!: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
     public updatedAt!: Date;
 
     @PrimaryColumn({ type: 'varchar', name: 'email', nullable: false, primary: true, unique: true })

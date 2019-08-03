@@ -53,7 +53,7 @@ export class TemplateTestSDK {
         });
     }
 
-    public get(access_token: AccessTokenType, template: Template): Promise<Response> {
+    public get(access_token: AccessTokenType, template: Template, by_id: boolean = true): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
                 return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
@@ -63,7 +63,8 @@ export class TemplateTestSDK {
             expect(template_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
                 .get(
-                    `/api/template/${new Date(template.createdAt).toISOString()}_${template.kind}`
+                    `/api/template/${by_id ? template.id : new Date(template.createdAt).toISOString()
+                    }_${template.kind}`
                 )
                 .set('Connection', 'keep-alive')
                 .set('X-Access-Token', access_token)
@@ -113,9 +114,10 @@ export class TemplateTestSDK {
 
                     try {
                         expect(res.body).to.be.an('object');
-                        Object.keys(updated_template).map(
-                            attr => expect(updated_template[attr]).to.be.equal(res.body[attr])
-                        );
+                        Object
+                            .keys(updated_template)
+                            .filter(attr => ['createdAt', 'updatedAt'].indexOf(attr) === -1)
+                            .map(attr => expect(updated_template[attr]).to.be.equal(res.body[attr]));
                         expect(removeNullProperties(res.body)).to.be.jsonSchema(template_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);

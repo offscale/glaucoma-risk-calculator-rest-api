@@ -1,6 +1,6 @@
 export declare class RiskRes {
     static _omit: string[];
-    id: string;
+    id: number;
     createdAt: Date;
     updatedAt: Date;
     age: number;

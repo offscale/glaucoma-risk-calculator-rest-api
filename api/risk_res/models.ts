@@ -5,12 +5,12 @@ export class RiskRes {
     public static _omit: string[] = [];
 
     @PrimaryGeneratedColumn()
-    public id!: string;
+    public id!: number;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'createdAt', precision: 3 })
     public createdAt!: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
     public updatedAt!: Date;
 
     @Column('integer', { nullable: false })

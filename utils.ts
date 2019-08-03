@@ -15,3 +15,6 @@ export const removeNullProperties = (obj: {}): typeof obj =>
 
 export const emptyTypeOrmResponse = (obj: Partial<InsertResult>): boolean =>
     obj.generatedMaps!.length + obj.raw!.length === 0;
+
+export const removePropsFromObj = (obj: {}, props: string[]): typeof obj =>
+    typeof props.forEach(prop => delete obj[prop]) === 'undefined' && obj;

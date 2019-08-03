@@ -64,20 +64,8 @@ export const createBatch = (app: restify.Server, namespace: string = ''): void =
                         })
                 },
                 (error, templates) => {
-                    if (error != null) {
-                        /*console.info('error.details =', error['details'], ';');
-
-                        if (error.hasOwnProperty('_e') && (error['_e'] as Error).stack
-                            && error['_e'].stack.indexOf('WLError') > -1) {
-
-                            const err = new GenericError(error['details']);
-                            err.cause = error['_e'];
-                            err.name = 'WLError';
-                            return next(err);
-                        }*/
-
-                        return next(fmtError(error));
-                    } else if (templates == null) return next(new NotFoundError('Template'));
+                    if (error != null) return next(fmtError(error));
+                    else if (templates == null) return next(new NotFoundError('Template'));
                     res.json(201, { templates: (templates) });
                     return next();
                 });
