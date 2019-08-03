@@ -4,7 +4,7 @@
   "description": "REST API backend written on Node.JS in TypeScript with restify and waterline.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/glaucoma-australia/glaucoma-risk-calculator-rest-api.git"
+    "url": "https://github.com/glaucoma/glaucoma-risk-calculator-rest-api.git"
   },
   "license": "(Apache-2.0 OR MIT)",
   "author": "Samuel Marks @SamuelMarks",
@@ -24,7 +24,7 @@
     "argon2": "0.24.0",
     "async": "^3.1.0",
     "faker": "^4.1.0",
-    "glaucoma-risk-calculator-engine": "https://api.github.com/repos/glaucoma-australia/glaucoma-risk-calculator-engine-dist/tarball",
+    "glaucoma-risk-calculator-engine": "https://api.github.com/repos/glaucoma/glaucoma-risk-calculator-engine-dist/tarball",
     "hiredis": "^0.5.0",
     "ioredis": "^4.14.0",
     "mathjs": "^6.0.3",
@@ -35,7 +35,7 @@
     "restify": "^8.4.0",
     "restify-errors": "^8.0.1",
     "simple-statistics": "^7.0.5",
-    "ttest": "SamuelMarks/ttest#typescript",
+    "ttest": "https://api.github.com/repos/SamuelMarks/ttest/tarball/typescript",
     "tv4": "^1.3.0",
     "uuid": "^3.3.2"
   },
@@ -61,7 +61,10 @@
     "chai": "^4.2.0",
     "chai-json-schema": "^1.5.1",
     "chai-json-schema-ajv": "^5.0.0",
+    "coveralls": "^3.0.5",
     "mocha": "^6.2.0",
+    "nyc": "^14.1.1",
+    "source-map-support": "^0.5.13",
     "supertest": "^4.0.2",
     "ts-node": "^8.3.0",
     "typescript": "~3.5.3"
