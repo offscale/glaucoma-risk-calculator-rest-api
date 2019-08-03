@@ -32,7 +32,7 @@ before_script:
 
 script:
     - "sed -i -e 's/_length: number;/_length!: number;/g' node_modules/summary/summary.ts"
-    - "perl -pe 's|\Q_cache_quartiles: {[q: number]: number;};\E|_cache_quartiles!: {[q: number]: number;};|g' -i node_modules/summary/summary.ts"
+    - 'perl -pe "s|\Q_cache_quartiles: {[q: number]: number;};\E|_cache_quartiles!: {[q: number]: number;};|g" -i node_modules/summary/summary.ts'
     - tsc
     - npm test
 
