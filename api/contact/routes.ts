@@ -7,6 +7,7 @@ import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
 
 import { has_auth } from '../auth/middleware';
 import { Contact } from './models';
+import { removePropsFromObj } from '../../utils';
 
 /* tslint:disable:no-var-requires */
 const contact_schema: JsonSchema = require('./../../test/api/contact/schema');
@@ -23,6 +24,7 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Contact_r = req.getOrm().typeorm!.connection.getRepository(Contact);
 
+            req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
             const contact = new Contact();
             Object.keys(req.body).forEach(k => contact[k] = req.body[k]);
 

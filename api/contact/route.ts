@@ -8,7 +8,7 @@ import { has_body, mk_valid_body_mw, mk_valid_body_mw_ignore } from '@offscale/r
 
 import { has_auth } from '../auth/middleware';
 import { Contact } from './models';
-import { emptyTypeOrmResponse } from '../../utils';
+import { emptyTypeOrmResponse, removePropsFromObj } from '../../utils';
 
 /* tslint:disable:no-var-requires */
 const contact_schema: JsonSchema = require('./../../test/api/contact/schema');
@@ -36,7 +36,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request & {user_id: string};
             const Contact_r = req.getOrm().typeorm!.connection.getRepository(Contact);
 
-            delete req.body.updatedAt;
+            req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
             // TODO: Transaction
             waterfall([
                 cb => Contact_r

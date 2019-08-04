@@ -8,6 +8,7 @@ import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { has_auth } from '../auth/middleware';
 import { RiskRes } from './models';
 import { Survey } from '../survey/models';
+import { removePropsFromObj } from '../../utils';
 
 /* tslint:disable:no-var-requires */
 const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
@@ -17,16 +18,15 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
             const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
-            const q: Promise<RiskRes | undefined> = req.params.id === 'latest'
-                ? RiskRes_r
-                    .createQueryBuilder('risk_res')
-                    .addOrderBy('risk_res.createdAt', 'DESC')
-                    .getOne()
-                : RiskRes_r.findOneOrFail(req.params.id);
+            const q: Promise<RiskRes | undefined> = RiskRes_r.findOneOrFail(
+                req.params.id === 'latest' ? {
+                    order: {
+                        createdAt: 'DESC'
+                    }
+                } : req.params.id
+            );
             q
                 .then(risk_res => {
-                    if (risk_res == null) return next(new NotFoundError('RiskRes'));
-                    risk_res = Array.isArray(risk_res) ? risk_res[0] : risk_res;
                     if (risk_res == null) return next(new NotFoundError('RiskRes'));
                     res.json(risk_res);
                     return next();
@@ -42,12 +42,16 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
 
+            req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
+            const risk_res = new RiskRes();
+            Object.keys(req.body).forEach(k => risk_res[k] = req.body[k]);
+
             const crit = Object.freeze({ id: req.params.id });
 
             RiskRes_r
                 .createQueryBuilder()
                 .update(Survey)
-                .set(req.body)
+                .set(risk_res)
                 .where('id = :id', crit)
                 .execute()
                 .then(result => {

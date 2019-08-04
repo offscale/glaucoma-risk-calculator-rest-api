@@ -1,5 +1,5 @@
 import { series, waterfall } from 'async';
-import Logger, { createLogger } from 'bunyan';
+import Logger, { createLogger, FATAL } from 'bunyan';
 import { default as restify, Server } from 'restify';
 
 import { get_models_routes, populateModelRoutes, raise } from '@offscale/nodejs-utils';
@@ -15,10 +15,16 @@ import { User } from './api/user/models';
 import { post as register_user, UserBodyReq, UserConfig } from './api/user/sdk';
 import * as config from './config';
 import { getOrmMwConfig, getPrivateIPAddress } from './config';
+import { RiskStats } from './api/risk_stats/models';
+import { Template } from './api/template/models';
 
 /* tslint:disable:no-var-requires */
 export const package_ = Object.freeze(require('./package'));
 export const logger: Logger = createLogger({ name: 'main' });
+
+if (process.env.NODE_ENV === 'test') {
+    logger.level(FATAL + 1);
+}
 
 /* tslint:disable:no-unused-expression */
 process.env['NO_DEBUG'] || logger.info(Object.keys(process.env).sort().map(k => ({ [k]: process.env[k] })));
@@ -72,7 +78,7 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                                     orms_out: config._orms_out.orms_out,
                                     body: default_admin
                                 } as IOrmReq & {body?: User} as UserBodyReq, UserConfig.default())
-                                    .then(() => callb())
+                                    .then(() => callb(void 0))
                                     .catch(callb),
                                 register_user: callb => {
                                     UserConfig.instance = {
@@ -82,6 +88,39 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                                         initial_accounts: [default_admin]
                                     };
                                     return callb(void 0);
+                                },
+                                load_risk_json: callb => {
+                                    const risk_stats = new RiskStats();
+                                    risk_stats.risk_json = require('glaucoma-risk-calculator-engine/risk.json');
+                                    config._orms_out.orms_out.typeorm!.connection.getRepository(RiskStats)
+                                        .manager
+                                        .save(risk_stats)
+                                        .then(() => callb(void 0))
+                                        .catch(callb)
+                                },
+                                load_template: callb => {
+                                    const Template_r = config._orms_out.orms_out.typeorm!.connection
+                                        .getRepository(Template);
+
+                                    Template_r.findOneOrFail({
+                                        order: {
+                                            createdAt: 'DESC'
+                                        }
+                                    }).then(template => {
+                                        if (template == null || 'twitter'.indexOf(template.contents) > -1)
+                                            return insert_default_template(callb);
+                                        return callb(void 0);
+                                    });
+
+                                    const insert_default_template = (cb: typeof callb) => {
+                                        const template = new Template();
+                                        template.contents = 'SET IN MAIN';
+                                        config._orms_out.orms_out.typeorm!.connection.getRepository(RiskStats)
+                                            .manager
+                                            .save(template)
+                                            .then(() => cb(void 0))
+                                            .catch(cb)
+                                    };
                                 },
                                 serve: callb =>
                                     typeof logger.info(`${app.name} listening from ${app.url}`) === 'undefined'

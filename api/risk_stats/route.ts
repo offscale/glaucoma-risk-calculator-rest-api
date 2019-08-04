@@ -19,26 +19,25 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const RiskStats_r = req.getOrm().typeorm!.connection.getRepository(RiskStats);
 
-            const find_latest = req.params.createdAt === 'latest';
-            const q: Promise<RiskStats | any[]> = find_latest
-                ? RiskStats_r
-                    .createQueryBuilder('risk_stats')
-                    .addOrderBy('risk_stats.createdAt', 'DESC')
-                    .getOne()
-                : (isISODateString(req.params.createdAt) ?
-                    RiskStats_r.query(`
-                    SELECT *
-                    FROM risk_stats_tbl
-                    WHERE date_trunc('millisecond', "createdAt") = date_trunc('millisecond', $1::timestamptz);`,
-                        [req.params.createdAt])
-                    : RiskStats_r.findOneOrFail(req.params.createdAt));
+            const q: Promise<RiskStats | undefined> =
+                RiskStats_r
+                    .findOneOrFail(req.params.createdAt === 'latest' ?
+                        {
+                            order: {
+                                createdAt: 'DESC'
+                            }
+                        }
+                        : (isISODateString(req.params.createdAt) ?
+                                { createdAt: req.params.createdAt }
+                                :/* id */req.params.createdAt
+                        )
+                    );
 
             q
-                .then((raw_or_risk_stats) => {
-                    const is_raw = (raw_or_risk_stats == null || raw_or_risk_stats.hasOwnProperty('length'));
-                    if (raw_or_risk_stats == null || is_raw && !(raw_or_risk_stats as any[]).length)
+                .then(risk_stats => {
+                    if (risk_stats == null)
                         return next(new NotFoundError('RiskStats'));
-                    res.json(raw_or_risk_stats);
+                    res.json(risk_stats);
                     return next();
                 })
                 .catch(error => next(fmtError(error)));

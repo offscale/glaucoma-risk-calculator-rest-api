@@ -63,6 +63,8 @@
     "chai-json-schema-ajv": "^5.0.0",
     "coveralls": "^3.0.5",
     "mocha": "^6.2.0",
+    "mocha-pretty-bunyan": "^1.1.1",
+    "mocha-pretty-bunyan-nyan": "^1.0.4",
     "nyc": "^14.1.1",
     "source-map-support": "^0.5.13",
     "supertest": "^4.0.2",

@@ -7,6 +7,7 @@ import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators'
 
 import { has_auth } from '../auth/middleware';
 import { RiskRes } from './models';
+import { removePropsFromObj } from '../../utils';
 
 /* tslint:disable:no-var-requires */
 const risk_res_schema: JsonSchema = require('./../../test/api/risk_res/schema');
@@ -17,6 +18,7 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
 
+            req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
             const risk_res = new RiskRes();
             Object.keys(req.body).forEach(k => risk_res[k] = req.body[k]);
 

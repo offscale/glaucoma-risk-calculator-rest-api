@@ -11,6 +11,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { RiskRes } from '../risk_res/models';
 import { Survey } from '../survey/models';
+import { removePropsFromObj } from '../../utils';
 // const jStat = require('jstat');
 
 /* tslint:disable:no-var-requires */
@@ -20,6 +21,8 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_body, mk_valid_body_mw_ignore(risk_res_schema, ['createdAt', 'id']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
+
+            req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt']);
 
             const risk_res = new RiskRes();
             Object.keys(req.body).forEach(k => risk_res[k] = req.body[k]);

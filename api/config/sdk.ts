@@ -4,12 +4,17 @@ import { waterfall } from 'async';
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { Config } from './models';
+import { removePropsFromObj } from '../../utils';
 
 
 export const getConfig = (req: restify.Request & IOrmReq): Promise<Config> =>
     new Promise<Config>((resolve, reject) =>
         req.getOrm().typeorm!.connection.getRepository(Config)
-            .findOneOrFail()
+            .findOneOrFail({
+                order: {
+                    createdAt: 'DESC'
+                }
+            })
             .then(config => {
                 if (config == null) return reject(new NotFoundError('Config'));
                 return resolve((config) as Config);
@@ -23,7 +28,11 @@ export const upsertConfig = (req: restify.Request & IOrmReq): Promise<Config> =>
 
         // TODO: Transaction
         waterfall([
-            cb => Config_r.findOneOrFail()
+            cb => Config_r.findOneOrFail({
+                order: {
+                    createdAt: 'DESC'
+                }
+            })
                 .then(config => {
                     if (config == null)
                         return cb(new NotFoundError('Config'));
@@ -42,6 +51,7 @@ export const upsertConfig = (req: restify.Request & IOrmReq): Promise<Config> =>
         ], (error: any, results?: Config[]) => {
             if (error != null) {
                 if (error instanceof NotFoundError) {
+                    req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
                     const config = new Config();
                     Object.keys(req.body).forEach(k => config[k] = req.body[k]);
                     Config_r

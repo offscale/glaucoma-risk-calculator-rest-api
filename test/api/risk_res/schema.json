@@ -19,7 +19,13 @@
     "parent": {
       "type": "boolean"
     },
+    "sibling": {
+      "type": "boolean"
+    },
     "myopia": {
+      "type": "boolean"
+    },
+    "diabetes": {
       "type": "boolean"
     },
     "email": {

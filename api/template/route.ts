@@ -55,7 +55,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                     { kind: req.params.kind },
                     req.body.id == null ? { createdAt: req.params.createdAt } : { id: req.body.id }
                 ));
-                req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt']);
+                req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
 
                 let template = await Template_r.findOneOrFail(crit);
 

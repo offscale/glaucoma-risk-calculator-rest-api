@@ -15,6 +15,7 @@ import { has_auth } from '../auth/middleware';
 import { readManyTemplates } from './sdk';
 import { Template } from './models';
 import { parse_out_kind_dt } from './middleware';
+import { removePropsFromObj } from '../../utils';
 
 /* tslint:disable:no-var-requires */
 const template_schema: JsonSchema = require('../../test/api/template/schema');
@@ -28,6 +29,7 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             if ((req.body as Template).kind == null)
                 (req.body as Template).kind = 'email';
 
+            req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
             const template = new Template();
             Object.keys(req.body).forEach(k => template[k] = req.body[k]);
 
@@ -52,9 +54,10 @@ export const createBatch = (app: restify.Server, namespace: string = ''): void =
 
             // TODO: raw query insert batch for efficiency + consistency
             map(req.body,
-                (_template: Template, cb) => {
+                (_template: Template | Partial<Template>, cb) => {
                     const tpl = new Template();
-                    Object.keys(req.body).forEach(k => tpl[k] = req.body[k]);
+                    _template = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
+                    Object.keys(_template).forEach(k => tpl[k] = _template[k]);
 
                     Template_r
                         .save(tpl)
@@ -66,7 +69,7 @@ export const createBatch = (app: restify.Server, namespace: string = ''): void =
                 (error, templates) => {
                     if (error != null) return next(fmtError(error));
                     else if (templates == null) return next(new NotFoundError('Template'));
-                    res.json(201, { templates: (templates) });
+                    res.json(201, { templates });
                     return next();
                 });
         }
@@ -79,7 +82,8 @@ export const readBatch = (app: restify.Server, namespace: string = ''): void => 
             const req = request as unknown as IOrmReq & restify.Request;
             readManyTemplates(req, (err, templates) => {
                 if (err != null) return next(fmtError(err));
-                res.json(templates!);
+                else if (templates == null) return next(new NotFoundError('Template'));
+                res.json(templates);
                 return next();
             });
         }

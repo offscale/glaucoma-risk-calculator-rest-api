@@ -8,6 +8,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_auth } from '../auth/middleware';
 import { getConfig } from './sdk';
 import { Config } from './models';
+import { removePropsFromObj } from '../../utils';
 
 /* tslint:disable:no-var-requires */
 const template_schema: JsonSchema = require('./../../test/api/config/schema');
@@ -18,8 +19,12 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Config_r = req.getOrm().typeorm!.connection.getRepository(Config);
 
+            req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
+            let config = new Config();
+            Object.keys(req.body).forEach(k => config[k] = req.body[k]);
+
             try {
-                const response /*{
+                config /*{
                     generatedMaps: {
                         createdAt: string,
                         updatedAt: string,
@@ -31,8 +36,9 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
                         updatedAt: string,
                         id: number
                     }[]
-                }*/ = await Config_r.manager.insert(Config, req.body);
-                res.json(Object.assign(response.generatedMaps[0], req.body));
+                }*/ = await Config_r.manager.save(config);
+                Object.keys(req.body).forEach(k => config[k] = config[k] || req.body[k]);
+                res.json(201, config);
                 return next();
             } catch (error) {
                 return next(fmtError(error));
