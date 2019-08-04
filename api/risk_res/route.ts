@@ -3,7 +3,7 @@ import { JsonSchema } from 'tv4';
 
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
-import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { fmtError } from '@offscale/custom-restify-errors';
 
 import { has_auth } from '../auth/middleware';
 import { RiskRes } from './models';
@@ -53,10 +53,15 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 .set(risk_res)
                 .where('id = :id', crit)
                 .execute()
-                .then(result => {
-                    res.json(result);
-                    return next();
-                })
+                .then(() =>
+                    RiskRes_r
+                        .findOneOrFail(crit)
+                        .then(risk_res => {
+                            res.json(risk_res);
+                            return next();
+                        })
+                        .catch(e => next(fmtError(e)))
+                )
                 .catch(error => next(fmtError(error)));
         }
     );

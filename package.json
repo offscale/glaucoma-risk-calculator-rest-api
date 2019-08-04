@@ -1,6 +1,6 @@
 {
   "name": "glaucoma-risk-calculator-rest-api",
-  "version": "0.0.53",
+  "version": "0.0.54",
   "description": "REST API backend written on Node.JS in TypeScript with restify and waterline.",
   "repository": {
     "type": "git",

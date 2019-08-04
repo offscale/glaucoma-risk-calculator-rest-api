@@ -2,7 +2,7 @@ import { waterfall } from 'async';
 import * as restify from 'restify';
 import { JsonSchema } from 'tv4';
 
-import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { fmtError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_body, mk_valid_body_mw, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 
@@ -42,13 +42,18 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                     .findOneOrFail({ owner: req.user_id, email: req.params.email })
                     .then(contact => cb(void 0, contact))
                     .catch(cb),
-                (contact: Contact, cb) =>
+                (contact: Contact, cb) => {
+                    const update_contact = new Contact();
+                    Object.keys(req.body).forEach(k => update_contact[k] = req.body[k]);
                     Contact_r
-                        .update(contact, req.body)
+                        .update(contact, update_contact)
                         .then(contact_ret =>
-                            cb(void 0, emptyTypeOrmResponse(contact_ret) ? contact : contact_ret)
+                            cb(void 0, emptyTypeOrmResponse(contact_ret) ?
+                                Object.assign(contact, update_contact)
+                                : contact_ret)
                         )
                         .catch(cb)
+                }
             ], (error, contact?: Contact) => {
                 if (error != null) return next(fmtError(error));
                 res.json(contact);

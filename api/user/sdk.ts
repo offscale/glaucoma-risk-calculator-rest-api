@@ -139,7 +139,7 @@ export const update = (req: UserBodyUserReq): Promise<User | User[]> => new Prom
             cb =>
                 req.getOrm().typeorm!.connection.getRepository(User)
                     .findOneOrFail({ email: req.user_id })
-                    .then((user: User | undefined) => cb(void 0, user))
+                    .then((user: User) => cb(void 0, user))
                     .catch(cb)
         ], (error, update_user) =>
             error == null ?

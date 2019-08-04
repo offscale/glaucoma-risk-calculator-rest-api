@@ -4,7 +4,7 @@ import * as restify from 'restify';
 import { JsonSchema } from 'tv4';
 
 import { has_body } from '@offscale/restify-validators';
-import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { fmtError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
@@ -69,10 +69,14 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 .where('id = :id', crit)
                 .execute()
                 .then(result => {
-                    const fin = () => {
-                        res.json(result);
-                        return next()
-                    };
+                    const fin = () =>
+                        Survey_r
+                            .findOneOrFail(crit)
+                            .then(survey => {
+                                res.json(survey);
+                                return next();
+                            })
+                            .catch(e => next(fmtError(e)));
                     email == null ? fin()
                         : writeFile(emails_txt, `${JSON.stringify({ email })}\n`, { flag: 'a' },
                         e => {

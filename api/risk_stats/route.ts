@@ -19,7 +19,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const RiskStats_r = req.getOrm().typeorm!.connection.getRepository(RiskStats);
 
-            const q: Promise<RiskStats | undefined> =
+            const q: Promise<RiskStats> =
                 req.params.createdAt === 'latest' ?
                     RiskStats_r
                         .findOneOrFail(void 0,
@@ -36,8 +36,6 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 
             q
                 .then(risk_stats => {
-                    if (risk_stats == null)
-                        return next(new NotFoundError('RiskStats'));
                     res.json(risk_stats);
                     return next();
                 })
