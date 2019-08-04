@@ -68,15 +68,17 @@ describe('User::routes', () => {
 
     describe('/api/user', () => {
         it('POST should create user', async () =>
-            await sdk.register(mocks[0])
+            mocks[0] = (await sdk.register(mocks[0])).body
         );
 
         it('POST should fail to register user twice', async () => {
             const user_mock = mocks[1];
             try {
-                await auth_sdk.login(user_mock);
+                mocks[1] = (await auth_sdk.login(user_mock)).body;
             } catch (e) {
-                expect(exceptionToErrorResponse(e).code).to.eql('NotFoundError');
+                const err = exceptionToErrorResponse(e);
+                expect(err.code).to.eql('TypeOrmError');
+                expect(err.error_message.startsWith('Could not find any entity of type "User"')).to.be.true;
                 await sdk.register(user_mock);
             }
 
@@ -96,7 +98,7 @@ describe('User::routes', () => {
         it('GET should retrieve user', async () => {
             const user_mock = mocks[2];
             const access_token = await auth_sdk.register_login(user_mock);
-            await sdk.read(access_token, user_mock);
+            mocks[2] = (await sdk.read(access_token, user_mock)).body;
         });
 
         it('PUT should update user', async () => {
@@ -105,7 +107,7 @@ describe('User::routes', () => {
             const access_token = response.header['x-access-token'];
             user = response.body;
             response = await sdk.update(access_token, void 0, { title: 'Sir', createdAt: user.createdAt });
-            await sdk.read(access_token, response.body);
+            mocks[3] = (await sdk.read(access_token, response.body)).body;
         });
 
         it('GET /users should get all users', done =>
@@ -122,13 +124,13 @@ describe('User::routes', () => {
         it('DELETE should unregister user', async () => {
             const user_mock = mocks[10];
             try {
-                await sdk.register(user_mock);
+                mocks[10] = (await sdk.register(user_mock)).body;
             } catch (e) {
                 if (exceptionToErrorResponse(e).error !== 'E_UNIQUE')
                     throw e;
             }
-            const res = await auth_sdk.login(user_mock);
-            const access_token: AccessTokenType = res.body['access_token'];
+            const login_res = await auth_sdk.login(user_mock);
+            const access_token: AccessTokenType = login_res.body['access_token'];
             await sdk.unregister({ access_token });
             try {
                 await AccessToken
@@ -142,7 +144,9 @@ describe('User::routes', () => {
             try {
                 await auth_sdk.login(user_mock);
             } catch (e) {
-                if (exceptionToErrorResponse(e).error_message !== 'User not found')
+                const err = exceptionToErrorResponse(e);
+                if (err.error_message !== 'User not found'
+                    && !err.error_message.startsWith('Could not find any entity of type "User"'))
                     throw e;
             }
         });

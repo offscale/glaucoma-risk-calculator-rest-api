@@ -123,7 +123,7 @@ export class TemplateTestSDK {
                         expect(res.body).to.be.an('object');
                         Object
                             .keys(updated_template)
-                            .filter(attr => ['createdAt', 'updatedAt'].indexOf(attr) === -1)
+                            .filter(attr => ['createdAt', 'updatedAt', 'id'].indexOf(attr) === -1)
                             .map(attr => expect(updated_template[attr]).to.be.equal(res.body[attr]));
                         expect(removeNullProperties(res.body)).to.be.jsonSchema(template_schema);
                     } catch (e) {

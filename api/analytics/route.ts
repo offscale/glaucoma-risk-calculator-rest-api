@@ -14,18 +14,19 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
 
-            const repo = req.getOrm().typeorm!.connection
+            const RiskRes_r = req.getOrm().typeorm!.connection
                 .getRepository(RiskRes);
 
-            const q: Promise<RiskRes | undefined> = req.params.id === 'latest'
-                ? repo
-                    .createQueryBuilder('risk_res')
-                    .addOrderBy('risk_res.createdAt', 'DESC')
-                    .getOne()
-                : repo.findOneOrFail(req.params.id);
+            const q: Promise<RiskRes> = req.params.id === 'latest'
+                ? RiskRes_r
+                    .findOneOrFail(void 0, {
+                        order: {
+                            createdAt: 'DESC'
+                        }
+                    })
+                : RiskRes_r.findOneOrFail(req.params.id);
             q
-                .then((risk_res?: RiskRes) => {
-                    if (risk_res == null) return next(new NotFoundError('RiskRes'));
+                .then((risk_res: RiskRes) => {
                     res.json(risk_res);
                     return next();
                 })

@@ -67,21 +67,19 @@ describe('User::admin::routes', () => {
      */
 
     describe('ADMIN /api/user/:email', () => {
-        before('register_all', async () => {
-            console.info('b4::mocks:', mocks, ';');
-            mocks = (await register_all(auth_sdk, mocks));
-            console.info('l8::mocks:', mocks, ';');
-        });
+        before('register_all', async () =>
+            mocks = (await register_all(auth_sdk, mocks))
+        );
         after(async () => await unregister_all(auth_sdk, mocks));
 
         it('GET should retrieve other user', async () =>
-            await sdk.read(mocks[0].access_token!, mocks[1])
+            mocks[1] = (await sdk.read(mocks[0].access_token!, mocks[1])).body
         );
 
         it('PUT should update other user', async () => {
-            console.info('mocks[2]', mocks[2]);
             const response = await sdk.update(
-                mocks[2].access_token!, void 0, { title: 'Sir', createdAt: mocks[2].createdAt }
+                mocks[2].access_token!, void 0,
+                { title: 'Sir', createdAt: mocks[2].createdAt, email: mocks[2].email }
             );
             await sdk.read(mocks[3].access_token!, response.body);
         });
@@ -91,15 +89,17 @@ describe('User::admin::routes', () => {
         );
 
         it('DELETE should unregister other user', async () => {
-            const user = mocks[5];
+            let user = mocks[5];
             try {
-                await sdk.register(user);
+                user = mocks[5] = (await sdk.register(user)).body;
             } catch (e) {
-                if (exceptionToErrorResponse(e).code !== 'E_UNIQUE')
+                const err = exceptionToErrorResponse(e);
+                if (err.code !== 'E_UNIQUE' && err.error_message.indexOf('Could not find any entity') === -1)
                     throw e;
             }
-            const res = await auth_sdk.login(user);
-            const access_token: AccessTokenType = res!.body['access_token'];
+            const login_res = await auth_sdk.login(user);
+            const access_token: AccessTokenType = login_res!.body['access_token'];
+            mocks[5] = login_res.body;
             await sdk.unregister({ access_token });
 
             try {
@@ -114,7 +114,8 @@ describe('User::admin::routes', () => {
             try {
                 await auth_sdk.login(user);
             } catch (e) {
-                if (exceptionToErrorResponse(e).error_message !== 'User not found')
+                const err = exceptionToErrorResponse(e);
+                if (err.code !== 'E_UNIQUE' && err.error_message.indexOf('Could not find any entity') === -1)
                     throw e;
             }
         });

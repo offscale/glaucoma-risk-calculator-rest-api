@@ -20,7 +20,6 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             req.getOrm().typeorm!.connection.getRepository(Contact)
                 .findOneOrFail({ owner: req['user_id'], email: req.params.email })
                 .then(contact => {
-                    if (contact == null) return next(new NotFoundError('Contact'));
                     res.json(contact);
                     return next();
                 })
@@ -41,10 +40,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             waterfall([
                 cb => Contact_r
                     .findOneOrFail({ owner: req.user_id, email: req.params.email })
-                    .then(contact => {
-                        if (contact == null) return cb(new NotFoundError('Contact'));
-                        return cb(void 0, contact);
-                    })
+                    .then(contact => cb(void 0, contact))
                     .catch(cb),
                 (contact: Contact, cb) =>
                     Contact_r
@@ -55,7 +51,6 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                         .catch(cb)
             ], (error, contact?: Contact) => {
                 if (error != null) return next(fmtError(error));
-                else if (contact == null) return next(new NotFoundError('Contact'));
                 res.json(contact);
                 return next();
             });

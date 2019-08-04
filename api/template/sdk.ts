@@ -10,12 +10,12 @@ export const readManyTemplates = (req: restify.Request & IOrmReq,
     const Template_r = req.getOrm().typeorm!.connection.getRepository(Template);
     Template_r
         .query(`
-    SELECT DISTINCT ON (kind) *
-    FROM template_tbl
-    ORDER BY kind, "createdAt" DESC;`)
-        .then((templates: {command: string, rowCount: number, oid: null, rows: Template[]}) => {
+            SELECT DISTINCT ON (kind) *
+            FROM template_tbl
+            ORDER BY kind, "createdAt" DESC;`)
+        .then((templates: Template[]) => {
             if (templates == null) return cb(new NotFoundError('Template'));
-            return cb(void 0, { templates: templates.rows });
+            return cb(void 0, { templates });
         })
         .catch(cb);
 };

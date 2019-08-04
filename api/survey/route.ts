@@ -21,16 +21,15 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
-            const q: Promise<Survey | undefined> = req.params.createdAt === 'latest'
-                ? Survey_r
-                    .createQueryBuilder('survey')
-                    .addOrderBy('survey.createdAt', 'DESC')
-                    .getOne()
-                : Survey_r.findOneOrFail({ createdAt: req.params.createdAt });
+            const q: Promise<Survey> = req.params.createdAt === 'latest' ?
+                Survey_r.findOneOrFail(void 0, {
+                    order: {
+                        createdAt: 'DESC'
+                    }
+                }) : Survey_r.findOneOrFail({ createdAt: req.params.createdAt });
 
             q
-                .then((survey?: Survey) => {
-                    if (survey == null) return next(new NotFoundError('Survey'));
+                .then((survey: Survey) => {
                     res.json(survey);
                     return next();
                 })
@@ -47,7 +46,7 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
 
             const crit = Object.freeze({ id: req.params.id });
 
-            const email = (() => {
+            const email: string | null = (() => {
                 if (req.body.hasOwnProperty('email')) {
                     const thisEmail = req.body.email;
                     delete req.body.email;
@@ -57,21 +56,30 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 }
             })();
 
+            const survey = new Survey();
+            Object
+                .keys(req.body)
+                .filter(k => k !== 'updatedAt')
+                .forEach(k => survey[k] = req.body[k]);
+
             Survey_r
                 .createQueryBuilder()
                 .update(Survey)
-                .set(req.body)
+                .set(survey)
                 .where('id = :id', crit)
                 .execute()
-                .then(result =>
-                    writeFile(emails_txt, `${JSON.stringify({ email })}\n`, { flag: 'a' },
+                .then(result => {
+                    const fin = () => {
+                        res.json(result);
+                        return next()
+                    };
+                    email == null ? fin()
+                        : writeFile(emails_txt, `${JSON.stringify({ email })}\n`, { flag: 'a' },
                         e => {
                             if (e == null) return next(fmtError(e));
-                            res.json(result);
-                            return next();
-                        }
-                    )
-                )
+                            return fin();
+                        });
+                })
                 .catch(error => next(fmtError(error)));
         }
     );

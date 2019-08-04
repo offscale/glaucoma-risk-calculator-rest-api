@@ -2,7 +2,7 @@ import * as restify from 'restify';
 import { JsonSchema } from 'tv4';
 
 import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
-import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { fmtError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
@@ -19,20 +19,23 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
             const Template_r = req.getOrm().typeorm!.connection.getRepository(Template);
 
-            const q: Promise<Template | undefined> = req.params.createdAt === 'latest'
+            const q: Promise<Template> = req.params.createdAt === 'latest'
                 ? Template_r
-                    .createQueryBuilder('template')
-                    .addOrderBy('template.createdAt', 'DESC')
-                    .where(req.params.kind == null ? {} : { kind: req.params.kind })
-                    .getOne()
+                    .findOneOrFail(
+                        req.params.kind == null ? {} : { kind: req.params.kind },
+                        {
+                            order: {
+                                createdAt: 'DESC'
+                            }
+                        }
+                    )
                 : Template_r.findOneOrFail(Object.freeze(Object.assign(
                     { kind: req.params.kind },
                     req.params.id == null ? { createdAt: req.params.createdAt } : { id: req.params.id }
                 )));
 
             q
-                .then((template?: Template) => {
-                    if (template == null) return next(new NotFoundError('Template'));
+                .then((template: Template) => {
                     res.json(template);
                     return next();
                 })
@@ -57,22 +60,20 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
                 ));
                 req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
 
-                let template = await Template_r.findOneOrFail(crit);
+                const template = new Template();
+                Object
+                    .keys(req.body)
+                    .filter(k => k !== 'updatedAt')
+                    .forEach(k => template[k] = req.body[k]);
 
-                const t = await Template_r
+                await Template_r
                     .createQueryBuilder()
-                    .update(template)
-                    .set(req.body)
+                    .update(Template)
+                    .set(template)
                     .where(crit)
                     .execute();
 
-                template = await Template_r.findOneOrFail(crit);
-
-                Object.keys(req.body).forEach(k => template[k] = req.body[k]);
-
-                const result = await Template_r.save(template);
-
-                res.json(result);
+                res.json(await Template_r.findOneOrFail(template));
                 return next();
             } catch (error) {
                 return next(fmtError(error));

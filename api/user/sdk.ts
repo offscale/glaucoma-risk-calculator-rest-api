@@ -100,11 +100,8 @@ export const post = (req: UserBodyReq,
 export const get = (req: UserBodyUserReq): Promise<User> => new Promise<User>((resolve, reject) =>
     req.getOrm().typeorm!.connection
         .getRepository(User)
-        .findOne({ email: req.user_id })
-        .then((user: User | undefined) =>
-            user == null ? reject(new NotFoundError('User'))
-                : resolve(user)
-        )
+        .findOneOrFail({ email: req.user_id })
+        .then((user: User) => resolve(user))
         .catch(reject)
 );
 
@@ -141,7 +138,7 @@ export const update = (req: UserBodyUserReq): Promise<User | User[]> => new Prom
                     .catch(cb),
             cb =>
                 req.getOrm().typeorm!.connection.getRepository(User)
-                    .findOne({ email: req.user_id })
+                    .findOneOrFail({ email: req.user_id })
                     .then((user: User | undefined) => cb(void 0, user))
                     .catch(cb)
         ], (error, update_user) =>
@@ -160,14 +157,17 @@ export const destroy = (req: IOrmReq & {body?: User, user_id: string}): Promise<
                     AccessToken
                         .get(req.getOrm().redis!.connection)
                         .logout({ user_id: req.user_id }, cb),
-                cb =>
+                cb => {
+                    const user = new User();
+                    user.email = req.user_id;
                     req.getOrm().typeorm!.connection
                         .getRepository(User)
-                        .remove({ email: req.user_id } as any)
+                        .remove(user)
                         .then(() => cb(void 0))
                         .catch(cb)
+                }
             ], error =>
                 error == null ? resolve(204)
-                    : reject(fmtError(error) as restify_errors.RestError)
+                    : reject(fmtError(error))
         );
     });

@@ -22,14 +22,11 @@ export const login = (app: restify.Server, namespace: string = ''): void => {
             waterfall([
                 cb => req.getOrm().typeorm!.connection
                     .getRepository(User)
-                    .findOne({
+                    .findOneOrFail({
                         select: ['password', 'email', 'roles'],
                         where: { email: req.body.email }
                     })
-                    .then((user: User | undefined) => {
-                        if (user == null) return cb(new NotFoundError('User'));
-                        return cb(void 0, user);
-                    })
+                    .then((user: User) => cb(void 0, user))
                     .catch(cb),
                 (user: User, cb) =>
                     argon2

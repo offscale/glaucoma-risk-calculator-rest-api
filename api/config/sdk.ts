@@ -3,8 +3,9 @@ import { waterfall } from 'async';
 
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
-import { Config } from './models';
+
 import { removePropsFromObj } from '../../utils';
+import { Config } from './models';
 
 
 export const getConfig = (req: restify.Request & IOrmReq): Promise<Config> =>
@@ -15,10 +16,7 @@ export const getConfig = (req: restify.Request & IOrmReq): Promise<Config> =>
                     createdAt: 'DESC'
                 }
             })
-            .then(config => {
-                if (config == null) return reject(new NotFoundError('Config'));
-                return resolve((config) as Config);
-            })
+            .then(config => resolve(config))
             .catch(reject)
     );
 
@@ -33,21 +31,19 @@ export const upsertConfig = (req: restify.Request & IOrmReq): Promise<Config> =>
                     createdAt: 'DESC'
                 }
             })
-                .then(config => {
-                    if (config == null)
-                        return cb(new NotFoundError('Config'));
-                    return cb(void 0, config[0]);
-                })
+                .then(config => cb(void 0, config))
                 .catch(cb),
-            (config, cb) =>
+            (config, cb) => {
+                const new_config = Object.assign({}, config, req.body);
                 Config_r
-                    .update(config, Object.assign({}, config, req.body))
+                    .update(config, new_config)
                     .then(config => {
                             if (config == null)
                                 return cb(new NotFoundError('Config'));
-                            return cb(void 0, config);
+                            return cb(void 0, Object.assign(new_config, config));
                         }
                     )
+            }
         ], (error: any, results?: Config[]) => {
             if (error != null) {
                 if (error instanceof NotFoundError) {

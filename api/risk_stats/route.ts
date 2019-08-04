@@ -20,18 +20,19 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const RiskStats_r = req.getOrm().typeorm!.connection.getRepository(RiskStats);
 
             const q: Promise<RiskStats | undefined> =
-                RiskStats_r
-                    .findOneOrFail(req.params.createdAt === 'latest' ?
-                        {
-                            order: {
-                                createdAt: 'DESC'
-                            }
-                        }
-                        : (isISODateString(req.params.createdAt) ?
-                                { createdAt: req.params.createdAt }
-                                :/* id */req.params.createdAt
-                        )
-                    );
+                req.params.createdAt === 'latest' ?
+                    RiskStats_r
+                        .findOneOrFail(void 0,
+                            {
+                                order: {
+                                    createdAt: 'DESC'
+                                }
+                            }) :
+                    RiskStats_r
+                        .findOneOrFail(isISODateString(req.params.createdAt) ?
+                            { createdAt: req.params.createdAt }
+                            :/* id */req.params.createdAt
+                        );
 
             q
                 .then(risk_stats => {
@@ -54,10 +55,13 @@ export const update = (app: restify.Server, namespace: string = ''): void => {
             req.body = Object.freeze({ risk_json: req.body.risk_json });
             const crit = { createdAt: req.params.createdAt };
 
+            const risk_stats = new RiskStats();
+            Object.keys(req.body).forEach(k => risk_stats[k] = req.body[k]);
+
             RiskStats_r
                 .createQueryBuilder()
                 .update()
-                .set(req.body)
+                .set(risk_stats)
                 .where(Object.freeze(crit))
                 .execute()
                 .then(result => {
