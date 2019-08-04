@@ -68,27 +68,6 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                         };
 
                         series({
-                                unregister: callb => authSdk.unregister_all([default_admin])
-                                    .then(() => callb())
-                                    .catch((err: Error & {status: number}) =>
-                                        callb(err != null && err.status !== 404 ? err : void 0,
-                                            'removed default user; next: adding')),
-                                prepare_user: callb => register_user({
-                                    getOrm: () => config._orms_out.orms_out,
-                                    orms_out: config._orms_out.orms_out,
-                                    body: default_admin
-                                } as IOrmReq & {body?: User} as UserBodyReq, UserConfig.default())
-                                    .then(() => callb(void 0))
-                                    .catch(callb),
-                                register_user: callb => {
-                                    UserConfig.instance = {
-                                        public_registration:
-                                            process.env.PUBLIC_REGISTRATION == null ?
-                                                true : !!process.env.PUBLIC_REGISTRATION,
-                                        initial_accounts: [default_admin]
-                                    };
-                                    return callb(void 0);
-                                },
                                 load_risk_json: callb => {
                                     const risk_stats = new RiskStats();
                                     risk_stats.risk_json = require('glaucoma-risk-calculator-engine/risk.json');
@@ -102,26 +81,44 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                                     const Template_r = config._orms_out.orms_out.typeorm!.connection
                                         .getRepository(Template);
 
-                                    Template_r.findOneOrFail({
-                                        order: {
-                                            createdAt: 'DESC'
-                                        }
-                                    }).then(template => {
-                                        if (template == null || 'twitter'.indexOf(template.contents) > -1)
-                                            return insert_default_template(callb);
-                                        return callb(void 0);
-                                    });
-
-                                    const insert_default_template = (cb: typeof callb) => {
-                                        const template = new Template();
-                                        template.contents = 'SET IN MAIN';
-                                        config._orms_out.orms_out.typeorm!.connection.getRepository(RiskStats)
-                                            .manager
-                                            .save(template)
-                                            .then(() => cb(void 0))
-                                            .catch(cb)
-                                    };
+                                    Template_r
+                                        .query(`
+                                          INSERT INTO template_tbl (kind, contents)
+                                          SELECT knd, tpl
+                                          FROM (
+                                            VALUES
+                                             ('email_subject', 'Glaucoma Risk Calculator'),
+                                             ('email', 'Be glaucoma aware, assess your own risk. Here’s yours:'),
+                                             ('twitter', 'Be glaucoma aware, assess your own risk. Here’s what I got:'),
+                                             ('facebook', 'Be glaucoma aware, assess your own risk. Here’s what I got:')
+                                          ) v(knd,tpl)
+                                          LEFT OUTER JOIN template_tbl ON kind=knd
+                                          WHERE kind IS NULL;
+                                        `)
+                                        .then(() => callb(void 0))
+                                        .catch(callb);
                                 },
+                                unregister: callb => authSdk.logout_unregister(default_admin)
+                                    .then(() => callb())
+                                    .catch((err: Error & {status: number}) =>
+                                        callb(err != null && err.status !== 404 ? err : void 0,
+                                            'removed default user; next: adding')),
+                                set_user_config: callb => {
+                                    UserConfig.instance = {
+                                        public_registration:
+                                            process.env.PUBLIC_REGISTRATION == null ?
+                                                true : !!process.env.PUBLIC_REGISTRATION,
+                                        initial_accounts: [default_admin]
+                                    };
+                                    return callb(void 0);
+                                },
+                                register_user: callb => register_user({
+                                    getOrm: () => config._orms_out.orms_out,
+                                    orms_out: config._orms_out.orms_out,
+                                    body: default_admin
+                                } as IOrmReq & {body?: User} as UserBodyReq, UserConfig.default())
+                                    .then(() => callb(void 0))
+                                    .catch(callb),
                                 serve: callb =>
                                     typeof logger.info(`${app.name} listening from ${app.url}`) === 'undefined'
                                     && callb(void 0)
