@@ -12,7 +12,8 @@
   "scripts": {
     "build_start": "rm -rf node_modules; [ -f typings.json ] && typings i; npm i && tsc && node main.js | bunyan",
     "start": "node main.js | bunyan",
-    "test": "mocha test --recursive"
+    "test": "nyc mocha --require ts-node/register --require source-map-support/register --recursive",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "dependencies": {
     "@offscale/custom-restify-errors": "^0.0.5",

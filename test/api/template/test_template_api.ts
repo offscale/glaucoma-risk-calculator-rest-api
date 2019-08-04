@@ -71,14 +71,14 @@ describe('Template::routes', () => {
     after('closeApp', done => closeApp(sdk!.app)(done));
 
     describe('/api/template', () => {
-        const template = template_mocks.successes[0];
+        let template = template_mocks.successes[0];
 
         after('deleteTemplate', async () =>
             await sdk.destroy(access_token, template)
         );
 
         it('POST should create Template', async () =>
-            await sdk.create(access_token, template)
+            template = (await sdk.create(access_token, template)).body
         );
     });
 

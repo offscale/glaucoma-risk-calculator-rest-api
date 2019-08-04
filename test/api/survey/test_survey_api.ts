@@ -79,11 +79,11 @@ describe('Survey::routes', () => {
         });
 
         it('POST should create Survey', async () =>
-            await sdk.create(access_token, surveys[0])
+            surveys[0] = (await sdk.create(access_token, surveys[0])).body
         );
 
         it('GET should retrieve all Survey', async () => {
-            await sdk.create(access_token, surveys[1]);
+            surveys[1] = (await sdk.create(access_token, surveys[1])).body;
             await sdk.getAll(access_token)
         });
     });

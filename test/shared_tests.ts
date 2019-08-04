@@ -1,4 +1,4 @@
-import { forEachOfLimit, map } from 'async';
+import { forEachOfLimit, times } from 'async';
 import { Response } from 'supertest';
 import { Server } from 'restify';
 
@@ -40,12 +40,13 @@ export async function unregister_all(auth_sdk: AuthTestSDK, mocks: User[]) {
 
 export const register_all = (auth_sdk: AuthTestSDK, mocks: User[]): Promise<User[]> =>
     new Promise((resolve, reject) =>
-        map(Object.keys(mocks).map(i => +i),
-            (idx: number, cb) => // Modify inplace
+        times(mocks.length, (idx, cb) =>
                 auth_sdk
-                    .register_login(mocks[idx])
-                    .then(access_token => {
-                        mocks[idx].access_token = access_token;
+                    .register_login_full_user_response(mocks[idx])
+                    .then(user => {
+                        const unhashed_password = mocks[idx].password;
+                        mocks[idx] = user;
+                        mocks[idx].password = unhashed_password;
                         return cb(void 0, mocks[idx] as User);
                     })
                     .catch(reject),

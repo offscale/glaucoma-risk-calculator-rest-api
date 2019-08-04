@@ -10,6 +10,7 @@ import { Template } from '../../../api/template/models';
 import * as template_route from '../../../api/template/route';
 import * as template_routes from '../../../api/template/routes';
 import { removeNullProperties } from '../../../utils';
+import { isISODateString } from '../../../api/template/utils';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -56,9 +57,12 @@ export class TemplateTestSDK {
     public get(access_token: AccessTokenType, template: Template, by_id: boolean = true): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
-                return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
+                return reject(new TypeError('`access_token` argument to `get` must be defined'));
             else if (template == null)
-                return reject(new TypeError('`template` argument to `getAll` must be defined'));
+                return reject(new TypeError('`template` argument to `get` must be defined'));
+            else if (template.createdAt == null
+                || !(template.createdAt instanceof Date) && !isISODateString(template.createdAt))
+                return reject(new TypeError('`template.createdAt` argument to `get` must be defined'));
 
             expect(template_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -95,6 +99,9 @@ export class TemplateTestSDK {
                 return reject(new TypeError('`initial_template` argument to `update` must be defined'));
             else if (updated_template == null)
                 return reject(new TypeError('`updated_template` argument to `update` must be defined'));
+            else if (initial_template.createdAt == null
+                || !(initial_template.createdAt instanceof Date) && !isISODateString(initial_template.createdAt))
+                return reject(new TypeError('`initial_template.createdAt` argument to `update` must be defined'));
             else if (initial_template.createdAt !== updated_template.createdAt)
                 return reject(new ReferenceError(
                     `${initial_template.createdAt.toISOString()} 
@@ -133,6 +140,9 @@ export class TemplateTestSDK {
                 return reject(new TypeError('`access_token` argument to `destroy` must be defined'));
             else if (template == null)
                 return reject(new TypeError('`template` argument to `destroy` must be defined'));
+            else if (template.createdAt == null
+                || !(template.createdAt instanceof Date) && !isISODateString(template.createdAt))
+                return reject(new TypeError('`template.createdAt` argument to `get` must be defined'));
 
             expect(template_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)

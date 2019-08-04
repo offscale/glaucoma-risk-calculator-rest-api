@@ -10,6 +10,7 @@ import { Contact } from '../../../api/contact/models';
 import * as contact_routes from '../../../api/contact/routes';
 import * as contact_route from '../../../api/contact/route';
 import { removeNullProperties } from '../../../utils';
+import { isISODateString } from '../../../api/template/utils';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -86,8 +87,13 @@ export class ContactTestSDK {
 
     public retrieve(access_token: AccessTokenType, contact: Contact): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
-            else if (contact == null) return reject(new TypeError('`contact` argument to `getAll` must be defined'));
+            if (access_token == null) return reject(new TypeError('`access_token` argument to `retrieve` must be defined'));
+            else if (contact == null) return reject(new TypeError('`contact` argument to `retrieve` must be defined'));
+            else if (contact.email == null)
+                return reject(new TypeError('`contact.email` argument to `retrieve` must be defined'));
+            else if (contact.createdAt == null
+                || !(contact.createdAt instanceof Date) && !isISODateString(contact.createdAt))
+                return reject(new TypeError('`contact.createdAt` argument to `retrieve` must be defined'));
 
             expect(contact_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -122,6 +128,12 @@ export class ContactTestSDK {
                 return reject(
                     new ReferenceError(`${initial_contact.owner} != ${updated_contact.owner} (\`owner\`s between contacts)`)
                 );
+            else if (initial_contact.email == null)
+                return reject(new TypeError('`initial_contact.email` argument to `update` must be defined'));
+            else if (initial_contact.createdAt == null
+                || !(initial_contact.createdAt instanceof Date) && !isISODateString(initial_contact.createdAt))
+                return reject(new TypeError('`contact.createdAt` argument to `update` must be defined'));
+
 
             expect(contact_route.update).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -154,6 +166,9 @@ export class ContactTestSDK {
                 return reject(new TypeError('`access_token` argument to `destroy` must be defined'));
             else if (contact == null)
                 return reject(new TypeError('`contact` argument to `destroy` must be defined'));
+            else if (contact.createdAt == null
+                || !(contact.createdAt instanceof Date) && !isISODateString(contact.createdAt))
+                return reject(new TypeError('`contact.createdAt` argument to `retrieve` must be defined'));
 
             expect(contact_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)

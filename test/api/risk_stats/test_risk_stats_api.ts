@@ -71,22 +71,14 @@ describe('RiskStats::routes', () => {
 
     describe('routes', () => {
         describe('/api/risk_stats', () => {
-            const risk_stats = risk_stats_mocks.successes[0];
-
-            before('deleteRiskStats', async () => {
-                try {
-                    await sdk.destroy(access_token, risk_stats)
-                } catch (e) {
-                    //
-                }
-            });
+            let risk_stats = risk_stats_mocks.successes[0];
 
             after('deleteRiskStats', async () =>
                 await sdk.destroy(access_token, risk_stats)
             );
 
             it('POST should create RiskStats', async () =>
-                await sdk.create(access_token, risk_stats)
+                risk_stats = (await sdk.create(access_token, risk_stats)).body
             );
         });
 

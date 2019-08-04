@@ -10,6 +10,7 @@ import { RiskRes } from '../../../api/risk_res/models';
 import * as risk_res_route from '../../../api/risk_res/route';
 import * as risk_res_routes from '../../../api/risk_res/routes';
 import { removeNullProperties } from '../../../utils';
+import { isISODateString } from '../../../api/template/utils';
 
 const chaiJsonSchema = require('chai-json-schema');
 
@@ -53,10 +54,11 @@ export class RiskResTestSDK {
 
     public get(access_token: AccessTokenType, risk_res: RiskRes): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
-            else if (risk_res == null) return reject(new TypeError('`risk_res` argument to `getAll` must be defined'));
-            /*else if (isNaN(risk_res.createdAt as any))
-             return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt.toISOString()}`);*/
+            if (access_token == null) return reject(new TypeError('`access_token` argument to `get` must be defined'));
+            else if (risk_res == null) return reject(new TypeError('`risk_res` argument to `get` must be defined'));
+            else if (risk_res.createdAt == null
+                || !(risk_res.createdAt instanceof Date) && !isISODateString(risk_res.createdAt))
+                return reject(new TypeError('`risk_res.createdAt` argument to `get` must be defined'));
 
             expect(risk_res_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -82,8 +84,6 @@ export class RiskResTestSDK {
     public getAll(access_token: AccessTokenType): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null) return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
-            /*else if (isNaN(risk_res.createdAt as any))
-             return callback(new TypeError(`\`risk_res.createdAt\` must not be NaN in \`getAll\` ${risk_res.createdAt.toISOString()}`);*/
 
             expect(risk_res_routes.getAll).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -116,6 +116,9 @@ export class RiskResTestSDK {
                 return reject(new TypeError('`access_token` argument to `destroy` must be defined'));
             else if (risk_res == null)
                 return reject(new TypeError('`risk_res` argument to `destroy` must be defined'));
+            else if (risk_res.createdAt == null
+                || !(risk_res.createdAt instanceof Date) && !isISODateString(risk_res.createdAt))
+                return reject(new TypeError('`risk_res.createdAt` argument to `getAll` must be defined'));
 
             expect(risk_res_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)

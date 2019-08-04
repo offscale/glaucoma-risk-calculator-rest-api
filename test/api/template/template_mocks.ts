@@ -9,11 +9,9 @@ export const template_mocks: {successes: Template[], failures: Array<{}>} = {
     ],
     successes: Array(10)
         .fill(void 0)
-        .map((_, idx) => {
+        .map(() => {
             const template = new Template();
 
-            template.id = idx;
-            template.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
             template.contents = faker.lorem.lines(1);
             template.kind = 'email';
 

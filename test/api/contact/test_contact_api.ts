@@ -70,37 +70,23 @@ describe('Contact::routes', () => {
     describe('/api/contact', () => {
         const contacts = mocks.successes.slice(0, 2);
 
-        before('deleteContact', async () => {
-            for (const contact of contacts)
-                await sdk.destroy(access_token, contact);
-        });
-
         after('deleteContact', async () => {
             for (const contact of contacts)
                 await sdk.destroy(access_token, contact);
         });
 
         it('POST should create contact', async () =>
-            await sdk.create(access_token, contacts[0])
+            contacts[0] = (await sdk.create(access_token, contacts[0])).body
         );
 
         it('GET should get all contacts', async () => {
-            await sdk.create(access_token, contacts[1]);
+            contacts[1] = (await sdk.create(access_token, contacts[1])).body;
             await sdk.getAll(access_token, contacts[1]);
         });
     });
 
     describe('/api/contact/:email', () => {
         let contact: Contact = mocks.successes[2];
-
-        after('deleteContact', async () => {
-            try {
-                await sdk.destroy(access_token, contact);
-            } catch (e) {
-                //
-            }
-        });
-
 
         before('createContact', async () =>
             contact = (await sdk.create(access_token, mocks.successes[2])).body
@@ -121,8 +107,7 @@ describe('Contact::routes', () => {
         );
 
         it('DELETE should destroy contact', async () => {
-            const _contact = mocks.successes[3];
-            await sdk.create(access_token, _contact);
+            const _contact = (await sdk.create(access_token, mocks.successes[3])).body;
             await sdk.destroy(access_token, _contact)
         });
     });

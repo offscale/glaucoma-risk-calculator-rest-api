@@ -10,6 +10,7 @@ import { RiskStats } from '../../../api/risk_stats/models';
 import * as risk_stats_route from '../../../api/risk_stats/route';
 import * as risk_stats_routes from '../../../api/risk_stats/routes';
 import { removeNullProperties } from '../../../utils';
+import { isISODateString } from '../../../api/template/utils';
 
 // tslint:disable-next-line:no-var-requires
 const chaiJsonSchema = require('chai-json-schema');
@@ -57,9 +58,13 @@ export class RiskStatsTestSDK {
     public get(access_token: AccessTokenType, risk_stats: RiskStats): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null)
-                return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
+                return reject(new TypeError('`access_token` argument to `get` must be defined'));
             else if (risk_stats == null)
-                return reject(new TypeError('`risk_stats` argument to `getAll` must be defined'));
+                return reject(new TypeError('`risk_stats` argument to `get` must be defined'));
+            else if (risk_stats.createdAt == null
+                || !(risk_stats.createdAt instanceof Date) && !isISODateString(risk_stats.createdAt))
+                return reject(new TypeError('`risk_stats.createdAt` argument to `get` must be defined'));
+
 
             expect(risk_stats_route.read).to.be.an.instanceOf(Function);
             supertest(this.app)
@@ -134,6 +139,9 @@ export class RiskStatsTestSDK {
                 return reject(new TypeError('`access_token` argument to `destroy` must be defined'));
             else if (risk_stats == null)
                 return reject(new TypeError('`risk_stats` argument to `destroy` must be defined'));
+            else if (risk_stats.createdAt == null
+                || !(risk_stats.createdAt instanceof Date) && !isISODateString(risk_stats.createdAt))
+                return reject(new TypeError('`risk_stats.createdAt` argument to `destroy` must be defined'));
 
             expect(risk_stats_route.del).to.be.an.instanceOf(Function);
             supertest(this.app)

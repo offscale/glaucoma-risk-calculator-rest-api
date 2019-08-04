@@ -82,7 +82,7 @@ describe('RiskRes::routes', () => {
         );
 
         it('GET should retrieve all RiskRes', async () => {
-            await sdk.create(access_token, risk_res[1]);
+            risk_res[1] = (await sdk.create(access_token, risk_res[1])).body;
             await sdk.getAll(access_token);
         });
     });
@@ -91,7 +91,7 @@ describe('RiskRes::routes', () => {
         let risk_res = risk_res_mocks.successes[2];
 
         before('createRiskRes', async () =>
-            risk_res_mocks.successes[2] = (await sdk.create(access_token, risk_res)).body
+            risk_res = (await sdk.create(access_token, risk_res)).body
         );
 
         after('deleteRiskRes', async () =>

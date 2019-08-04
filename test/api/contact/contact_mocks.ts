@@ -18,7 +18,6 @@ export const contact_mocks: (users: User[]) => {successes: Contact[], failures: 
             .map(() => {
                 const contact = new Contact();
 
-                contact.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
                 contact.owner = faker.random.arrayElement(users).email;
                 contact.email = faker.random.arrayElement(users).email;
 

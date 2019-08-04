@@ -100,11 +100,12 @@ describe('User::routes', () => {
         });
 
         it('PUT should update user', async () => {
-            const user_mock = mocks[3];
-            let resp = await sdk.register(user_mock);
-            const access_token = resp.header['x-access-token'];
-            resp = await sdk.update(access_token, void 0, { title: 'Sir' });
-            await sdk.read(access_token, resp.body);
+            let user = mocks[3];
+            let response = await sdk.register(user);
+            const access_token = response.header['x-access-token'];
+            user = response.body;
+            response = await sdk.update(access_token, void 0, { title: 'Sir', createdAt: user.createdAt });
+            await sdk.read(access_token, response.body);
         });
 
         it('GET /users should get all users', done =>

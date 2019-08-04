@@ -8,13 +8,11 @@ export const config_mocks: {successes: Config[], failures: Array<{}>} = {
     ],
     successes: Array(10)
         .fill(void 0)
-        .map((_, idx) => {
+        .map(() => {
             const config = new Config();
 
-            config.id = idx;
             config.client_id = Math.random().toString(15);
             config.tenant_id = Math.random().toString(15);
-            config.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
 
             return config;
         })

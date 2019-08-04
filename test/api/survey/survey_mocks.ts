@@ -9,11 +9,9 @@ export const survey_mocks: {successes: Survey[], failures: Array<{}>} = {
     ],
     successes: Array(10)
         .fill(void 0)
-        .map((_, idx) => {
+        .map(() => {
             const survey = new Survey();
 
-            survey.id = idx;
-            survey.createdAt = faker.date.past(Math.floor(Math.random() * 10) + 1);
             survey.perceived_risk = parseFloat('88.3');
             survey.recruiter = 'curious';
             survey.eye_test_frequency = 'annual';

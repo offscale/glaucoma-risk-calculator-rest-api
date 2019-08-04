@@ -9,5 +9,6 @@ export declare class AuthTestSDK {
     login(user: User): Promise<Response>;
     unregister_all(users: User[]): Promise<Response[]>;
     register_login(user?: User, num?: number): Promise<AccessTokenType>;
+    register_login_full_user_response(user?: User, num?: number): Promise<User>;
     logout_unregister(user: User, num?: number): Promise<unknown>;
 }
