@@ -7,15 +7,15 @@ export class Template {
     @PrimaryGeneratedColumn()
     public id!: number;
 
-    @CreateDateColumn({ name: 'createdAt', precision: 3 })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp with time zone', precision: 3 })
     public createdAt!: Date;
 
-    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp with time zone', precision: 3 })
     public updatedAt!: Date;
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public contents!: string;
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public kind!: string;
 }

@@ -8,34 +8,34 @@ export class Config {
     @PrimaryGeneratedColumn()
     public id!: number;
 
-    @CreateDateColumn({ name: 'createdAt', precision: 3 })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp with time zone', precision: 3 })
     public createdAt!: Date;
 
-    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp with time zone', precision: 3 })
     public updatedAt!: Date;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public client_id!: string;
 
     // TODO: Move this somewhere encrypted
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public client_secret?: string;
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public tenant_id!: string;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public access_token?: AccessTokenType;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public refresh_token?: string;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public state?: string;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public session_state?: string;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public from?: string;
 }

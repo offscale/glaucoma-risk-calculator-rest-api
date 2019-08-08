@@ -1,4 +1,4 @@
-import { parallel } from 'async';
+import { asyncify, parallel } from 'async';
 import * as restify from 'restify';
 import { JsonSchema } from 'tv4';
 import * as simpleStatistics from 'simple-statistics';
@@ -12,6 +12,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { RiskRes } from '../risk_res/models';
 import { Survey } from '../survey/models';
 import { removePropsFromObj } from '../../utils';
+import { Between, FindConditions, Repository } from 'typeorm';
 // const jStat = require('jstat');
 
 /* tslint:disable:no-var-requires */
@@ -108,7 +109,7 @@ export const funcs: DeepReadonlyArray<[string, string]> = Object.freeze([
 ]);
 
 const get_func = (func: DeepReadonlyArray<string>, input: {}): ((a: {}) => number) => {
-    console.info('func:', func, ';\ninput:', input, ';');
+    // console.info('func:', func, ';\ninput:', input, ';');
     return (b: {}): number => 5;
 };
 /*
@@ -126,6 +127,123 @@ const f = (fs: typeof funcs, obj: {}): {} =>
         .reduce((a, b) => Object.assign(a, b), {});
 
 export const getAll = (app: restify.Server, namespace: string = ''): void => {
+    type TAgg = {[key: string]: number};
+
+    const row_wise_stats = (RiskRes_r: Repository<RiskRes>,
+                            criteria?: FindConditions<Survey | RiskRes>): Promise<{}> => new Promise<{}>(
+        (resolve, reject) =>
+            RiskRes_r
+                .find(criteria == null ? void 0 : criteria)
+                .then(risk_res => {
+                    if (risk_res == null || !risk_res.length) return reject(new NotFoundError('RiskRes'));
+
+                    /*
+                    console.info('tukeyhsd:',
+                        jStat.tukeyhsd([[1, 2], [3, 4, 5], [6], [7, 8]]), ';');
+
+                     */
+
+                    return resolve(Object.assign(
+                        // Object.keys(risk_res[0])
+                        {
+                            column: ['age', 'client_risk']
+                                .map(col => ({
+                                        [col]: Object.assign(
+                                            f(funcs, risk_res.map(rr =>
+                                                /*console.info('col:', col, ';\nrr:', rr, ';') as any ||*/
+                                                rr[col]
+                                            ))
+                                        )
+                                        , // Object.assign(f(funcs, risk_res.map(rr => rr[col])),
+                                        // { ttest: ttest(risk_res.map(rr => rr[col]), void 0) }
+                                    })
+                                )
+                                .reduce((prev, curr) => Object.assign(prev, curr), {})
+                        },
+                        { risk_res }
+                        )
+                    );
+                })
+                .catch(reject));
+
+    const ethnicity_agg = (RiskRes_r: Repository<RiskRes>,
+                           where_condition: string,
+                           valuesToEscape: string[]): Promise<TAgg> => new Promise<TAgg>(
+        (resolve, reject) =>
+            RiskRes_r
+                .query(
+                    `SELECT ethnicity, COUNT(*)
+                        FROM risk_res_tbl
+                        ${where_condition} 
+                        GROUP BY ethnicity ;`,
+                    valuesToEscape)
+                .then(r => {
+                    if (r == null) return reject(new NotFoundError('RiskRes'));
+                    return resolve(r.map(resolveIntFromObject));
+                })
+                .catch(reject)
+    );
+
+    const step_2 = (RiskRes_r: Repository<RiskRes>,
+                    where_condition: string,
+                    valuesToEscape: string[]): Promise<TAgg> => new Promise<TAgg>(
+        (resolve, reject) => RiskRes_r.query(`
+                    SELECT
+                        COUNT(*),
+                        COUNT(client_risk) filter (WHERE client_risk <= 25) AS least,
+                        COUNT(client_risk) filter (WHERE client_risk > 25 AND client_risk <= 50) AS average,
+                        COUNT(client_risk) filter (WHERE client_risk > 50 AND client_risk <= 75) AS high,
+                        COUNT(client_risk) filter (WHERE client_risk > 75) AS greatest
+                    FROM risk_res_tbl
+                    ${where_condition} ;`, valuesToEscape)
+            .then(r => {
+                if (r == null || !r.length) return reject(new NotFoundError('RiskRes'));
+                return resolve(resolveIntFromObject(r[0]));
+            })
+            .catch(reject)
+    );
+
+    const survey_tbl = (Survey_r: Repository<Survey>,
+                        criteria?: FindConditions<Survey>): Promise<Survey> => new Promise<Survey>(
+        (resolve, reject) => console.info('survey_tbl::criteria:', criteria, ';') as any || (
+            criteria == null ?
+                Survey_r.findOneOrFail({
+                    order: {
+                        createdAt: 'DESC'
+                    }
+                })
+                : Survey_r
+                    .findOneOrFail(criteria)
+        )
+            .then(resolve)
+            .catch(reject));
+
+    const joint = (Survey_r: Repository<Survey>,
+                   where_condition: string,
+                   valuesToEscape: string[]): Promise<Array<Survey | RiskRes>> => new Promise<Array<Survey | RiskRes>>(
+        (resolve, reject) =>
+            Survey_r.query(`
+                    SELECT r.age, r.client_risk, r.gender, r.ethnicity, r.other_info, r.email, r.sibling, r.parent,
+                           r.study, r.myopia, r.diabetes, r.id AS risk_id, r."createdAt", r."updatedAt",
+                           s.perceived_risk, s.recruiter, s.eye_test_frequency, s.glasses_use, s.behaviour_change,
+                           s.risk_res_id, s.id, s."createdAt", s."updatedAt"
+                    FROM survey_tbl s
+                    FULL JOIN risk_res_tbl r
+                    ON s.risk_res_id = r.id
+                    ${where_condition.replace(/ "/g, ' s."')} ;`, valuesToEscape)
+                .then(r => {
+                    if (r == null || !r.length) return reject(new NotFoundError('RiskRes'));
+                    const joint = r.map(resolveIntFromObject);
+                    console.info('getAll::joint::ttest:', JSON.stringify(ttest([1, 2, 2, 2, 4], {
+                        mu: 2,
+                        alpha: 0.05,
+                        alternative: 'not equal'
+                    })), ';');
+                    return resolve(joint);
+                })
+                .catch(reject)
+    );
+
     app.get(namespace,//has_auth('admin'),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
@@ -133,121 +251,50 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
             const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
             const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
-            const [condition, where_condition, valuesToEscape] = ((): [string, string, string[]] => {
+            const [
+                condition,
+                where_condition,
+                valuesToEscape,
+                criteria
+            ] = ((): [string, string, string[], FindConditions<Survey | RiskRes> | undefined] => {
                 if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
-                    return ['', '', []];
+                    return ['', '', [], void 0];
 
                 req.query.startDatetime = decodeURIComponent(req.query.startDatetime);
                 req.query.endDatetime = decodeURIComponent(req.query.endDatetime);
 
-                const r: [string, string, string[]] = [
-                    `"createdAt" >= $1 AND "updatedAt" <= $2`, '', [req.query.startDatetime, req.query.endDatetime]
+                const r: [string, string, string[], FindConditions<Survey | RiskRes> | undefined] = [
+                    `"createdAt" BETWEEN $1 AND $2`,
+                    '',
+                    [req.query.startDatetime, req.query.endDatetime],
+                    {
+                        createdAt: Between(req.query.startDatetime, req.query.endDatetime)
+                    }
                 ];
                 r[1] = `WHERE ${r[0]}`;
+
                 return r;
             })();
 
             parallel({
-                row_wise_stats:
-                    callb => RiskRes_r
-                        .find(condition ? {
-                            where: {
-                                createdAt: { '>=': req.query.startDatetime },
-                                updatedAt: { '<=': req.query.endDatetime }
-                            }
-                        } : {})
-                        .then(risk_res => {
-                            if (risk_res == null || !risk_res.length) return next(new NotFoundError('RiskRes'));
-
-                            /*
-                            console.info('tukeyhsd:',
-                                jStat.tukeyhsd([[1, 2], [3, 4, 5], [6], [7, 8]]), ';');
-
-                             */
-
-                            return callb(void 0,
-                                Object.assign(
-                                    // Object.keys(risk_res[0])
-                                    {
-                                        column: ['age', 'client_risk']
-                                            .map(col => ({
-                                                    [col]: Object.assign(
-                                                        f(funcs, risk_res.map(rr => console.info('col:', col, ';\nrr:', rr, ';') as any || rr[col]))
-                                                    )
-                                                    , // Object.assign(f(funcs, risk_res.map(rr => rr[col])),
-                                                    // { ttest: ttest(risk_res.map(rr => rr[col]), void 0) }
-                                                })
-                                            )
-                                            .reduce((prev, curr) => Object.assign(prev, curr), {})
-                                    },
-                                    { risk_res }
-                                )
-                            );
-                        })
-                        .catch(callb),
-                ethnicity_agg:
-                    callb => RiskRes_r
-                        .query(
-                            `SELECT ethnicity, COUNT(*)
-                        FROM risk_res_tbl0
-                        ${where_condition} 
-                        GROUP BY ethnicity ;`,
-                            valuesToEscape)
-                        .then(r => {
-                            if (r == null) return next(new NotFoundError('RiskRes'));
-                            return callb(
-                                void 0, r.rows.map(el => ({ name: el.ethnicity, value: parseInt(el.count) }))
-                            );
-                        })
+                row_wise_stats: asyncify(callb =>
+                    row_wise_stats(RiskRes_r, criteria)),
+                ethnicity_agg: callb =>
+                    ethnicity_agg(RiskRes_r, where_condition, valuesToEscape)
+                        .then(aggs => callb(void 0, aggs))
                         .catch(callb),
                 step_2: callb =>
-                    RiskRes_r.query(`
-                    SELECT
-                        COUNT(*),
-                        COUNT(client_risk) filter (WHERE client_risk <= 25) AS least,
-                        COUNT(client_risk) filter (WHERE client_risk > 25 AND client_risk <= 50) AS average,
-                        COUNT(client_risk) filter (WHERE client_risk > 50 AND client_risk <= 75) AS high,
-                        COUNT(client_risk) filter (WHERE client_risk > 75) AS greatest
-                    FROM risk_res_tbl0
-                    ${where_condition} ;`, valuesToEscape)
-                        .then(r => {
-                            if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
-                            return callb(void 0, r.rows.map(resolveIntFromObject)[0]);
-                        })
+                    step_2(RiskRes_r, where_condition, valuesToEscape)
+                        .then(s2 => callb(void 0, s2))
                         .catch(callb),
-                survey_tbl: callb => Survey_r
-                    .find(condition ? {
-                        where: {
-                            createdAt: { '>=': req.query.startDatetime },
-                            updatedAt: { '<=': req.query.endDatetime }
-                        }
-                    } : {})
-                    .then(survey => {
-                        if (survey == null || !survey.length) return next(new NotFoundError('Survey'));
-
-                        return callb(void 0, survey);
-                    })
-                    .catch(callb),
-                joint: callb => Survey_r.query(`
-                    SELECT r.age, r.client_risk, r.gender, r.ethnicity, r.other_info, r.email, r.sibling, r.parent,
-                           r.study, r.myopia, r.diabetes, r.id AS risk_id, r."createdAt", r."updatedAt",
-                           s.perceived_risk, s.recruiter, s.eye_test_frequency, s.glasses_use, s.behaviour_change,
-                           s.risk_res_id, s.id, s."createdAt", s."updatedAt"
-                    FROM survey_tbl s
-                    FULL JOIN risk_res_tbl0 r
-                    ON s.risk_res_id = r.id
-                    ${where_condition.replace(/ "/g, ' s."')} ;`, valuesToEscape)
-                    .then(r => {
-                        if (r.rows == null || !r.rows.length) return next(new NotFoundError('RiskRes'));
-                        const joint = r.rows.map(resolveIntFromObject);
-                        console.info('ttest:', ttest([1, 2, 2, 2, 4], {
-                            mu: 2,
-                            alpha: 0.05,
-                            alternative: 'not equal'
-                        }), ';');
-                        return callb(void 0, joint);
-                    })
-                    .catch(callb)
+                survey_tbl: callb =>
+                    survey_tbl(Survey_r)
+                        .then(survey => callb(void 0, survey))
+                        .catch(callb),
+                joint: callb =>
+                    joint(Survey_r, where_condition, valuesToEscape)
+                        .then(aggs => callb(void 0, aggs))
+                        .catch(callb)
             }, (err, results) => {
                 if (err != null) return next(fmtError(err));
                 res.json(results);

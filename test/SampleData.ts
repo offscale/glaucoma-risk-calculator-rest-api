@@ -116,10 +116,14 @@ export class SampleData implements ISampleData {
         };
 
         this.register(user, (err, res) => {
-            if (err == null) return setToken && callback(void 0, this.token);
+            if (err == null) {
+                setToken(res);
+                return callback(void 0, this.token);
+            }
             return this.login(user, (e, _r) => {
                 if (e != null) return callback(e);
-                return setToken && callback(void 0, this.token);
+                setToken(res);
+                return callback(void 0, this.token);
             });
         });
     }

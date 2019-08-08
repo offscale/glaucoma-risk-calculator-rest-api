@@ -22,7 +22,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const q: Promise<RiskStats> =
                 req.params.createdAt === 'latest' ?
                     RiskStats_r
-                        .findOneOrFail(void 0,
+                        .findOneOrFail(
                             {
                                 order: {
                                     createdAt: 'DESC'

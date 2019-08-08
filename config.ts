@@ -27,12 +27,12 @@ export const typeorm_config: PostgresConnectionOptions = Object.freeze(
             .map((kv: [string, any]) => ({ [kv[0] === 'user' ? 'username' : kv[0]]: kv[1] }))
             .reduce((a, b) => Object.assign(a, b), {}),
         {
-            type: 'postgres',
+            type: 'postgres' as PostgresConnectionOptions['type'],
             autoSchemaSync: true,
             synchronize: true,
             logging: false
         }
-    ) as PostgresConnectionOptions
+    )
 );
 
 // import * as sequelize from 'sequelize';

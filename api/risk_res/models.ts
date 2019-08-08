@@ -7,28 +7,28 @@ export class RiskRes {
     @PrimaryGeneratedColumn()
     public id!: number;
 
-    @CreateDateColumn({ name: 'createdAt', precision: 3 })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp with time zone', precision: 3 })
     public createdAt!: Date;
 
-    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp with time zone', precision: 3 })
     public updatedAt!: Date;
 
     @Column('integer', { nullable: false })
     public age!: number;
 
-    @Column('float', { nullable: false })
+    @Column('real', { nullable: false })
     public client_risk!: number;
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public gender!: string;
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public ethnicity!: string;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public other_info?: string;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public email?: string;
 
     @Column('boolean', { nullable: true })
@@ -37,7 +37,7 @@ export class RiskRes {
     @Column('boolean', { nullable: true })
     public parent?: boolean; // parent has glaucoma?
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public study!: string;
 
     @Column('boolean', { nullable: true })

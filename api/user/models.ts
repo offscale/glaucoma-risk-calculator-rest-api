@@ -15,19 +15,19 @@ export const hash_password = (password: string, callback): void => {
 export class User {
     public static _omit: string[] = ['password'];
 
-    @PrimaryColumn({ type: 'varchar', name: 'email', nullable: false, primary: true, unique: true })
+    @PrimaryColumn({ type: 'text', name: 'email', nullable: false, primary: true, unique: true })
     public email!: string;
 
-    @Column('varchar', { nullable: false, select: false })
+    @Column('text', { nullable: false, select: false })
     public password!: string;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public title?: string;
 
-    @CreateDateColumn({ name: 'createdAt', precision: 3 })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp with time zone', precision: 3 })
     public createdAt?: Date;
 
-    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp with time zone', precision: 3 })
     public updatedAt?: Date;
 
     @Column('simple-array', { nullable: false })

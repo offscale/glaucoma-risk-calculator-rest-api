@@ -1,5 +1,5 @@
 import * as restify from 'restify';
-import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { fmtError } from '@offscale/custom-restify-errors';
 import { JsonSchema } from 'tv4';
 
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
@@ -19,7 +19,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
 
             const q: Promise<RiskRes> = req.params.id === 'latest'
                 ? RiskRes_r
-                    .findOneOrFail(void 0, {
+                    .findOneOrFail({
                         order: {
                             createdAt: 'DESC'
                         }

@@ -22,7 +22,7 @@ export const read = (app: restify.Server, namespace: string = ''): void => {
             const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
             const q: Promise<Survey> = req.params.createdAt === 'latest' ?
-                Survey_r.findOneOrFail(void 0, {
+                Survey_r.findOneOrFail({
                     order: {
                         createdAt: 'DESC'
                     }

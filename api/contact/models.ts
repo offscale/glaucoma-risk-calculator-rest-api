@@ -4,18 +4,18 @@ import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } fro
 export class Contact {
     public static _omit: string[] = [];
 
-    @CreateDateColumn({ name: 'createdAt', precision: 3 })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp with time zone', precision: 3 })
     public createdAt!: Date;
 
-    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp with time zone', precision: 3 })
     public updatedAt!: Date;
 
-    @PrimaryColumn({ type: 'varchar', name: 'email', nullable: false, primary: true, unique: true })
+    @PrimaryColumn({ type: 'text', name: 'email', nullable: false, primary: true, unique: true })
     public email!: string;
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     public name?: string;
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public owner!: string;
 }

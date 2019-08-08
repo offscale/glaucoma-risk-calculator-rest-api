@@ -7,25 +7,25 @@ export class Survey {
     @PrimaryGeneratedColumn()
     public id!: number;
 
-    @CreateDateColumn({ name: 'createdAt', precision: 3 })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp with time zone', precision: 3 })
     public createdAt!: Date;
 
-    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp with time zone', precision: 3 })
     public updatedAt!: Date;
 
-    @Column('float', { nullable: true })
+    @Column('real', { nullable: true })
     public perceived_risk?: number;
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public recruiter!: 'family' | 'recommended' | 'curious';
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public eye_test_frequency!: 'annual' | 'biennial' | 'quinquennial' | 'rarely' | 'never';
 
-    @Column('varchar', { nullable: false })
+    @Column('text', { nullable: false })
     public glasses_use!: 'shortsighted' | 'longsighted' | 'astigmatism' | 'other' | 'none';
 
-    @Column('varchar', { nullable: true })
+    @Column('text', { nullable: true })
     behaviour_change?: 'as_recommended' | 'less_likely' | 'no_change';
 
     @Column('integer', { nullable: true })
