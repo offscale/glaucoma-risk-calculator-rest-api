@@ -172,7 +172,7 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
         (resolve, reject) =>
             RiskRes_r
                 .query(
-                    `SELECT ethnicity, COUNT(*)
+                    `SELECT ethnicity as name, COUNT(*) as value
                         FROM risk_res_tbl
                         ${where_condition} 
                         GROUP BY ethnicity ;`,
