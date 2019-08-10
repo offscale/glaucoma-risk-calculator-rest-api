@@ -2,11 +2,12 @@ import * as restify from 'restify';
 
 import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
 
+import { removePropsFromObj } from '../../utils';
 import { has_auth } from '../auth/middleware';
 import { User } from './models';
 import * as user_sdk from './sdk';
 import { UserBodyReq, UserBodyUserReq, UserConfig } from './sdk';
-import { removePropsFromObj } from '../../utils';
+
 
 export const create = (app: restify.Server, namespace: string = '') =>
     app.post(namespace, has_body, mk_valid_body_mw(user_sdk.schema),

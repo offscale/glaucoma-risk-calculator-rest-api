@@ -40,7 +40,7 @@ export const login = (app: restify.Server, namespace: string = ''): void => {
                             User._omit.forEach(attr => delete user[attr]);
                             return cb(err, user);
                         })
-            ], (error: any, user: User | undefined) => {
+            ], (error, user: User | undefined) => {
                 if (error != null) return next(fmtError(error));
                 else if (user == null) return next(new NotFoundError('User'));
                 res.setHeader('X-Access-Token', user.access_token!);
