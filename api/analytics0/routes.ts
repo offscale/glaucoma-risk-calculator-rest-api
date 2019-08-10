@@ -244,7 +244,7 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                 .catch(reject)
     );
 
-    app.get(namespace,//has_auth('admin'),
+    app.get(namespace, // has_auth('admin'),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
 
@@ -297,7 +297,14 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                         .catch(callb)
             }, (err, results) => {
                 if (err != null) return next(fmtError(err));
-                res.json(results);
+                const response = Buffer.from(JSON.stringify(results), 'utf8');
+                res.charSet('utf-8');
+                res.contentType = 'json';
+                res.set({
+                    'content-type': 'application/json'
+                });
+                res.header('Content-Length', response.byteLength);
+                res.sendRaw(response);
                 return next();
             });
         }
