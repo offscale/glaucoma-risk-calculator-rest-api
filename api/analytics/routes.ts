@@ -1,18 +1,20 @@
-import { asyncify, parallel } from 'async';
+import { parallel } from 'async';
 import * as restify from 'restify';
 import { JsonSchema } from 'tv4';
 import * as simpleStatistics from 'simple-statistics';
 import { ttest } from 'ttest/hypothesis';
+import { Between, FindConditions, Repository } from 'typeorm';
 
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 import { resolveIntFromObject } from '@offscale/nodejs-utils'
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
+import { removePropsFromObj } from '../../utils';
 import { RiskRes } from '../risk_res/models';
 import { Survey } from '../survey/models';
-import { removePropsFromObj } from '../../utils';
-import { Between, FindConditions, Repository } from 'typeorm';
+import { StudentT } from 'ttest/hypothesis/one-data-set';
+
 // const jStat = require('jstat');
 
 /* tslint:disable:no-var-requires */
@@ -41,7 +43,7 @@ export const create = (app: restify.Server, namespace: string = ''): void => {
     );
 };
 
-// const funcs = Object.freeze(['average', 'mean', 'max', 'min']);
+// const statistical_functions = Object.freeze(['average', 'mean', 'max', 'min']);
 
 type DeepReadonly<T> =
     T extends any[] ? DeepReadonlyArray<T[number]> :
@@ -54,7 +56,7 @@ type DeepReadonlyObject<T> = T &
     { readonly [P in keyof T]: DeepReadonly<T[P]> };
 /*
 // Can't automatically acquire with `func.name`
-export const funcs: DeepReadonlyArray<[string, (ns: number[]|{}) => number[]][]> = Object.freeze([
+export const statistical_functions: DeepReadonlyArray<[string, (ns: number[]|{}) => number[]][]> = Object.freeze([
     ['min', simpleStatistics.min],
     ['max', simpleStatistics.max],
     ['sum', simpleStatistics.sum],
@@ -83,7 +85,7 @@ const f = (fs: DeepReadonlyArray<[string, (ns: number[]|{}) => number[]][]>, obj
         .reduce((a, b) => Object.assign(a, b), {});
 */
 
-export const funcs: DeepReadonlyArray<[string, string]> = Object.freeze([
+export const statistical_functions: DeepReadonlyArray<[string, string]> = Object.freeze([
     ['min', 'simpleStatistics'],
     ['max', 'simpleStatistics'],
     ['sum', 'simpleStatistics'],
@@ -108,9 +110,19 @@ export const funcs: DeepReadonlyArray<[string, string]> = Object.freeze([
     // ['tukeyhsd', 'jStat']
 ]);
 
-const get_func = (func: DeepReadonlyArray<string>, input: {}): ((a: {}) => number) => {
-    // console.info('func:', func, ';\ninput:', input, ';');
-    return (b: {}): number => 5;
+const get_func = (func: DeepReadonlyArray<string>, input: {}): ((a: {}) => number | StudentT) => {
+    if (func[1] === 'simpleStatistics')
+        return (_: {}) => simpleStatistics[func[0]](input);
+    else if (func[1] === 'ttest')
+        return (_: {}) => ttest([1, 2, 2, 2, 4], {
+            mu: 2,
+            alpha: 0.05,
+            alternative: 'not equal'
+        });
+    else {
+        console.error('`get_func` could not recognise the func:', func, '\twith input:', input, ';');
+        return (_: {}): number => -1;
+    }
 };
 /*
     console.info('func', func, ';\n', (
@@ -118,7 +130,7 @@ const get_func = (func: DeepReadonlyArray<string>, input: {}): ((a: {}) => numbe
     : ;
 */
 
-const f = (fs: typeof funcs, obj: {}): {} =>
+const f = (fs: typeof statistical_functions, obj: {}): {} =>
     fs
         .map(func => ({
             [func[0]]:
@@ -149,12 +161,12 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                             column: ['age', 'client_risk']
                                 .map(col => ({
                                         [col]: Object.assign(
-                                            f(funcs, risk_res.map(rr =>
+                                            f(statistical_functions, risk_res.map(rr =>
                                                 /*console.info('col:', col, ';\nrr:', rr, ';') as any ||*/
                                                 rr[col]
                                             ))
                                         )
-                                        , // Object.assign(f(funcs, risk_res.map(rr => rr[col])),
+                                        , // Object.assign(f(statistical_functions, risk_res.map(rr => rr[col])),
                                         // { ttest: ttest(risk_res.map(rr => rr[col]), void 0) }
                                     })
                                 )
@@ -203,6 +215,47 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
             .catch(reject)
     );
 
+    const step_2_multi_series = (RiskRes_r: Repository<RiskRes>,
+                                 where_condition: string,
+                                 valuesToEscape: string[]): Promise<IMultiSeries[]> => new Promise<IMultiSeries[]>(
+        (resolve, reject) => {
+            const tiers = ['lowest', 'low', 'med', 'high'];
+
+            RiskRes_r.query(`
+                    SELECT *, (array${JSON.stringify(tiers)
+                .replace(/ /g, '')
+                .replace(/"/g, '\'')
+            })[ceil(greatest(client_risk,1) / 25.0)] AS mag
+                    FROM risk_res_tbl
+                    ${where_condition} 
+                    ORDER BY client_risk;`, valuesToEscape)
+                .then(r => {
+                    if (r == null || !r.length) return reject(new NotFoundError('RiskRes'));
+                    const multi_series_m = new Map<string, {name: string, value: number}[]>();
+                    tiers.forEach(tier => multi_series_m.set(tier, []));
+                    r
+                        .map(resolveIntFromObject)
+                        .forEach((row: RiskRes & {mag: string}) => {
+                            multi_series_m
+                                .get(row.mag)!
+                                .push({
+                                    name: row.id.toString(),
+                                    value: row.client_risk as number
+                                })
+                        });
+                    const multi_series: IMultiSeries[] = [];
+                    tiers.forEach(tier =>
+                        multi_series.push({
+                            name: tier,
+                            series: multi_series_m.get(tier)!
+                        })
+                    );
+
+                    return resolve(multi_series);
+                })
+                .catch(reject);
+        });
+
     const survey_tbl = (Survey_r: Repository<Survey>,
                         criteria?: FindConditions<Survey>): Promise<Survey> => new Promise<Survey>(
         (resolve, reject) => console.info('survey_tbl::criteria:', criteria, ';') as any || (
@@ -244,41 +297,41 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                 .catch(reject)
     );
 
-    app.get(namespace, // has_auth('admin'),
+    const parse_request =
+        (req: restify.Request): [string, string, string[], FindConditions<Survey | RiskRes> | undefined] => {
+            if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
+                return ['', '', [], void 0];
+
+            req.query.startDatetime = decodeURIComponent(req.query.startDatetime);
+            req.query.endDatetime = decodeURIComponent(req.query.endDatetime);
+
+            const r: [string, string, string[], FindConditions<Survey | RiskRes> | undefined] = [
+                `"createdAt" BETWEEN $1 AND $2`,
+                '',
+                [req.query.startDatetime, req.query.endDatetime],
+                {
+                    createdAt: Between(req.query.startDatetime, req.query.endDatetime)
+                }
+            ];
+            r[1] = `WHERE ${r[0]}`;
+
+            return r;
+        };
+
+    app.get(`${namespace}0`, // has_auth('admin'),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
 
             const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
             const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
 
-            const [
-                condition,
-                where_condition,
-                valuesToEscape,
-                criteria
-            ] = ((): [string, string, string[], FindConditions<Survey | RiskRes> | undefined] => {
-                if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
-                    return ['', '', [], void 0];
-
-                req.query.startDatetime = decodeURIComponent(req.query.startDatetime);
-                req.query.endDatetime = decodeURIComponent(req.query.endDatetime);
-
-                const r: [string, string, string[], FindConditions<Survey | RiskRes> | undefined] = [
-                    `"createdAt" BETWEEN $1 AND $2`,
-                    '',
-                    [req.query.startDatetime, req.query.endDatetime],
-                    {
-                        createdAt: Between(req.query.startDatetime, req.query.endDatetime)
-                    }
-                ];
-                r[1] = `WHERE ${r[0]}`;
-
-                return r;
-            })();
+            const [condition, where_condition, valuesToEscape, criteria] = parse_request(req);
 
             parallel({
-                row_wise_stats: asyncify(callb =>
-                    row_wise_stats(RiskRes_r, criteria)),
+                row_wise_stats: callb =>
+                    row_wise_stats(RiskRes_r, criteria)
+                        .then(row_wise => callb(void 0, row_wise))
+                        .catch(callb),
                 ethnicity_agg: callb =>
                     ethnicity_agg(RiskRes_r, where_condition, valuesToEscape)
                         .then(aggs => callb(void 0, aggs))
@@ -309,4 +362,38 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
             });
         }
     );
+
+    app.get(`${namespace}1`, // has_auth('admin'),
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            const req = request as unknown as IOrmReq & restify.Request;
+
+            const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
+            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
+
+            const [condition, where_condition, valuesToEscape, criteria] = parse_request(req);
+
+            parallel({
+                step_2_multi_series: callb =>
+                    step_2_multi_series(RiskRes_r, where_condition, valuesToEscape)
+                        .then(s2_multi_series => callb(void 0, s2_multi_series))
+                        .catch(callb),
+            }, (err, results) => {
+                if (err != null) return next(fmtError(err));
+                const response = Buffer.from(JSON.stringify(results), 'utf8');
+                res.charSet('utf-8');
+                res.contentType = 'json';
+                res.set({
+                    'content-type': 'application/json'
+                });
+                res.header('Content-Length', response.byteLength);
+                res.sendRaw(response);
+                return next();
+            });
+        }
+    );
 };
+
+interface IMultiSeries {
+    name: string;
+    series: {name: string, value: number}[];
+}
