@@ -114,7 +114,7 @@ const get_func = (func: DeepReadonlyArray<string>, input: {}): ((a: {}) => numbe
     if (func[1] === 'simpleStatistics')
         return (_: {}) => simpleStatistics[func[0]](input);
     else if (func[1] === 'ttest')
-        return (_: {}) => ttest([1, 2, 2, 2, 4], {
+        return (_: {}) => ttest(input as any, {
             mu: 2,
             alpha: 0.05,
             alternative: 'not equal'
