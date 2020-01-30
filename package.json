@@ -4,7 +4,7 @@
   "description": "REST API backend written on Node.JS in TypeScript with restify and waterline.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/glaucoma/glaucoma-risk-calculator-rest-api.git"
+    "url": "https://github.com/offscale/glaucoma-risk-calculator-rest-api.git"
   },
   "license": "(Apache-2.0 OR MIT)",
   "author": "Samuel Marks @SamuelMarks",
