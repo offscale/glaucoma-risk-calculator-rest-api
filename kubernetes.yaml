@@ -14,7 +14,7 @@ spec:
         spec:
             containers:
                 -   name: glaucoma-risk-calculator-rest-api
-                    image: glaucoma/glaucoma-risk-calculator-rest-api
+                    image: offscale/glaucoma-risk-calculator-rest-api
                     resources:
                         requests:
                             cpu: 512m

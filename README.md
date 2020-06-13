@@ -2,9 +2,9 @@ glaucoma-risk-calculator REST API
 =================================
 
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://travis-ci.org/glaucoma/glaucoma-risk-calculator-rest-api.svg?branch=master)](https://travis-ci.org/glaucoma/glaucoma-risk-calculator-rest-api)
-[![Coverage Status](https://coveralls.io/repos/github/glaucoma/glaucoma-risk-calculator-rest-api/badge.svg)](https://coveralls.io/github/glaucoma/glaucoma-risk-calculator-rest-api)
-![David dependency status for latest release](https://david-dm.org/glaucoma/glaucoma-risk-calculator-rest-api.svg)
+[![Build Status](https://travis-ci.org/offscale/glaucoma-risk-calculator-rest-api.svg?branch=master)](https://travis-ci.org/offscale/glaucoma-risk-calculator-rest-api)
+[![Coverage Status](https://coveralls.io/repos/github/offscale/glaucoma-risk-calculator-rest-api/badge.svg)](https://coveralls.io/github/offscale/glaucoma-risk-calculator-rest-api)
+![David dependency status for latest release](https://david-dm.org/offscale/glaucoma-risk-calculator-rest-api.svg)
 
 REST API backend written on Node.JS in TypeScript with restify and waterline
 

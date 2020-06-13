@@ -25,7 +25,7 @@
     "argon2": "0.26.2",
     "async": "^3.2.0",
     "faker": "^4.1.0",
-    "glaucoma-risk-calculator-engine": "glaucoma/glaucoma-risk-calculator-engine-dist",
+    "glaucoma-risk-calculator-engine": "offscale/glaucoma-risk-calculator-engine-dist",
     "ioredis": "^4.17.3",
     "mathjs": "^7.0.1",
     "morgan": "^1.10.0",
