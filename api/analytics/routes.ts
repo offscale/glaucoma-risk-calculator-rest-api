@@ -322,8 +322,10 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
 
-            const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
-            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
+            const RiskRes_r = req.getOrm().typeorm!.connection
+                .getRepository<RiskRes>(RiskRes) as unknown as Repository<RiskRes>;
+            const Survey_r = req.getOrm().typeorm!.connection
+                .getRepository(Survey) as unknown as Repository<Survey>;
 
             const [condition, where_condition, valuesToEscape, criteria] = parse_request(req);
 
@@ -367,8 +369,8 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
 
-            const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes);
-            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey);
+            const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes) as unknown as Repository<RiskRes>;
+            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey) as unknown as Repository<Survey>;
 
             const [condition, where_condition, valuesToEscape, criteria] = parse_request(req);
 

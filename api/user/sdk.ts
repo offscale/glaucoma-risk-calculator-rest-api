@@ -80,7 +80,7 @@ export const post = (req: UserBodyReq,
                 AccessToken
                     .get(req.getOrm().redis!.connection)
                     .add(_user.email, User.rolesAsStr(_user.roles), 'access',
-                        (err: Error, access_token: AccessTokenType) =>
+                        (err: Error | null, access_token: AccessTokenType) =>
                             err != null ? cb(err) : cb(void 0, Object.assign(_user, { access_token }))
                     )
         ], (error: Error | null | undefined | restify_errors.RestError, _user: User | undefined) => {
@@ -100,8 +100,11 @@ export const post = (req: UserBodyReq,
 export const get = (req: UserBodyUserReq): Promise<User> => new Promise<User>((resolve, reject) =>
     req.getOrm().typeorm!.connection
         .getRepository(User)
-        .findOneOrFail({ email: req.user_id })
-        .then((user: User) => resolve(user))
+        .findOne({ email: req.user_id })
+        .then((user: User | undefined) =>
+            user == null ? reject(new NotFoundError('User'))
+                : resolve(user)
+        )
         .catch(reject)
 );
 
@@ -138,8 +141,8 @@ export const update = (req: UserBodyUserReq): Promise<User | User[]> => new Prom
                     .catch(cb),
             cb =>
                 req.getOrm().typeorm!.connection.getRepository(User)
-                    .findOneOrFail({ email: req.user_id })
-                    .then((user: User) => cb(void 0, user))
+                    .findOne({ email: req.user_id })
+                    .then((user: User | undefined) => cb(void 0, user))
                     .catch(cb)
         ], (error, update_user) =>
             error == null ?
@@ -157,17 +160,14 @@ export const destroy = (req: IOrmReq & {body?: User, user_id: string}): Promise<
                     AccessToken
                         .get(req.getOrm().redis!.connection)
                         .logout({ user_id: req.user_id }, cb),
-                cb => {
-                    const user = new User();
-                    user.email = req.user_id;
+                cb =>
                     req.getOrm().typeorm!.connection
                         .getRepository(User)
-                        .remove(user)
+                        .remove({ email: req.user_id } as any)
                         .then(() => cb(void 0))
                         .catch(cb)
-                }
             ], error =>
                 error == null ? resolve(204)
-                    : reject(fmtError(error))
+                    : reject(fmtError(error) as restify_errors.RestError)
         );
     });
