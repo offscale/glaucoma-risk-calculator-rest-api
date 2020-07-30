@@ -39,7 +39,7 @@ export class AccessToken {
 
     public logout(arg: LogoutArg, callback: (err?: Error | RestError) => void) {
         if (arg.user_id)
-            // TODO: Rewrite this in Lua [maybe?]
+        // TODO: Rewrite this in Lua [maybe?]
             this.redis.smembers(arg.user_id, (err: Error | null, access_tokens: string[]) => {
                 if (err != null) return callback(err);
                 (this['redis'] as any)

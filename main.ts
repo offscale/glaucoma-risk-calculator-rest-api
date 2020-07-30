@@ -1,5 +1,5 @@
 import { series, waterfall } from 'async';
-import Logger, { createLogger, FATAL } from 'bunyan';
+import Logger, { createLogger } from 'bunyan';
 import { default as restify, Server } from 'restify';
 
 import { get_models_routes, populateModelRoutes, raise } from '@offscale/nodejs-utils';
@@ -13,21 +13,17 @@ import { AuthTestSDK } from './test/api/auth/auth_test_sdk';
 import { AccessToken } from './api/auth/models';
 import { User } from './api/user/models';
 import { post as register_user, UserBodyReq, UserConfig } from './api/user/sdk';
+import { Template } from './api/template/models';
+import { RiskStats } from './api/risk_stats/models';
 import * as config from './config';
 import { getOrmMwConfig, getPrivateIPAddress } from './config';
-import { RiskStats } from './api/risk_stats/models';
-import { Template } from './api/template/models';
 
 /* tslint:disable:no-var-requires */
 export const package_ = Object.freeze(require('./package'));
 export const logger: Logger = createLogger({ name: 'main' });
 
-if (process.env.NODE_ENV === 'test') {
-    logger.level(FATAL + 1);
-}
-
 /* tslint:disable:no-unused-expression */
-process.env['NO_DEBUG'] || logger.info(Object.keys(process.env).sort().map(k => ({ [k]: process.env[k] })));
+//process.env['NO_DEBUG'] || logger.info(Object.keys(process.env).sort().map(k => ({ [k]: process.env[k] })));
 
 export const all_models_and_routes: Map<string, any> = populateModelRoutes(__dirname);
 export const all_models_and_routes_as_mr: IModelRoute = get_models_routes(all_models_and_routes);

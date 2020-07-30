@@ -1,4 +1,4 @@
-import { forEachOfLimit, times } from 'async';
+import { forEachOfLimit, map } from 'async';
 import { Response } from 'supertest';
 import { Server } from 'restify';
 
@@ -16,7 +16,7 @@ interface IResponse extends Response {
     readonly body: ReadableStream | null | any | {access_token: AccessTokenType};
 }
 
-export const create_and_auth_users = (user_mocks_subset: User[], auth_sdk: AuthTestSDK, done: MochaDone) => {
+export const create_and_auth_users = (user_mocks_subset: User[], auth_sdk: AuthTestSDK, done: Done) => {
     // TODO: Build bulk API endpoints so this can be done efficiently.
     forEachOfLimit(user_mocks_subset, 1, (user: User, idx: number | string, callback) =>
         auth_sdk.register_login(user)
@@ -40,13 +40,12 @@ export async function unregister_all(auth_sdk: AuthTestSDK, mocks: User[]) {
 
 export const register_all = (auth_sdk: AuthTestSDK, mocks: User[]): Promise<User[]> =>
     new Promise((resolve, reject) =>
-        times(mocks.length, (idx, cb) =>
+        map(Object.keys(mocks).map(i => +i),
+            (idx: number, cb) => // Modify inplace
                 auth_sdk
-                    .register_login_full_user_response(mocks[idx])
-                    .then(user => {
-                        const unhashed_password = mocks[idx].password;
-                        mocks[idx] = user;
-                        mocks[idx].password = unhashed_password;
+                    .register_login(mocks[idx])
+                    .then(access_token => {
+                        mocks[idx].access_token = access_token;
                         return cb(void 0, mocks[idx] as User);
                     })
                     .catch(reject),
@@ -59,6 +58,6 @@ export const tearDownConnections = (orms_out_or_done: Done | IOrmsOut, done?: Do
         : tearDownConns(orms_out_or_done as IOrmsOut, e => (done as Done)(e));
 
 export const closeApp = (app: Server) => (done: Done) =>
-    app.close(() => done(void 0));
+    app == null ? done(void 0) : app.close(() => done(void 0));
 
 // after('closeApp', done => (app as Server).close(() => done(void 0));

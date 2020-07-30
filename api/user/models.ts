@@ -15,29 +15,25 @@ export const hash_password = (password: string, callback): void => {
 export class User {
     public static _omit: string[] = ['password'];
 
-    @PrimaryColumn({ type: 'text', name: 'email', nullable: false, primary: true, unique: true })
+    @PrimaryColumn({ type: 'varchar', name: 'email', nullable: false, primary: true, unique: true })
     public email!: string;
-
-    @Column('text', { nullable: false, select: false })
+    @Column('varchar', { nullable: false, select: false })
     public password!: string;
-
-    @Column('text', { nullable: true })
+    @Column('varchar', { nullable: true })
     public title?: string;
-
-    @CreateDateColumn({ name: 'createdAt', type: 'timestamp with time zone', precision: 3 })
+    @CreateDateColumn({ name: 'createdAt', precision: 3 })
     public createdAt?: Date;
-
-    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp with time zone', precision: 3 })
+    @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
     public updatedAt?: Date;
+
+    public static rolesAsStr = (roles: string[]): string => roles && roles.length ?
+        roles.filter(role => role && role.length).join('::') : '';
 
     @Column('simple-array', { nullable: false })
     public roles!: string[];
 
     // Might get attached for tests or in middleware; NOT present in db
     public access_token?: AccessTokenType;
-
-    public static rolesAsStr = (roles: string[]): string => roles && roles.length ?
-        roles.filter(role => role && role.length).join('::') : '';
 
     @BeforeUpdate()
     @BeforeInsert()

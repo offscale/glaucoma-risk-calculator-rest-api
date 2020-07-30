@@ -2,6 +2,7 @@ import { waterfall } from 'async';
 import { createLogger } from 'bunyan';
 import * as path from 'path';
 import { basename } from 'path';
+
 import { Server } from 'restify';
 
 import { model_route_to_map } from '@offscale/nodejs-utils';
@@ -12,8 +13,8 @@ import { AccessToken } from '../../../api/auth/models';
 import { User } from '../../../api/user/models';
 import { _orms_out } from '../../../config';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
+import { tearDownConnections, unregister_all } from '../../shared_tests';
 import { user_mocks } from '../user/user_mocks';
-import { closeApp, tearDownConnections, unregister_all } from '../../shared_tests';
 import { AuthTestSDK } from './auth_test_sdk';
 
 const models_and_routes: IModelRoute = {
@@ -54,7 +55,7 @@ describe('Auth::routes', () => {
 
     after('deregister_all', async () => await unregister_all(sdk, mocks));
     after('tearDownConnections', tearDownConnections);
-    after('closeApp', done => closeApp(sdk!.app)(done));
+    //after('closeApp', done => closeApp(sdk!.app)(done));
 
     describe('/api/auth', () => {
         before(async () => await unregister_all(sdk, mocks));

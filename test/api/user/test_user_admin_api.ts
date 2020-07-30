@@ -1,4 +1,4 @@
-import { waterfall } from 'async';
+import { map, waterfall } from 'async';
 import { createLogger } from 'bunyan';
 import * as path from 'path';
 import { basename } from 'path';
@@ -12,7 +12,7 @@ import { _orms_out } from '../../../config';
 import { User } from '../../../api/user/models';
 import { AccessToken } from '../../../api/auth/models';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
-import { closeApp, register_all, tearDownConnections, unregister_all } from '../../shared_tests';
+import { closeApp, tearDownConnections, unregister_all } from '../../shared_tests';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { user_mocks } from './user_mocks';
 import { UserTestSDK } from './user_test_sdk';
@@ -24,7 +24,7 @@ const models_and_routes: IModelRoute = {
 
 process.env['NO_SAMPLE_DATA'] = 'true';
 
-let mocks: User[] = user_mocks.successes.slice(24, 36);
+const mocks: User[] = user_mocks.successes.slice(24, 36);
 const tapp_name = `test::${basename(__dirname)}`;
 const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
 const logger = createLogger({ name: tapp_name });
@@ -67,20 +67,23 @@ describe('User::admin::routes', () => {
      */
 
     describe('ADMIN /api/user/:email', () => {
-        before('register_all', async () =>
-            mocks = (await register_all(auth_sdk, mocks))
+        before('register_all', done => map(mocks, (user, cb) =>
+                sdk.register(user)
+                    .then(res => {
+                        user.access_token = res!.header['x-access-token'];
+                        return cb(void 0);
+                    })
+                    .catch(cb),
+            done)
         );
         after(async () => await unregister_all(auth_sdk, mocks));
 
         it('GET should retrieve other user', async () =>
-            mocks[1] = (await sdk.read(mocks[0].access_token!, mocks[1])).body
+            await sdk.read(mocks[0].access_token!, mocks[1])
         );
 
         it('PUT should update other user', async () => {
-            const response = await sdk.update(
-                mocks[2].access_token!, void 0,
-                { title: 'Sir', createdAt: mocks[2].createdAt, email: mocks[2].email }
-            );
+            const response = await sdk.update(mocks[2].access_token!, void 0, { title: 'Sir' });
             await sdk.read(mocks[3].access_token!, response.body);
         });
 
@@ -89,17 +92,15 @@ describe('User::admin::routes', () => {
         );
 
         it('DELETE should unregister other user', async () => {
-            let user = mocks[5];
+            const user = mocks[5];
             try {
-                user = mocks[5] = (await sdk.register(user)).body;
+                await sdk.register(user);
             } catch (e) {
-                const err = exceptionToErrorResponse(e);
-                if (err.code !== 'E_UNIQUE' && err.error_message.indexOf('Could not find any entity') === -1)
+                if (exceptionToErrorResponse(e).code !== 'E_UNIQUE')
                     throw e;
             }
-            const login_res = await auth_sdk.login(user);
-            const access_token: AccessTokenType = login_res!.body['access_token'];
-            mocks[5] = login_res.body;
+            const res = await auth_sdk.login(user);
+            const access_token: AccessTokenType = res!.body['access_token'];
             await sdk.unregister({ access_token });
 
             try {
@@ -114,8 +115,7 @@ describe('User::admin::routes', () => {
             try {
                 await auth_sdk.login(user);
             } catch (e) {
-                const err = exceptionToErrorResponse(e);
-                if (err.code !== 'E_UNIQUE' && err.error_message.indexOf('Could not find any entity') === -1)
+                if (exceptionToErrorResponse(e).error_message !== 'User not found')
                     throw e;
             }
         });

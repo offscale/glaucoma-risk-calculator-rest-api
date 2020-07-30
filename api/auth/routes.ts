@@ -22,11 +22,14 @@ export const login = (app: restify.Server, namespace: string = ''): void => {
             waterfall([
                 cb => req.getOrm().typeorm!.connection
                     .getRepository(User)
-                    .findOneOrFail({
+                    .findOne({
                         select: ['password', 'email', 'roles'],
                         where: { email: req.body.email }
                     })
-                    .then((user: User) => cb(void 0, user))
+                    .then((user: User | undefined) => {
+                        if (user == null) return cb(new NotFoundError('User'));
+                        return cb(void 0, user);
+                    })
                     .catch(cb),
                 (user: User, cb) =>
                     argon2
@@ -40,7 +43,7 @@ export const login = (app: restify.Server, namespace: string = ''): void => {
                             User._omit.forEach(attr => delete user[attr]);
                             return cb(err, user);
                         })
-            ], (error, user: User | undefined) => {
+            ], (error: any, user: User | undefined) => {
                 if (error != null) return next(fmtError(error));
                 else if (user == null) return next(new NotFoundError('User'));
                 res.setHeader('X-Access-Token', user.access_token!);

@@ -10,7 +10,6 @@ import { User } from '../../../api/user/models';
 import * as user_routes from '../../../api/user/routes';
 import * as user_admin_routes from '../../../api/user/admin';
 import { removeNullProperties } from '../../../utils';
-import { isISODateString } from '../../../api/template/utils';
 
 /* tslint:disable:no-var-requires */
 const user_schema = sanitiseSchema(require('./../user/schema.json'), User._omit);
@@ -97,9 +96,6 @@ export class UserTestSDK {
             if (user == null) return reject(new TypeError('`user` argument to `update` must be defined'));
             else if (access_token == null || !access_token.length)
                 return reject(new TypeError('`access_token` argument to `update` must be defined'));
-            else if (user.createdAt == null
-                || !(user.createdAt instanceof Date) && !isISODateString(user.createdAt))
-                return reject(new TypeError('`user.createdAt` argument to `update` must be defined'));
 
             expect(user_routes.update).to.be.an.instanceOf(Function);
             expect(user_admin_routes.update).to.be.an.instanceOf(Function);

@@ -95,31 +95,18 @@ export class AuthTestSDK {
     }
 
     public register_login(user?: User, num?: number): Promise<AccessTokenType> {
-        return new Promise<AccessTokenType>((resolve, reject) =>
-            this.register_login_full_user_response(user, num)
-                .then(user => resolve(user.access_token))
-                .catch(reject)
-        );
-    }
-
-    public register_login_full_user_response(user?: User, num?: number): Promise<User> {
-        return new Promise<User>((resolve, reject) => {
+        return new Promise<AccessTokenType>((resolve, reject) => {
             if (num == null) num = 0;
             user = user || user_mocks.successes[num as number];
-            if (user == null)
-                return reject(new TypeError('`user` argument to `register_login_full_user_response` must be defined'));
+            if (user == null) return reject(new TypeError('`user` argument to `register_login` must be defined'));
 
-            const user_handler = (r: Response) => {
-                let user = r.body as User;
-                user.access_token = r.header['x-access-token'];
-                return resolve(user);
-            };
+            const token_handler = r => resolve(r.header['x-access-token']);
 
             this.user_sdk.register(user!)
-                .then(user_handler)
+                .then(token_handler)
                 .catch(() =>
                     this.login(user!)
-                        .then(user_handler)
+                        .then(token_handler)
                         .catch(reject)
                 );
         });

@@ -2,12 +2,10 @@ import * as restify from 'restify';
 
 import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
 
-import { removePropsFromObj } from '../../utils';
 import { has_auth } from '../auth/middleware';
 import { User } from './models';
 import * as user_sdk from './sdk';
 import { UserBodyReq, UserBodyUserReq, UserConfig } from './sdk';
-
 
 export const create = (app: restify.Server, namespace: string = '') =>
     app.post(namespace, has_body, mk_valid_body_mw(user_sdk.schema),
@@ -42,7 +40,6 @@ export const update = (app: restify.Server, namespace: string = '') =>
         mk_valid_body_mw_ignore(schema, ['Missing required property']),*/
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as UserBodyUserReq;
-            req.body = removePropsFromObj(req.body, ['createdAt', 'updatedAt', 'id']);
             user_sdk.update(req)
                 .then((user) => {
 
