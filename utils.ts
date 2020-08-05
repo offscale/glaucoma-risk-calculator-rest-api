@@ -18,3 +18,6 @@ export const emptyTypeOrmResponse = (obj: Partial<InsertResult>): boolean =>
 
 export const removePropsFromObj = (obj: {}, props: string[]): typeof obj =>
     typeof props.forEach(prop => delete obj[prop]) === 'undefined' && obj;
+
+export const without_starting = (s: string, sw: string): string =>
+    s.substr((startsw => startsw ? sw.length : 0)(s.startsWith(sw)), s.length)

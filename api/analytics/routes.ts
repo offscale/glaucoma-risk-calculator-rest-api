@@ -3,7 +3,7 @@ import * as restify from 'restify';
 import { JsonSchema } from 'tv4';
 import * as simpleStatistics from 'simple-statistics';
 import { ttest } from 'ttest/hypothesis';
-import { Between, FindConditions, Repository } from 'typeorm';
+import { FindConditions, Repository } from 'typeorm';
 
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
@@ -142,10 +142,15 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
     type TAgg = {[key: string]: number};
 
     const row_wise_stats = (RiskRes_r: Repository<RiskRes>,
-                            criteria?: FindConditions<Survey | RiskRes>): Promise<{}> => new Promise<{}>(
+                            condition: string | null,
+                            valuesToEscape: string[]): Promise<{}> => new Promise<{}>(
         (resolve, reject) =>
-            RiskRes_r
-                .find(criteria == null ? void 0 : criteria)
+            /*(q => condition == null || condition.length ? q : q.where(condition, valuesToEscape) )(
+                RiskRes_r.createQueryBuilder())*/
+            RiskRes_r.createQueryBuilder().select().setNativeParameters(valuesToEscape).where(condition!)
+                .getMany()
+                /*.where(condition!, valuesToEscape)
+                .getMany()*/
                 .then(risk_res => {
                     if (risk_res == null || !risk_res.length) return reject(new NotFoundError('RiskRes'));
 
@@ -159,10 +164,11 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                         // Object.keys(risk_res[0])
                         {
                             column: ['age', 'client_risk']
+                                .filter(col => risk_res[col] != null)
                                 .map(col => ({
                                         [col]: Object.assign(
                                             f(statistical_functions, risk_res.map(rr =>
-                                                /*console.info('col:', col, ';\nrr:', rr, ';') as any ||*/
+                                                /* console.info('col:', col, ';\nrr:', rr, ';') as any || */
                                                 rr[col]
                                             ))
                                         )
@@ -176,24 +182,43 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                         )
                     );
                 })
-                .catch(reject));
+                .catch(e => {
+                    console.error('row_wise_stats::condition:', condition, ';',
+                        '\nrow_wise_stats::valuesToEscape:', valuesToEscape, ';',
+                        '\nrow_wise_stats::sql:', RiskRes_r.createQueryBuilder().select().setParameters({ valuesToEscape }).where(condition!).getSql(), ';',
+                        '\nrow_wise_stats::e:', e, ';');
+                    return reject(e);
+                })
+    );
 
     const ethnicity_agg = (RiskRes_r: Repository<RiskRes>,
-                           where_condition: string,
+                           condition: string,
                            valuesToEscape: string[]): Promise<TAgg> => new Promise<TAgg>(
         (resolve, reject) =>
             RiskRes_r
-                .query(
-                    `SELECT ethnicity as name, COUNT(*) as value
-                        FROM risk_res_tbl
-                        ${where_condition} 
-                        GROUP BY ethnicity ;`,
-                    valuesToEscape)
+                .createQueryBuilder()
+                .select('COUNT(*)', 'ethnicity as name')
+                .setNativeParameters(valuesToEscape)
+                .where(condition)
+                .execute()
                 .then(r => {
                     if (r == null) return reject(new NotFoundError('RiskRes'));
                     return resolve(r.map(resolveIntFromObject));
                 })
                 .catch(reject)
+        /*
+        RiskRes_r
+            .query(
+                `SELECT ethnicity as name, COUNT(*) as value
+                    FROM risk_res_tbl
+                    ${where_condition}
+                    GROUP BY ethnicity ;`,
+                valuesToEscape)
+            .then(r => {
+                if (r == null) return reject(new NotFoundError('RiskRes'));
+                return resolve(r.map(resolveIntFromObject));
+            })
+            .catch(reject)*/
     );
 
     const step_2 = (RiskRes_r: Repository<RiskRes>,
@@ -298,20 +323,17 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
     );
 
     const parse_request =
-        (req: restify.Request): [string, string, string[], FindConditions<Survey | RiskRes> | undefined] => {
+        (req: restify.Request): [string, string, string[]] => {
             if (req.query == null || req.query.startDatetime == null || req.query.endDatetime == null)
-                return ['', '', [], void 0];
+                return ['', '', []];
 
-            req.query.startDatetime = decodeURIComponent(req.query.startDatetime);
-            req.query.endDatetime = decodeURIComponent(req.query.endDatetime);
+            const [startDatetime, endDatetime] = ['startDatetime', 'endDatetime']
+                .map(k => req.query[k]).map(decodeURIComponent).map(decodeURIComponent);
 
-            const r: [string, string, string[], FindConditions<Survey | RiskRes> | undefined] = [
+            const r: [string, string, string[]] = [
                 `"createdAt" BETWEEN $1 AND $2`,
                 '',
-                [req.query.startDatetime, req.query.endDatetime],
-                {
-                    createdAt: Between(req.query.startDatetime, req.query.endDatetime)
-                }
+                [startDatetime, endDatetime]
             ];
             r[1] = `WHERE ${r[0]}`;
 
@@ -327,15 +349,15 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
             const Survey_r = req.getOrm().typeorm!.connection
                 .getRepository(Survey) as unknown as Repository<Survey>;
 
-            const [condition, where_condition, valuesToEscape, criteria] = parse_request(req);
+            const [condition, where_condition, valuesToEscape] = parse_request(req);
 
             parallel({
                 row_wise_stats: callb =>
-                    row_wise_stats(RiskRes_r, criteria)
+                    row_wise_stats(RiskRes_r, condition, valuesToEscape)
                         .then(row_wise => callb(void 0, row_wise))
                         .catch(callb),
                 ethnicity_agg: callb =>
-                    ethnicity_agg(RiskRes_r, where_condition, valuesToEscape)
+                    ethnicity_agg(RiskRes_r, condition, valuesToEscape)
                         .then(aggs => callb(void 0, aggs))
                         .catch(callb),
                 step_2: callb =>
@@ -370,9 +392,8 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
             const req = request as unknown as IOrmReq & restify.Request;
 
             const RiskRes_r = req.getOrm().typeorm!.connection.getRepository(RiskRes) as unknown as Repository<RiskRes>;
-            const Survey_r = req.getOrm().typeorm!.connection.getRepository(Survey) as unknown as Repository<Survey>;
 
-            const [condition, where_condition, valuesToEscape, criteria] = parse_request(req);
+            const [_, where_condition, valuesToEscape] = parse_request(req);
 
             parallel({
                 step_2_multi_series: callb =>
