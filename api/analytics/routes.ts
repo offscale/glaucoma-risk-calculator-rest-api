@@ -194,9 +194,10 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
         (resolve, reject) =>
             RiskRes_r
                 .createQueryBuilder()
-                .select('COUNT(*)', 'ethnicity as name')
+                .select(['ethnicity AS name', 'COUNT(*) AS value'])
                 .setNativeParameters(valuesToEscape)
                 .where(condition)
+                .groupBy('ethnicity')
                 .execute()
                 .then(r => {
                     if (r == null) return reject(new NotFoundError('RiskRes'));
