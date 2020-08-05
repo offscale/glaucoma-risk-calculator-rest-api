@@ -110,9 +110,11 @@ export const statistical_functions: DeepReadonlyArray<[string, string]> = Object
     // ['tukeyhsd', 'jStat']
 ]);
 
-const get_func = (func: DeepReadonlyArray<string>, input: {}): ((a: {}) => number | StudentT) => {
+const get_func = (func: DeepReadonlyArray<string>, input: {} | number[]): ((a: {}) => number | StudentT) => {
     if (func[1] === 'simpleStatistics')
-        return (_: {}) => simpleStatistics[func[0]](input);
+        return (_: {}) => simpleStatistics[func[0]](['harmonicMean', 'geometricMean'].indexOf(func[0]) > -1 ?
+            (input as number[]).filter(i => i > 0) : input
+        );
     else if (func[1] === 'ttest')
         return (_: {}) => ttest(input as any, {
             mu: 2,
@@ -164,13 +166,14 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                         // Object.keys(risk_res[0])
                         {
                             column: ['age', 'client_risk']
-                                .filter(col => risk_res[col] != null)
                                 .map(col => ({
                                         [col]: Object.assign(
-                                            f(statistical_functions, risk_res.map(rr =>
-                                                /* console.info('col:', col, ';\nrr:', rr, ';') as any || */
-                                                rr[col]
-                                            ))
+                                            f(statistical_functions,
+                                                risk_res
+                                                    .map(rr =>
+                                                        /* console.info('col:', col, ';\nrr:', rr, ';') as any || */
+                                                        rr[col]
+                                                    ))
                                         )
                                         , // Object.assign(f(statistical_functions, risk_res.map(rr => rr[col])),
                                         // { ttest: ttest(risk_res.map(rr => rr[col]), void 0) }
@@ -182,13 +185,7 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
                         )
                     );
                 })
-                .catch(e => {
-                    console.error('row_wise_stats::condition:', condition, ';',
-                        '\nrow_wise_stats::valuesToEscape:', valuesToEscape, ';',
-                        '\nrow_wise_stats::sql:', RiskRes_r.createQueryBuilder().select().setParameters({ valuesToEscape }).where(condition!).getSql(), ';',
-                        '\nrow_wise_stats::e:', e, ';');
-                    return reject(e);
-                })
+                .catch(reject)
     );
 
     const ethnicity_agg = (RiskRes_r: Repository<RiskRes>,
