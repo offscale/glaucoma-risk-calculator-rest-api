@@ -149,7 +149,11 @@ export const getAll = (app: restify.Server, namespace: string = ''): void => {
         (resolve, reject) =>
             /*(q => condition == null || condition.length ? q : q.where(condition, valuesToEscape) )(
                 RiskRes_r.createQueryBuilder())*/
-            RiskRes_r.createQueryBuilder().select().setNativeParameters(valuesToEscape).where(condition!)
+            RiskRes_r
+                .createQueryBuilder()
+                .select()
+                .setNativeParameters(valuesToEscape)
+                .where(condition!)
                 .getMany()
                 /*.where(condition!, valuesToEscape)
                 .getMany()*/

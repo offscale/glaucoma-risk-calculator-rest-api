@@ -30,7 +30,7 @@ export const typeorm_config: PostgresConnectionOptions = Object.freeze(
             type: 'postgres' as PostgresConnectionOptions['type'],
             autoSchemaSync: true,
             synchronize: true,
-            logging: false
+            logging: typeof process.env['DB_LOGGING'] !== 'undefined'
         }
     )
 );
