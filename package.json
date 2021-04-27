@@ -30,7 +30,7 @@
     "mathjs": "^8.0.1",
     "morgan": "^1.10.0",
     "pg": "^8.5.0",
-    "redis": "^3.0.2",
+    "redis": "^3.1.1",
     "reflect-metadata": "^0.1.13",
     "restify": "^8.5.1",
     "restify-errors": "^8.0.2",
